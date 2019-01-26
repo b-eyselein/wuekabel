@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
+    "module": "commonjs",
     "target": "es6",
-    "module": "amd",
-    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "sourceMap": true,
+    "types": ["jquery"],
     "removeComments": true,
     "preserveConstEnums": true,
-    "sourceMap": true,
     "mapRoot": "/assets",
     "sourceRoot": "/assets",
     "rootDirs": [

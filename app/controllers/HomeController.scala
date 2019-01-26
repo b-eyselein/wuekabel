@@ -33,10 +33,9 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
     implicit request =>
       tableDefs.futureLanguageById(langId) flatMap {
         case None           => Future(onNoSuchLanguage(langId))
-        case Some(language) =>
-          tableDefs.futureCollectionsForLanguage(language) map {
-            collections => Ok(views.html.language(user, language, collections))
-          }
+        case Some(language) => tableDefs.futureCollectionsForLanguage(language) map {
+          collections => Ok(views.html.language(user, language, collections))
+        }
       }
   }
 
@@ -66,17 +65,37 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
     implicit request =>
       tableDefs.futureLanguageById(langId) flatMap {
         case None           => Future(onNoSuchLanguage(langId))
-        case Some(language) =>
-          tableDefs.futureCollectionById(language, collId) flatMap {
-            case None             => Future(onNoSuchCollection(language, collId))
-            case Some(collection) =>
-              for {
-                flashcardCount <- tableDefs.futureFlashcardCountForCollection(collection)
-                toLearnCount <- Future(-1)
-                toRepeatCount <- Future(-1)
-              } yield Ok(views.html.collection(user, language, collection, flashcardCount, toLearnCount, toRepeatCount))
-          }
+        case Some(language) => tableDefs.futureCollectionById(language, collId) flatMap {
+          case None             => Future(onNoSuchCollection(language, collId))
+          case Some(collection) =>
+            for {
+              flashcardCount <- tableDefs.futureFlashcardCountForCollection(collection)
+              toLearnCount <- tableDefs.futureFlashcardsToLearnCount(user, collection)
+              toRepeatCount <- tableDefs.futureFlashcardsToRepeatCount(user, collection)
+            } yield Ok(views.html.collection(user, language, collection, flashcardCount, toLearnCount, toRepeatCount))
+        }
       }
+  }
+
+
+  def learn(langId: Int, collId: Int): EssentialAction = futureWithUser { user =>
+    implicit request =>
+      tableDefs.futureLanguageById(langId) flatMap {
+        case None           => Future(onNoSuchLanguage(langId))
+        case Some(language) => tableDefs.futureCollectionById(language, collId) flatMap {
+          case None             => Future(onNoSuchCollection(language, collId))
+          case Some(collection) => tableDefs.futureFlashcardsToLearnCount(user, collection) map {
+            case 0 => ???
+            case _ => Ok(views.html.learn(user, language, collection))
+          }
+        }
+      }
+  }
+
+
+  def repeat(langId: Int, collId: Int): EssentialAction = futureWithUser { user =>
+    implicit request =>
+      ???
   }
 
 }

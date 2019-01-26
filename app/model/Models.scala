@@ -1,5 +1,7 @@
 package model
 
+import java.time.LocalDate
+
 import enumeratum.{EnumEntry, PlayEnum}
 
 import scala.collection.immutable
@@ -53,3 +55,7 @@ case object Correctness extends PlayEnum[Correctness] {
 final case class Flashcard(id: Int, collId: Int, langId: Int, cardType: CardType, question: String, meaning: Option[String])
 
 final case class ChoiceAnswer(id: Int, cardId: Int, collId: Int, langId: Int, answer: String, correctness: Correctness)
+
+// User answered flashcard
+
+final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, langId: Int, bucketId: Int, dateAnswered: LocalDate, correct: Boolean, tries: Int)

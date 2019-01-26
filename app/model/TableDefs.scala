@@ -1,5 +1,9 @@
 package model
 
+
+import java.sql.Date
+import java.time.LocalDate
+
 import javax.inject.Inject
 import model.Consts._
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
@@ -15,14 +19,22 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
   // Table queries
 
+  private val bucketsTQ: TableQuery[BucketsTable] = TableQuery[BucketsTable]
+
   private val usersTQ        : TableQuery[UsersTable]         = TableQuery[UsersTable]
   private val userPasswordsTQ: TableQuery[UserPasswordsTable] = TableQuery[UserPasswordsTable]
 
-  private val languagesTQ  : TableQuery[LanguagesTable]   = TableQuery[LanguagesTable]
-  private val collectionsTQ: TableQuery[CollectionsTable] = TableQuery[CollectionsTable]
-  private val flashcardsTQ : TableQuery[FlashcardsTable]  = TableQuery[FlashcardsTable]
+  private val languagesTQ    : TableQuery[LanguagesTable]     = TableQuery[LanguagesTable]
+  private val collectionsTQ  : TableQuery[CollectionsTable]   = TableQuery[CollectionsTable]
+  private val flashcardsTQ   : TableQuery[FlashcardsTable]    = TableQuery[FlashcardsTable]
+  private val choiceAnswersTQ: TableQuery[ChoiceAnswersTable] = TableQuery[ChoiceAnswersTable]
 
   private val userLearnsLanguageTQ: TableQuery[UserLearnsLanguageTable] = TableQuery[UserLearnsLanguageTable]
+
+  private val usersAnsweredFlashcardsTQ: TableQuery[UsersAnsweredFlashcardsTable] = TableQuery[UsersAnsweredFlashcardsTable]
+
+  private val flashcardsToLearnTQ : TableQuery[FlashcardsToLearnView]  = TableQuery[FlashcardsToLearnView]
+  private val flashcardsToRepeatTQ: TableQuery[FlashcardsToRepeatView] = TableQuery[FlashcardsToRepeatView]
 
   // Queries
 
@@ -77,6 +89,16 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
   def futureFlashcardCountForCollection(collection: Collection): Future[Int] =
     db.run(flashcardsTQ.filter(fc => fc.collId === collection.id && fc.langId === collection.langId).size.result)
 
+  def futureFlashcardsToLearnCount(user: User, collection: Collection): Future[Int] =
+    db.run(flashcardsToLearnTQ.filter {
+      fctl => fctl.collId === collection.id && fctl.langId === collection.langId && fctl.username === user.username
+    }.size.result)
+
+  def futureFlashcardsToRepeatCount(user: User, collection: Collection): Future[Int] =
+    db.run(flashcardsToRepeatTQ.filter {
+      fctr => fctr.collId === collection.id && fctr.langId === collection.langId && fctr.username === user.username
+    }.size.result)
+
   // Column types
 
   private implicit val cardTypeColumnType: BaseColumnType[CardType] =
@@ -84,6 +106,9 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
   private implicit val correctnessColumnType: BaseColumnType[Correctness] =
     MappedColumnType.base[Correctness, String](_.entryName, Correctness.withNameInsensitive)
+
+  private implicit val myDateColumnType: BaseColumnType[LocalDate] =
+    MappedColumnType.base[LocalDate, Date](Date.valueOf, _.toLocalDate)
 
   // Table definitions
 
@@ -217,7 +242,7 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
   }
 
-  class UsersAnsweredFlashcardsTable(tag: Tag) extends Table[(String, Int, Int, Int, Int, String, Boolean, Int)](tag, "users_answered_flashcards") {
+  class UsersAnsweredFlashcardsTable(tag: Tag) extends Table[UserAnsweredFlashcard](tag, "users_answered_flashcards") {
 
     def username: Rep[String] = column[String](usernameName)
 
@@ -229,7 +254,7 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
     def bucketId: Rep[Int] = column[Int]("bucket_id")
 
-    def dateAnswered: Rep[String] = column[String]("date_answered")
+    def dateAnswered: Rep[LocalDate] = column[LocalDate]("date_answered")
 
     def correct: Rep[Boolean] = column[Boolean](correctName)
 
@@ -243,9 +268,51 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
     def cardFk: ForeignKeyQuery[FlashcardsTable, Flashcard] = foreignKey("uaf_card_fk", (cardId, collId, langId), flashcardsTQ)(fc => (fc.id, fc.collId, fc.langId))
 
 
-    override def * = (username, cardId, collId, langId, bucketId, dateAnswered, correct, tries)
+    override def * : ProvenShape[UserAnsweredFlashcard] = (username, cardId, collId, langId, bucketId, dateAnswered, correct, tries) <> (UserAnsweredFlashcard.tupled, UserAnsweredFlashcard.unapply)
 
   }
 
+  // Views
+
+  class FlashcardsToLearnView(tag: Tag) extends Table[(Int, Int, Int, String)](tag, "flashcards_to_learn") {
+
+    def cardId: Rep[Int] = column[Int](idName)
+
+    def collId: Rep[Int] = column[Int]("coll_id")
+
+    def langId: Rep[Int] = column[Int]("lang_id")
+
+    def username: Rep[String] = column[String](usernameName)
+
+
+    def pk: PrimaryKey = primaryKey("fcs_to_learn_pk", (cardId, collId, langId, username))
+
+    def userFk: ForeignKeyQuery[UsersTable, User] = foreignKey("fcs_to_learn_user_fk", username, usersTQ)(_.username)
+
+    def cardFk: ForeignKeyQuery[FlashcardsTable, Flashcard] = foreignKey("fcs_to_learn_card_fk", (cardId, collId, langId), flashcardsTQ)(fc => (fc.id, fc.collId, fc.langId))
+
+
+    override def * : ProvenShape[(Int, Int, Int, String)] = (cardId, collId, langId, username)
+
+  }
+
+  class FlashcardsToRepeatView(tag: Tag) extends Table[(Int, Int, Int, String, Boolean, Int)](tag, "flashcards_to_repeat") {
+
+    def cardId: Rep[Int] = column[Int](idName)
+
+    def collId: Rep[Int] = column[Int]("coll_id")
+
+    def langId: Rep[Int] = column[Int]("lang_id")
+
+    def username: Rep[String] = column[String](usernameName)
+
+    def correct: Rep[Boolean] = column[Boolean](correctName)
+
+    def tries: Rep[Int] = column[Int](triesName)
+
+
+    override def * : ProvenShape[(Int, Int, Int, String, Boolean, Int)] = (cardId, collId, langId, username, correct, tries)
+
+  }
 
 }

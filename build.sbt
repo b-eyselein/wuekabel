@@ -13,8 +13,15 @@ resolveFromWebjarsNodeModulesDir := true
 
 val webJarDependencies = Seq(
   "org.webjars.npm" % "jquery" % "3.3.1",
+  "org.webjars.npm" % "types__jquery" % "3.3.29",
+
   "org.webjars.npm" % "materialize-css" % "1.0.0"
 )
+
+dependencyOverrides ++= Seq(
+  "org.webjars.npm" % "types__sizzle" % "2.3.2"
+)
+
 
 libraryDependencies ++= webJarDependencies
 

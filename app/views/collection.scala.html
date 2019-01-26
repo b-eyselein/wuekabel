@@ -23,7 +23,7 @@
                 <span class="green-text">Sie haben alle Karteikarten gelernt.</span>
             </a>
         } else {
-            <a href="{{ url_for('languages.route_learn', lang_id = language.id, coll_id = collection.id) }}"
+            <a href="@routes.HomeController.learn(language.id, collection.id)"
             class="btn btn-large waves-effect waves-block red">
                 Es existieren noch @toLearnCount neue Karteikarten.
             </a>
@@ -38,7 +38,7 @@
                 <span class="green-text">Sie haben alle Karteikarten wiederholt.</span>
             </a>
         } else {
-            <a href="{{ url_for('languages.route_repeat', lang_id = language.id, coll_id = collection.id) }}"
+            <a href="@routes.HomeController.repeat(language.id, collection.id)"
             class="btn btn-large waves-effect waves-block red">
                 Es existieren noch @toRepeatCount nicht wiederholte Karteikarten.
             </a>
