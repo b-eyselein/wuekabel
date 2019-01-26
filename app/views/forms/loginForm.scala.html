@@ -1,0 +1,26 @@
+@import model.{Consts, LoginFormValues}
+
+@(loginForm: Form[LoginFormValues])(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
+
+@title = @{
+    "Login"
+}
+
+@main(title, None) {
+
+    <h1 class="center-align">@title</h1>
+
+    <form action="@routes.LoginController.login" method="post" class="col s12">
+
+        @helper.CSRF.formField
+
+        @myhelpers.input(loginForm(Consts.usernameName), "Nutzername", isRequired = true)
+
+        @myhelpers.input(loginForm(Consts.pwName), "Password", fieldType = "password", isRequired = true)
+
+        <div>
+            <button class="btn waves-effect waves-light green">Login</button>
+        </div>
+
+    </form>
+}

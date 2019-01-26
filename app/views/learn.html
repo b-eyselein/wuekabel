@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Lernen{% endblock %}
+
+{% block content %}
+
+    <button data-href="{{ url_for('api.route_learn_load_flashcards', lang_id=language.id, coll_id=collection.id) }}"
+            id="startLearningBtn">Lernen starten...
+    </button>
+
+    <div id="flashcardDiv"></div>
+
+    <hr>
+
+    <div class="row" id="btnsRow">
+        <button class="btn btn-large waves-effect green" onclick="checkSolution();"
+                data-href="{{ url_for('route_check_solution') }}" id="checkSolutionBtn">Lösung testen
+        </button>
+        <button class="btn btn-large waves-effect blue" onclick="nextFlashcard();">
+            Weiter
+        </button>
+
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='app/loadFlashcards.js') }}"></script>
+    <script src="{{ url_for('static', filename='app/solutionTypes.js') }}"></script>
+    <script src="{{ url_for('static', filename='app/learn.js') }}"></script>
+{% endblock %}

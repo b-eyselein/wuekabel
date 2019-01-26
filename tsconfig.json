@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "amd",
+    "moduleResolution": "node",
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "mapRoot": "/assets",
+    "sourceRoot": "/assets",
+    "rootDirs": [
+      "app/assets",
+      "test/assets"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "*",
+        "target/web/node-modules/main/webjars/*"
+      ]
+    },
+    "typeRoots": [
+      "target/web/node-modules/main/webjars/@types"
+    ]
+  },
+  "exclude": [
+    "project/target",
+    "target"
+  ]
+}

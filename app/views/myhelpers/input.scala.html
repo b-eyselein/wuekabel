@@ -1,0 +1,11 @@
+@(field: Field, labelContent: String, fieldType: String = "text", inputWidth: Int = 12, placeHolder: Option[String] = None,
+        isRequired: Boolean = false, isReadOnly: Boolean = false)
+
+
+<div class="row">
+    <div class="input-field col s@inputWidth">
+        <input type="@fieldType" id="@field.id" name="@field.name" class="validate" placeholder="@labelContent"
+        @if(isRequired) { required }>
+        <label for="@field.id">@labelContent</label>
+    </div>
+</div>

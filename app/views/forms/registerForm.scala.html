@@ -1,0 +1,30 @@
+@import model.{Consts, RegisterFormValues}
+
+@(registerValuesForm: Form[RegisterFormValues])(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
+
+@title = @{
+    "Registrierung"
+}
+
+@main(title, None) {
+
+    <h1 class="center-align">@title</h1>
+
+    @helper.form(routes.LoginController.register(), 'class -> "col s12") {
+
+        @helper.CSRF.formField
+
+        @myhelpers.input(registerValuesForm(Consts.usernameName), "Nutzername", isRequired = true)
+
+        @myhelpers.input(registerValuesForm(Consts.nameName), "Name", isRequired = true)
+
+        @myhelpers.input(registerValuesForm(Consts.pwName), "Password", fieldType = "password", isRequired = true)
+
+        @myhelpers.input(registerValuesForm(Consts.repeatPwName), "Passwort wiederholen", fieldType = "password", isRequired = true)
+
+        <div>
+            <button class="btn btn-large waves-effect waves-light green">Registrieren</button>
+        </div>
+
+    }
+}
