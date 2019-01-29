@@ -1,6 +1,6 @@
 @import model.{CardType, CompleteFlashcard, User}
 
-@(user: User, completeFlashcard: CompleteFlashcard)(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
+@(user: User, completeFlashcard: CompleteFlashcard, isRepeating: Boolean)(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
 
 @title = @{
     "Lernen"
@@ -38,14 +38,12 @@
                     </div>
                 </div>
 
-                <br>
-
-                <p id="correctionTextPar" hidden>&nbsp;</p>
+                <p id="correctionTextPar">&nbsp;</p>
 
             }
             case CardType.SingleChoice | CardType.MultipleChoice => {
 
-                @for(answer <- completeFlashcard.choiceAnswers) {
+                @for(answer <- scala.util.Random.shuffle(completeFlashcard.choiceAnswers)) {
                     <p>
                         <label for="choice_@answer.id">
                             <input id="choice_@answer.id" name="choice_answers" type="@choiceInputType" data-choiceid="@answer.id">
@@ -66,7 +64,12 @@
         data-href="@routes.HomeController.checkSolution(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId, completeFlashcard.flashcard.id)">
             Lösung testen
         </button>
-        <a href="@routes.HomeController.startLearning(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId)"
+        <a
+            @if(isRepeating) {
+                href="@routes.HomeController.startLearning(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId)"
+            } else {
+                href="@routes.HomeController.startRepeating(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId)"
+            }
         id="nextFlashcardBtn" class="btn btn-large waves-effect blue disabled">Weiter</a>
     </div>
 }

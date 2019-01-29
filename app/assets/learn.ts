@@ -61,9 +61,9 @@ function readSolution(cardType: string): Solution | null {
 }
 
 function onCorrectionSuccess(result: CorrectionResult): void {
-    console.info(JSON.stringify(result, null, 2));
+    // console.info(JSON.stringify(result, null, 2));
 
-    correctionTextPar.prop('hidden', false).text('Ihre Lösung war ' + (result.correct ? '' : 'nicht ') + 'korrekt.');
+    correctionTextPar.text('Ihre Lösung war ' + (result.correct ? '' : 'nicht ') + 'korrekt.');
 
     if (result.correct) {
         checkSolutionBtn.prop('disabled', true);

@@ -173,7 +173,7 @@ create table if not exists users_answered_flashcards
 -- Views
 
 create view flashcards_to_learn as
-select id, fcs.coll_id, fcs.lang_id, us.username
+select id as card_id, fcs.coll_id, fcs.lang_id, us.username
 from flashcards fcs
        join users us
        left outer join users_answered_flashcards uaf
@@ -188,7 +188,7 @@ from flashcards f
                  on uaf.card_id = f.id and uaf.coll_id = f.coll_id and uaf.lang_id = f.lang_id
        join buckets b on uaf.bucket_id = b.id
 where datediff(now(), date_answered) >= b.distance_days
-  and uaf.correct = false;
+   or uaf.correct = false;
 
 # --- !Downs
 

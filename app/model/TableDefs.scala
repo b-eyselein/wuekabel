@@ -104,16 +104,24 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
   }.size.result)
 
   def futureMaybeIdentifierNextFlashcardToLearn(user: User, collection: Collection): Future[Option[FlashcardIdentifier]] =
-    db.run(
-      flashcardsToLearnTQ
-        .filter { fctl => fctl.collId === collection.id && fctl.langId === collection.langId && fctl.username === user.username }
-        .result
-        .headOption
-        .map {
-          case None                              => None
-          case Some((cardId, collId, langId, _)) => Some(FlashcardIdentifier(cardId, collId, langId))
-        }
-    )
+    db.run(flashcardsToLearnTQ
+      .filter { fctl => fctl.collId === collection.id && fctl.langId === collection.langId && fctl.username === user.username }
+      .result
+      .headOption
+      .map {
+        case None                              => None
+        case Some((cardId, collId, langId, _)) => Some(FlashcardIdentifier(cardId, collId, langId))
+      })
+
+  def futureMaybeIdentifierNextFlashcardToRepeat(user: User, collection: Collection): Future[Option[FlashcardIdentifier]] =
+    db.run(flashcardsToRepeatTQ
+      .filter { fctr => fctr.collId === collection.id && fctr.langId === collection.langId && fctr.username === user.username }
+      .result
+      .headOption
+      .map {
+        case None                                    => None
+        case Some((cardId, collId, langId, _, _, _)) => Some(FlashcardIdentifier(cardId, collId, langId))
+      })
 
   def futureFlashcardsToLearn(user: User, collection: Collection): Future[Seq[Flashcard]] = {
     db.run(flashcardsToLearnTQ
@@ -214,7 +222,7 @@ ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
     def distanceDays: Rep[Int] = column[Int]("distance_days")
 
 
-    def * : ProvenShape[Bucket] = (id, distanceDays) <> (Bucket.tupled, Bucket.unapply)
+    override def * : ProvenShape[Bucket] = (id, distanceDays) <> (Bucket.tupled, Bucket.unapply)
 
   }
 
@@ -318,7 +326,7 @@ ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
 
   class FlashcardsToLearnView(tag: Tag) extends Table[(Int, Int, Int, String)](tag, "flashcards_to_learn") {
 
-    def cardId: Rep[Int] = column[Int](idName)
+    def cardId: Rep[Int] = column[Int]("card_id")
 
     def collId: Rep[Int] = column[Int]("coll_id")
 
@@ -340,7 +348,7 @@ ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
 
   class FlashcardsToRepeatView(tag: Tag) extends Table[(Int, Int, Int, String, Boolean, Int)](tag, "flashcards_to_repeat") {
 
-    def cardId: Rep[Int] = column[Int](idName)
+    def cardId: Rep[Int] = column[Int]("card_id")
 
     def collId: Rep[Int] = column[Int]("coll_id")
 

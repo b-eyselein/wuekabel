@@ -26,7 +26,7 @@ trait Secured {
     Security.Authenticated(username, onUnauthorized)(user => controllerComponents.actionBuilder.async(bodyParser)(request => f(user)(request)))
 
 
-  def withUser(f: User => Request[AnyContent] => Result)(implicit ec: ExecutionContext): EssentialAction = withAuth { username =>
+  protected def withUser(f: User => Request[AnyContent] => Result)(implicit ec: ExecutionContext): EssentialAction = withAuth { username =>
     implicit request => {
       tableDefs.futureUserByUserName(username) map {
         case Some(user) => f(user)(request)
@@ -35,7 +35,7 @@ trait Secured {
     }
   }
 
-  def futureWithUser(f: User => Request[AnyContent] => Future[Result])(implicit ec: ExecutionContext): EssentialAction = withAuth { username =>
+  protected def futureWithUser(f: User => Request[AnyContent] => Future[Result])(implicit ec: ExecutionContext): EssentialAction = withAuth { username =>
     implicit request =>
       tableDefs.futureUserByUserName(username) flatMap {
         case Some(user) => f(user)(request)
