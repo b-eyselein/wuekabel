@@ -19,12 +19,6 @@ trait Secured {
   private def futureOnUnauthorized(request: RequestHeader)(implicit ec: ExecutionContext): Future[Result] =
     Future(onUnauthorized(request))
 
-  //  private def onInsufficientPrivileges(request: RequestHeader): Result = Redirect(routes.HomeController.index()).flashing("msg" -> "You do not have sufficient privileges!")
-
-  //  private def futureOnInsufficientPrivileges(request: RequestHeader)(implicit ec: ExecutionContext): Future[Result] =
-  //    Future(onInsufficientPrivileges(request))
-
-
   private def withAuth(f: => String => Request[AnyContent] => Future[Result]): EssentialAction =
     Security.Authenticated(username, onUnauthorized)(user => controllerComponents.actionBuilder.async(request => f(user)(request)))
 
@@ -58,25 +52,5 @@ trait Secured {
           case None       => futureOnUnauthorized(request)
         }
     }
-
-  //  def withAdmin(f: User => Request[AnyContent] => Result)(implicit ec: ExecutionContext): EssentialAction = withAuth { username =>
-  //    implicit request =>
-  //      tableDefs.userByName(username) map {
-  //        case Some(user) =>
-  //          if (user.isAdmin) f(user)(request)
-  //          else onInsufficientPrivileges(request)
-  //        case None       => onUnauthorized(request)
-  //      }
-  //  }
-
-  //  def futureWithAdmin(f: User => Request[AnyContent] => Future[Result])(implicit ec: ExecutionContext): EssentialAction = withAuth { username =>
-  //    implicit request =>
-  //      tableDefs.userByName(username) flatMap {
-  //        case Some(user) =>
-  //          if (user.isAdmin) f(user)(request)
-  //          else futureOnInsufficientPrivileges(request)
-  //        case None       => futureOnUnauthorized(request)
-  //      }
-  //  }
 
 }

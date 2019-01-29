@@ -109,42 +109,44 @@ create table if not exists flashcards
     on update cascade on delete cascade
 );
 
+insert into flashcards (id, coll_id, lang_id, flash_card_type, question, meaning)
+values (1, 1, 1, 'Vocable', 'pater', 'Vater'),
+       (2, 1, 1, 'Vocable', 'mater', 'Mutter'),
+       (3, 1, 1, 'Text', 'magna domus', 'großes Haus'),
+       (4, 1, 1, 'SingleChoice', 'Welches Geschlecht hat das Wort pater?', null),
+       (5, 1, 1, 'MultipleChoice', 'Welche dieser Aussagen sind korrekt?', null);
+
 create table if not exists choice_answers
 (
-  id           int                                   not null,
-  card_id int                                   not null,
-  coll_id      int                                   not null,
-  lang_id      int                                   not null,
+  id          int                                   not null,
+  card_id     int                                   not null,
+  coll_id     int                                   not null,
+  lang_id     int                                   not null,
 
-  answer       text                                  not null,
-  correctness  enum ('CORRECT', 'OPTIONAL', 'WRONG') not null default 'WRONG',
+  answer      text                                  not null,
+  correctness enum ('CORRECT', 'OPTIONAL', 'WRONG') not null default 'WRONG',
 
   primary key (id, card_id, coll_id, lang_id),
   foreign key (card_id, coll_id, lang_id) references flashcards (id, coll_id, lang_id)
     on update cascade on delete cascade
 );
 
-insert into flashcards (id, coll_id, lang_id, flash_card_type, question, meaning)
-values (1, 1, 1, 'Vocable', 'pater', 'Vater'),
-       (2, 1, 1, 'Vocable', 'mater', 'Mutter'),
-       (3, 1, 1, 'SingleChoice', 'Welches Geschlecht hat das Wort pater?', null),
-       (4, 1, 1, 'MultipleChoice', 'Welche dieser Aussagen sind korrekt?', null);
 
 insert into choice_answers (id, card_id, coll_id, lang_id, answer, correctness)
-values (1, 3, 1, 1, 'Maskulinum', 'CORRECT'),
-       (2, 3, 1, 1, 'Femininum', 'WRONG'),
-       (3, 3, 1, 1, 'Neutrum', 'WRONG'),
-       (1, 4, 1, 1, 'Wörter auf -or sind meist männlich', 'CORRECT'),
-       (2, 4, 1, 1, 'Wörter auf -is sind meist weiblich', 'WRONG'),
-       (3, 4, 1, 1, 'Wörter auf -x sind meist weiblich', 'CORRECT'),
-       (4, 4, 1, 1, 'Wörter auf -en sind immer neutrum', 'CORRECT');
+values (1, 4, 1, 1, 'Maskulinum', 'CORRECT'),
+       (2, 4, 1, 1, 'Femininum', 'WRONG'),
+       (3, 4, 1, 1, 'Neutrum', 'WRONG'),
+       (1, 5, 1, 1, 'Wörter auf -or sind meist männlich', 'CORRECT'),
+       (2, 5, 1, 1, 'Wörter auf -is sind meist weiblich', 'WRONG'),
+       (3, 5, 1, 1, 'Wörter auf -x sind meist weiblich', 'CORRECT'),
+       (4, 5, 1, 1, 'Wörter auf -en sind immer neutrum', 'CORRECT');
 
 -- User <-> Flashcard
 
 create table if not exists users_answered_flashcards
 (
   username      varchar(50) not null,
-  card_id  int         not null,
+  card_id       int         not null,
   coll_id       int         not null,
   lang_id       int         not null,
   bucket_id     int         not null,

@@ -2,35 +2,35 @@
 
 @(user: User, languages: Seq[Language])
 
-@title = @{
-    "Meine Sprachen"
-}
-
-
-@main(title, Some(user)) {
-    @if(languages.nonEmpty) {
-
-        <h2 class="center-align">Meine Sprachen</h2>
-
-        <hr>
-
-        @for(language <- languages) {
-            <div class="row">
-                <div class="col s12">
-                    <a href="@routes.HomeController.language(language.id)"
-                    class="btn btn-large waves-effect waves-block green">@language.name</a>
-                </div>
-            </div>
-        }
-    } else {
-
-        <h4 class="red-text center-align">Sie haben noch keine Sprache gewählt.</h4>
-
-        <hr>
-
-        <a class="btn btn-large waves-effect waves-block green"
-        href="{{ url_for('languages.route_all_languages') }}">Sprache wählen</a>
-
+    @title = @{
+        "Meine Sprachen"
     }
 
-}
+
+    @main(title, Some(user)) {
+        @if(languages.nonEmpty) {
+
+            <h2 class="center-align">Meine Sprachen</h2>
+
+            <hr>
+
+            @for(language <- languages) {
+                <div class="row">
+                    <div class="col s12">
+                        <a href="@routes.HomeController.language(language.id)"
+                        class="btn btn-large waves-effect waves-block green">@language.name</a>
+                    </div>
+                </div>
+            }
+        } else {
+
+            <h4 class="red-text center-align">Sie haben noch keine Sprache gewählt.</h4>
+
+            <hr>
+
+            <a class="btn btn-large waves-effect waves-block green" href="@routes.HomeController.allLanguages()">
+                Sprache wählen</a>
+
+        }
+
+    }

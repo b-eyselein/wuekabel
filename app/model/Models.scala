@@ -28,9 +28,9 @@ case object CardType extends PlayEnum[CardType] {
 
   val values: immutable.IndexedSeq[CardType] = findValues
 
-  case object VocableCard extends CardType
+  case object Vocable extends CardType
 
-  case object TextCard extends CardType
+  case object Text extends CardType
 
   case object SingleChoice extends CardType
 
@@ -52,9 +52,13 @@ case object Correctness extends PlayEnum[Correctness] {
 
 }
 
+final case class FlashcardIdentifier(cardId: Int, collId: Int, langId: Int)
+
 final case class Flashcard(id: Int, collId: Int, langId: Int, cardType: CardType, question: String, meaning: Option[String])
 
 final case class ChoiceAnswer(id: Int, cardId: Int, collId: Int, langId: Int, answer: String, correctness: Correctness)
+
+final case class CompleteFlashcard(flashcard: Flashcard, choiceAnswers: Seq[ChoiceAnswer])
 
 // User answered flashcard
 

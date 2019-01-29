@@ -1,28 +1,46 @@
-/// <reference path="loadFlashcards.ts"/>
-/// <reference path="solutionTypes.ts"/>
+interface Solution {
+    learnerSolution: string
+    selectedAnswers: number[]
+}
 
+interface EditOperation {
+    operationType: "Replace" | "Insert" | "Delete"
+    index: number
+    char: string | null
+}
 
+interface AnswerSelectionResult {
+    wrong: number[],
+    correct: number[],
+    missing: number[]
+}
+
+interface CorrectionResult {
+    correct: boolean,
+    cardType: 'Vocable' | 'Text' | 'SingleChoice' | 'MultipleChoice'
+    learnerSolution: Solution,
+    operations: EditOperation[],
+    answerSelection: AnswerSelectionResult
+}
+
+let correctionTextPar: JQuery<HTMLParagraphElement>;
+let checkSolutionBtn: JQuery<HTMLButtonElement>;
 let checkSolutionUrl: string;
 
-
-function checkSolution(): void {
-    let answer: AnswerType;
-
-    switch (currentFlashcard.cardType) {
-        case 'vocable':
+function readSolution(cardType: string): Solution | null {
+    switch (cardType) {
+        case 'Vocable':
+        case 'Text':
             const learnerSolution: string = $('#translation_input').val() as string;
 
             if (learnerSolution.length === 0) {
-                alert('Lösung ist leer!');
-                return;
+                return null;
             }
 
-            answer = new TranslationSolution(learnerSolution);
-            break;
+            return {learnerSolution, selectedAnswers: []};
 
-
-        case 'single_choice':
-        case 'multiple_choice':
+        case 'SingleChoice':
+        case 'MultipleChoice':
             const selectedAnswers: number[] = [];
 
             $('input[name=choice_answers]').each((_, element: HTMLElement) => {
@@ -32,31 +50,67 @@ function checkSolution(): void {
             });
 
             if (selectedAnswers.length === 0) {
-                alert('Sie haben keine Lösung ausgewählt!');
-                return;
+                return null;
             }
 
-            answer = new ChoiceSolution(selectedAnswers);
-            break;
+            return {learnerSolution: "", selectedAnswers};
         default:
-            alert('There has been an internal error...');
-            return;
+            alert('There has been an internal error: ' + cardType);
+            return null;
+    }
+}
+
+function onCorrectionSuccess(result: CorrectionResult): void {
+    console.info(JSON.stringify(result, null, 2));
+
+    correctionTextPar.prop('hidden', false).text('Ihre Lösung war ' + (result.correct ? '' : 'nicht ') + 'korrekt.');
+
+    if (result.correct) {
+        checkSolutionBtn.prop('disabled', true);
+
+        $('#nextFlashcardBtn').removeClass('disabled');
+    } else {
+
     }
 
-    let solution: Solution = new Solution(currentFlashcard.id, currentFlashcard.collId, currentFlashcard.langId, currentFlashcard.cardType, answer);
-    console.warn(JSON.stringify(solution, null, 2));
+    switch (result.cardType) {
+        case 'Vocable':
+        case 'Text':
+            $('#translation_input').removeClass(result.correct ? 'invalid' : 'valid').addClass(result.correct ? 'valid' : 'invalid');
+            break;
+        case 'SingleChoice':
+        case 'MultipleChoice':
+            console.error(JSON.stringify(result.answerSelection));
+            break;
+        default:
+            console.error(result.cardType);
+    }
+}
+
+function checkSolution(): void {
+
+    const cardType = $('#flashcardDiv').data('cardtype');
+
+    const solution = readSolution(cardType);
+
+    if (solution === null) {
+        alert("Sie können keine leere Lösung abgeben!");
+        return;
+    }
+
+    // console.warn(JSON.stringify(solution, null, 2));
 
     $.ajax({
         url: checkSolutionUrl,
-        method: 'PUT',
+        method: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(solution),
         dataType: 'json',
-        success: (result: CorrectionResult) => {
-            console.info(JSON.stringify(result, null, 2));
-
-            $('#translation_input').removeClass(result.correct ? 'invalid' : 'valid').addClass(result.correct ? 'valid' : 'invalid');
+        beforeSend: (xhr) => {
+            const token = $('input[name="csrfToken"]').val() as string;
+            xhr.setRequestHeader("Csrf-Token", token)
         },
+        success: onCorrectionSuccess,
         error: (jqXHR) => {
             console.error(jqXHR.responseText);
         }
@@ -64,21 +118,8 @@ function checkSolution(): void {
 
 }
 
-function nextFlashcard(): void {
-    console.error("TODO: next flashcard...");
-    updateHtml();
-}
-
 $(() => {
-    const startLearningBtn = $('#startLearningBtn');
-    const loadFlashcardsUrl = startLearningBtn.data('href');
-    startLearningBtn.remove();
-
-    checkSolutionUrl = $('#checkSolutionBtn').data('href');
-
-    $.ajax({
-        url: loadFlashcardsUrl,
-        success: onLoadFlashcardsSuccess,
-        error: onLoadFlashcardsError
-    });
+    correctionTextPar = $('#correctionTextPar');
+    checkSolutionBtn = $('#checkSolutionBtn');
+    checkSolutionUrl = checkSolutionBtn.data('href');
 });

@@ -42,9 +42,9 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
   def futurePwHashForUser(username: String): Future[Option[UserPassword]] = db.run(userPasswordsTQ.filter(_.username === username).result.headOption)
 
-  def futureSaveUser(user: User): Future[Boolean] = db.run(usersTQ += user) transform(_ == 1, identity)
+  def futureSaveUser(user: User): Future[Boolean] = db.run(usersTQ += user).transform(_ == 1, identity)
 
-  def savePwHash(userPassword: UserPassword): Future[Boolean] = db.run(userPasswordsTQ += userPassword) transform(_ == 1, identity)
+  def savePwHash(userPassword: UserPassword): Future[Boolean] = db.run(userPasswordsTQ += userPassword).transform(_ == 1, identity)
 
   def futureLanguageById(langId: Int): Future[Option[Language]] = db.run(languagesTQ.filter(_.id === langId).result.headOption)
 
@@ -73,12 +73,12 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
   }
 
   def activateLanguageForUser(user: User, language: Language): Future[Boolean] =
-    db.run(userLearnsLanguageTQ += (user.username, language.id)) transform(_ == 1, identity)
+    db.run(userLearnsLanguageTQ += (user.username, language.id)).transform(_ == 1, identity)
 
   def deactivateLanguageForUser(user: User, language: Language): Future[Boolean] =
     db.run(userLearnsLanguageTQ.filter {
       ull => ull.username === user.username && ull.langId === language.id
-    }.delete) transform(_ == 1, identity)
+    }.delete).transform(_ == 1, identity)
 
   def futureCollectionsForLanguage(language: Language): Future[Seq[Collection]] =
     db.run(collectionsTQ.filter(_.langId === language.id).result)
@@ -86,18 +86,60 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
   def futureCollectionById(language: Language, collId: Int): Future[Option[Collection]] =
     db.run(collectionsTQ.filter(coll => coll.langId === language.id && coll.id === collId).result.headOption)
 
+  def futureFlashcardById(collection: Collection, cardId: Int): Future[Option[Flashcard]] =
+    db.run(flashcardsTQ.filter {
+      fc => fc.id === cardId && fc.collId === collection.id && fc.langId === collection.langId
+    }.result.headOption)
+
+  def futureChoiceAnswersForFlashcard(flashcard: Flashcard): Future[Seq[ChoiceAnswer]] =
+    db.run(choiceAnswersTQ.filter {
+      ca => ca.cardId === flashcard.id && ca.collId === flashcard.collId && ca.langId === flashcard.langId
+    }.result)
+
   def futureFlashcardCountForCollection(collection: Collection): Future[Int] =
     db.run(flashcardsTQ.filter(fc => fc.collId === collection.id && fc.langId === collection.langId).size.result)
 
-  def futureFlashcardsToLearnCount(user: User, collection: Collection): Future[Int] =
-    db.run(flashcardsToLearnTQ.filter {
-      fctl => fctl.collId === collection.id && fctl.langId === collection.langId && fctl.username === user.username
-    }.size.result)
+  def futureFlashcardsToLearnCount(user: User, collection: Collection): Future[Int] = db.run(flashcardsToLearnTQ.filter {
+    fctl => fctl.collId === collection.id && fctl.langId === collection.langId && fctl.username === user.username
+  }.size.result)
+
+  def futureMaybeIdentifierNextFlashcardToLearn(user: User, collection: Collection): Future[Option[FlashcardIdentifier]] =
+    db.run(
+      flashcardsToLearnTQ
+        .filter { fctl => fctl.collId === collection.id && fctl.langId === collection.langId && fctl.username === user.username }
+        .result
+        .headOption
+        .map {
+          case None                              => None
+          case Some((cardId, collId, langId, _)) => Some(FlashcardIdentifier(cardId, collId, langId))
+        }
+    )
+
+  def futureFlashcardsToLearn(user: User, collection: Collection): Future[Seq[Flashcard]] = {
+    db.run(flashcardsToLearnTQ
+      .filter { fctl => fctl.collId === collection.id && fctl.langId === collection.langId && fctl.username === user.username }
+      .join(flashcardsTQ)
+      .on { case (fctl, fc) => fctl.cardId === fc.id && fctl.collId === fc.collId && fctl.langId === fc.langId }
+      .map { case (fctl, fc) => fc }
+      .result)
+  }
 
   def futureFlashcardsToRepeatCount(user: User, collection: Collection): Future[Int] =
     db.run(flashcardsToRepeatTQ.filter {
       fctr => fctr.collId === collection.id && fctr.langId === collection.langId && fctr.username === user.username
     }.size.result)
+
+  def futureInsertOrUpdateUserAnswer(user: User, flashcard: Flashcard, correct: Boolean): Future[Boolean] = {
+    val query: DBIO[Int] =
+      sqlu"""
+INSERT INTO users_answered_flashcards (username, card_id, coll_id, lang_id, bucket_id, date_answered, correct, tries)
+VALUE (${user.username}, ${flashcard.id}, ${flashcard.collId}, ${flashcard.langId}, 1, NOW(), $correct, 1)
+ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
+                        bucket_id = IF($correct, bucket_id + 1, bucket_id),
+                        tries = IF($correct, tries, tries + 1);"""
+
+    db.run(query).transform(_ == 1, identity)
+  }
 
   // Column types
 

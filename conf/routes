@@ -1,28 +1,31 @@
 # Routes
 
-GET         /                                                    controllers.HomeController.index
+GET         /                                                                         controllers.HomeController.index
 
 # User management
 
-GET         /registerForm                                        controllers.LoginController.registerForm
-POST        /register                                            controllers.LoginController.register
-GET         /loginForm                                           controllers.LoginController.loginForm
-POST        /login                                               controllers.LoginController.login
-GET         /logout                                              controllers.LoginController.logout
+GET         /registerForm                                                             controllers.LoginController.registerForm
+POST        /register                                                                 controllers.LoginController.register
+GET         /loginForm                                                                controllers.LoginController.loginForm
+POST        /login                                                                    controllers.LoginController.login
+GET         /logout                                                                   controllers.LoginController.logout
 
 # Languages
-GET         /languages                                           controllers.HomeController.allLanguages
-GET         /languages/:langId                                   controllers.HomeController.language(langId: Int)
+GET         /languages                                                                controllers.HomeController.allLanguages
+GET         /languages/:langId                                                        controllers.HomeController.language(langId: Int)
 
-GET         /selectLanguage/:langId                              controllers.HomeController.selectLanguage(langId: Int)
-GET         /deselectLanguage/:langId                            controllers.HomeController.deselectLanguage(langId: Int)
+GET         /selectLanguage/:langId                                                   controllers.HomeController.selectLanguage(langId: Int)
+GET         /deselectLanguage/:langId                                                 controllers.HomeController.deselectLanguage(langId: Int)
 
-GET         /languages/:langId/collections/:collId               controllers.HomeController.collection(langId: Int, collId: Int)
+GET         /languages/:langId/collections/:collId                                    controllers.HomeController.collection(langId: Int, collId: Int)
 
+GET         /languages/:langId/collections/:collId/startLearning                      controllers.HomeController.startLearning(langId: Int, collId: Int)
+GET         /languages/:langId/collections/:collId/cards/:cardId/learn                controllers.HomeController.learn(langId: Int, collId: Int, cardId:Int)
 
-GET         /languages/:langId/collections/:collId/learn         controllers.HomeController.learn(langId: Int, collId: Int)
-GET         /languages/:langId/collections/:collId/repeat        controllers.HomeController.repeat(langId: Int, collId: Int)
+GET         /languages/:langId/collections/:collId/startRepeating                     controllers.HomeController.startRepeating(langId: Int, collId: Int)
+GET         /languages/:langId/collections/:collId/cards/:cardId/repeat               controllers.HomeController.repeat(langId: Int, collId: Int, cardId:Int)
 
+POST        /languages/:langId/collections/:collId/cards/:cardId/checkSolution        controllers.HomeController.checkSolution(langId:Int, collId: Int, cardId: Int)
 
 # Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file                                        controllers.Assets.versioned(path="/public", file: Asset)
+GET         /assets/*file                                                             controllers.Assets.versioned(path="/public", file: Asset)

@@ -32,11 +32,10 @@ class LoginController @Inject()(cc: ControllerComponents, val dbConfigProvider: 
 
       tableDefs.futureSaveUser(newUser) flatMap {
         case false => Future(BadRequest("Could not save user!"))
-        case true  =>
-          tableDefs.savePwHash(pwHash) map {
-            _ => Redirect(routes.LoginController.loginForm())
-            //              Ok(views.html.registered.render(credentials.username))
-          }
+        case true  => tableDefs.savePwHash(pwHash) map {
+          _ => Redirect(routes.LoginController.loginForm())
+          //              Ok(views.html.registered.render(credentials.username))
+        }
       }
     }
 
@@ -51,20 +50,17 @@ class LoginController @Inject()(cc: ControllerComponents, val dbConfigProvider: 
 
     val onRead: LoginFormValues => Future[Result] = { credentials =>
 
-      val futureUserAndPwHash: Future[(Option[User], Option[UserPassword])] = for {
-        user <- tableDefs.futureUserByUserName(credentials.username)
-        pwHash <- tableDefs.futurePwHashForUser(credentials.username)
-      } yield (user, pwHash)
-
-      futureUserAndPwHash map {
-        case (None, _)                  => Redirect(controllers.routes.LoginController.register())
-        case (Some(_), None)            => BadRequest("Cannot change password!")
-        case (Some(user), Some(pwHash)) =>
-          if (credentials.password isBcrypted pwHash.pwHash) {
-            Redirect(controllers.routes.HomeController.index()).withSession(idName -> user.username)
-          } else {
-            Ok(views.html.forms.loginForm(FormMappings.loginValuesForm.fill(credentials)))
-          }
+      tableDefs.futureUserByUserName(credentials.username) flatMap {
+        case None       => Future(Redirect(controllers.routes.LoginController.registerForm()))
+        case Some(user) => tableDefs.futurePwHashForUser(credentials.username) map {
+          case None               => BadRequest("Cannot change password!")
+          case Some(userPassword) =>
+            if (credentials.password isBcrypted userPassword.pwHash) {
+              Redirect(controllers.routes.HomeController.index()).withSession(idName -> user.username)
+            } else {
+              Ok(views.html.forms.loginForm(FormMappings.loginValuesForm.fill(credentials)))
+            }
+        }
       }
     }
 
