@@ -10,8 +10,7 @@ services:
       - MYSQL_ROOT_PASSWORD=12344321
 
   wuekabel_server:
-    build: .
-    image: wuekabel
+    image: beyselein/wuekabel
     ports:
       - 9090:9000
     tty: true
