@@ -29,6 +29,28 @@ values ('first_user', '$2a$10$6loikDKMzBkdP1HG33BeheyhF7e1.gNBx3mM1CiePRg2AaicJm
        ('second_user', '$2a$10$Mjaar2EAS0olPjsWRNozcuEsST/IMhgt.iPJX9qBCDoBLmyv/WaSq'),
        ('third_user', '$2a$10$hQjCkndxdP7185BRjM8fJuFLr0UrySpyN4/dKhrjxr.9dAcMRqha.');
 
+-- Courses
+
+create table if not exists courses
+(
+  id   varchar(50) primary key,
+  name varchar(100) not null
+);
+
+-- Users <-> Courses
+
+create table if not exists users_in_courses
+(
+  username  varchar(50),
+  course_id varchar(50),
+
+  primary key (username, course_id),
+  foreign key (username) references users (username)
+    on update cascade on delete cascade,
+  foreign key (course_id) references courses (id)
+    on update cascade on delete cascade
+);
+
 -- Language
 
 create table if not exists languages
@@ -208,6 +230,10 @@ drop table if exists collections;
 drop table if exists user_learns_language;
 
 drop table if exists languages;
+
+drop table if exists users_in_courses;
+
+drop table if exists courses;
 
 drop table if exists user_passwords;
 

@@ -10,6 +10,9 @@ GET         /loginForm                                                          
 POST        /login                                                                         controllers.LoginController.login
 GET         /logout                                                                        controllers.LoginController.logout
 
++ nocsrf
+POST        /lti                                                                           controllers.LoginController.lti
+
 # Languages
 
 GET         /languages                                                                     controllers.HomeController.allLanguages
@@ -20,7 +23,7 @@ GET         /deselectLanguage/:langId                                           
 
 GET         /languages/:langId/collections/:collId                                         controllers.HomeController.collection(langId: Int, collId: Int)
 
-GET         /languages/:langId/collections/:collId/startLearning/:isRepeating                           controllers.HomeController.startLearning(langId: Int, collId: Int, isRepeating: Boolean)
+GET         /languages/:langId/collections/:collId/startLearning/:isRepeating              controllers.HomeController.startLearning(langId: Int, collId: Int, isRepeating: Boolean)
 
 GET         /languages/:langId/collections/:collId/cards/:cardId/learn/:isRepeating        controllers.HomeController.learn(langId: Int, collId: Int, cardId:Int, isRepeating: Boolean)
 

@@ -12,6 +12,10 @@ final case class User(username: String, isAdmin: Boolean = false)
 
 final case class UserPassword(username: String, pwHash: String)
 
+// Course
+
+final case class Course(id: String, name: String)
+
 // Languages and Collections
 
 final case class Language(id: Int, name: String)
