@@ -11,6 +11,7 @@ POST        /login                                                              
 GET         /logout                                                                   controllers.LoginController.logout
 
 # Languages
+
 GET         /languages                                                                controllers.HomeController.allLanguages
 GET         /languages/:langId                                                        controllers.HomeController.language(langId: Int)
 
@@ -26,6 +27,24 @@ GET         /languages/:langId/collections/:collId/startRepeating               
 GET         /languages/:langId/collections/:collId/cards/:cardId/repeat               controllers.HomeController.repeat(langId: Int, collId: Int, cardId:Int)
 
 POST        /languages/:langId/collections/:collId/cards/:cardId/checkSolution        controllers.HomeController.checkSolution(langId:Int, collId: Int, cardId: Int)
+
+
+# Admin routes
+GET         /admin                                                                    controllers.AdminController.index
+
+POST        /newLanguage                                                              controllers.AdminController.newLanguage
+
+GET         /languages/:langId/admin                                                  controllers.AdminController.languageAdmin(langId: Int)
+
+POST        /languages/:langId/newCollection                                          controllers.AdminController.newCollection(langId: Int)
+
+GET         /languages/:langId/collections/:collId/admin                              controllers.AdminController.collectionAdmin(langId: Int, collId: Int)
+
+POST        /languages/:langId/collection/:collId/uploadCardsFile                     controllers.AdminController.uploadCardsFile(langId: Int, collId: Int)
+
+#GET         /languages/:langId/collections/:collId/importForm                         controllers.AdminController.importForm(langId: Int, collId: Int)
+#GET         /languages/:langId/collections/:collId/import                             controllers.AdminController.performImport(langId: Int, collId: Int)
+
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                                                             controllers.Assets.versioned(path="/public", file: Asset)

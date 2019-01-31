@@ -8,13 +8,13 @@ import scala.collection.immutable
 
 // User and password
 
-final case class User(username: String, name: String)
+final case class User(username: String, isAdmin: Boolean = false)
 
 final case class UserPassword(username: String, pwHash: String)
 
 // Languages and Collections
 
-final case class Language(id: Int, shortName: String, name: String)
+final case class Language(id: Int, name: String)
 
 final case class Collection(id: Int, langId: Int, name: String)
 
@@ -52,9 +52,17 @@ case object Correctness extends PlayEnum[Correctness] {
 
 }
 
-final case class FlashcardIdentifier(cardId: Int, collId: Int, langId: Int)
+final case class FlashcardIdentifier(cardId: Int, collId: Int, langId: Int) {
 
-final case class Flashcard(id: Int, collId: Int, langId: Int, cardType: CardType, question: String, meaning: Option[String])
+  def asString = s"$langId.$collId.$cardId"
+
+}
+
+final case class Flashcard(id: Int, collId: Int, langId: Int, cardType: CardType, question: String, meaning: Option[String]) {
+
+  def identifier: FlashcardIdentifier = FlashcardIdentifier(id, collId, langId)
+
+}
 
 final case class ChoiceAnswer(id: Int, cardId: Int, collId: Int, langId: Int, answer: String, correctness: Correctness)
 

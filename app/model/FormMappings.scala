@@ -6,7 +6,9 @@ import Consts._
 
 final case class LoginFormValues(username: String, password: String)
 
-final case class RegisterFormValues(username: String, name: String, pw: String, pwRepeat: String)
+final case class RegisterFormValues(username: String, pw: String, pwRepeat: String)
+
+final case class NewCollectionFormValues()
 
 object FormMappings {
 
@@ -20,10 +22,13 @@ object FormMappings {
   val registerValuesForm: Form[RegisterFormValues] = Form(
     mapping(
       usernameName -> nonEmptyText,
-      nameName -> nonEmptyText,
       pwName -> nonEmptyText,
       repeatPwName -> nonEmptyText
     )(RegisterFormValues.apply)(RegisterFormValues.unapply)
   )
+
+  val newLanguageValuesForm: Form[String] = Form(single(nameName -> nonEmptyText))
+
+  val newCollectionValuesForm: Form[String] = Form(single(nameName -> nonEmptyText))
 
 }

@@ -1,0 +1,15 @@
+@(field: Field, labelContent: String, options: Seq[String], inputWidth: Int = 12, isRequired: Boolean = false)
+
+@attributes = {
+@if(isRequired) { required }
+}
+
+<div class="input-field col s@inputWidth">
+    <select id="@field.id" name="@field.name" @attributes>
+        <option value="" disabled selected>Choose your option</option>
+        <option value="1">Option 1</option>
+        <option value="2">Option 2</option>
+        <option value="3">Option 3</option>
+    </select>
+    <label for="@field.id">@labelContent</label>
+</div>

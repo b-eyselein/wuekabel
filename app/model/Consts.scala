@@ -10,6 +10,8 @@ object Consts {
   val correctName    : String = "correct"
   val correctnessName: String = "correctness"
 
+  val excelFileName: String = "excelFile"
+
   val idName   : String = "id"
   val indexName: String = "index"
 

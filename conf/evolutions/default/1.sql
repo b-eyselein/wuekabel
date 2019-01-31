@@ -5,13 +5,13 @@
 create table if not exists users
 (
   username varchar(50) primary key,
-  name     varchar(50) not null
+  is_admin boolean not null default false
 );
 
-insert into users (username, name)
-values ('first_user', 'James Bond'),
-       ('second_user', 'Jason Bourne'),
-       ('third_user', 'Jack Bauer');
+insert into users (username, is_admin)
+values ('first_user', true),
+       ('second_user', true),
+       ('third_user', true);
 
 -- User passwords
 
@@ -33,15 +33,14 @@ values ('first_user', '$2a$10$6loikDKMzBkdP1HG33BeheyhF7e1.gNBx3mM1CiePRg2AaicJm
 
 create table if not exists languages
 (
-  id         int primary key,
-  short_name varchar(20) not null,
-  name       varchar(100) unique
+  id   int primary key auto_increment,
+  name varchar(100) unique
 );
 
-insert into languages (id, short_name, name)
-values (1, 'latin', 'Latein'),
-       (2, 'french', 'Französisch'),
-       (3, 'english', 'Englisch');
+insert into languages (id, name)
+values (1, 'Latein'),
+       (2, 'Französisch'),
+       (3, 'Englisch');
 
 
 -- Users <-> Languages
@@ -80,7 +79,7 @@ values (1, 1),
 
 create table if not exists collections
 (
-  id      int          not null,
+  id      int          not null auto_increment,
   lang_id int          not null,
   name    varchar(100) not null,
 
@@ -96,7 +95,7 @@ values (1, 1, 'Beispielsammlung');
 
 create table if not exists flashcards
 (
-  id              int                                                        not null,
+  id              int                                                        not null auto_increment,
   coll_id         int                                                        not null,
   lang_id         int                                                        not null,
   flash_card_type enum ('Vocable', 'Text', 'SingleChoice', 'MultipleChoice') not null default 'Vocable',
@@ -118,7 +117,7 @@ values (1, 1, 1, 'Vocable', 'pater', 'Vater'),
 
 create table if not exists choice_answers
 (
-  id          int                                   not null,
+  id          int                                   not null auto_increment,
   card_id     int                                   not null,
   coll_id     int                                   not null,
   lang_id     int                                   not null,

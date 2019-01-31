@@ -1,0 +1,54 @@
+@import model.{User, Language, Consts}
+
+@(user: User, languages: Seq[Language], newLanguageForm: Form[String])(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
+
+@title = @{
+    "Administrator"
+}
+
+@main(title, Some(user)) {
+    <section>
+        <h2 class="center-align">Sprachen</h2>
+
+        <hr>
+
+        @if(languages.nonEmpty) {
+
+            @for(languageGroup <- languages.grouped(2)) {
+                <div class="row">
+                @for(language <- languageGroup) {
+                    <div class="col m6">
+                        <a class="btn btn-large waves-effect waves-block blue" href="@routes.AdminController.languageAdmin(language.id)">@language.name</a>
+                    </div>
+                }
+                </div>
+            }
+
+        } else {
+            <h4 class="red-text">Es existieren noch keine Sprachen.</h4>
+
+            <br>
+        }
+
+        <hr>
+
+
+        <div class="row">
+            <div class="col s12">
+                <h4 class="center-align">Sprache erstellen</h4>
+
+                @helper.form(routes.AdminController.newLanguage) {
+
+                    @helper.CSRF.formField
+
+                    @myhelpers.input(newLanguageForm(Consts.nameName), labelContent = "Name", isRequired = true)
+
+                    <button class="btn btn-large waves-effect waves-block green">Sprache erstellen</button>
+
+                }
+            </div>
+        </div>
+
+    </section>
+
+}

@@ -46,6 +46,9 @@ libraryDependencies ++= Seq(
 
   // Betterfiles
   "com.github.pathikrit" %% "better-files" % "3.7.0",
+
+  "org.apache.poi" % "poi" % "4.0.1",
+  "org.apache.poi" % "poi-ooxml" % "4.0.1"
 )
 
 // Adds additional packages into Twirl

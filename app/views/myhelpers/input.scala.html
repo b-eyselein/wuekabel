@@ -2,10 +2,13 @@
         isRequired: Boolean = false, isReadOnly: Boolean = false)
 
 
-<div class="row">
-    <div class="input-field col s@inputWidth">
-        <input type="@fieldType" id="@field.id" name="@field.name" class="validate" placeholder="@labelContent"
-        @if(isRequired) { required }>
-        <label for="@field.id">@labelContent</label>
+    @attributes = {
+    @if(isRequired) { required } @if(isReadOnly) { readonly }
+    }
+
+    <div class="row">
+        <div class="input-field col s@inputWidth">
+            <input type="@fieldType" id="@field.id" name="@field.name" class="validate" placeholder="@labelContent" @attributes>
+            <label for="@field.id">@labelContent</label>
+        </div>
     </div>
-</div>

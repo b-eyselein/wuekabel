@@ -18,9 +18,19 @@ trait ControllerHelpers extends Secured {
   private def onNuSuchFlashcard(language: Language, collection: Collection, cardId: Int): Result =
     NotFound(s"Es gibt keine Karteikarte mit der ID $cardId für die Sammlung ${collection.name} für die Sprache ${language.name}")
 
-  protected def futureWithUserAndLanguage(langId: Int)(f: (User, Language) => Request[AnyContent] => Future[Result])
-                                       (implicit ec: ExecutionContext): EssentialAction =
-    futureWithUser { user =>
+  protected def withUserAndLanguage(adminRightsRequired: Boolean, langId: Int)(f: (User, Language) => Request[AnyContent] => Result)
+                                   (implicit ec: ExecutionContext): EssentialAction =
+    futureWithUser(adminRightsRequired) { user =>
+      implicit request =>
+        tableDefs.futureLanguageById(langId) map {
+          case None           => onNoSuchLanguage(langId)
+          case Some(language) => f(user, language)(request)
+        }
+    }
+
+  protected def futureWithUserAndLanguage(adminRightsRequired: Boolean, langId: Int)(f: (User, Language) => Request[AnyContent] => Future[Result])
+                                         (implicit ec: ExecutionContext): EssentialAction =
+    futureWithUser(adminRightsRequired) { user =>
       implicit request =>
         tableDefs.futureLanguageById(langId) flatMap {
           case None           => Future(onNoSuchLanguage(langId))
@@ -28,9 +38,20 @@ trait ControllerHelpers extends Secured {
         }
     }
 
-  protected def futureWithUserAndCollection(langId: Int, collId: Int)(f: (User, Language, Collection) => Request[AnyContent] => Future[Result])
-                                         (implicit ec: ExecutionContext): EssentialAction =
-    futureWithUserAndLanguage(langId) { (user, language) =>
+  protected def withUserAndCollection(adminRightsRequired: Boolean, langId: Int, collId: Int)(f: (User, Language, Collection) => Request[AnyContent] => Result)
+                                     (implicit ec: ExecutionContext): EssentialAction =
+    futureWithUserAndLanguage(adminRightsRequired, langId) { (user, language) =>
+      implicit request =>
+        tableDefs.futureCollectionById(language, collId) map {
+          case None             => onNoSuchCollection(language, collId)
+          case Some(collection) => f(user, language, collection)(request)
+        }
+    }
+
+
+  protected def futureWithUserAndCollection(adminRightsRequired: Boolean, langId: Int, collId: Int)(f: (User, Language, Collection) => Request[AnyContent] => Future[Result])
+                                           (implicit ec: ExecutionContext): EssentialAction =
+    futureWithUserAndLanguage(adminRightsRequired, langId) { (user, language) =>
       implicit request =>
         tableDefs.futureCollectionById(language, collId) flatMap {
           case None             => Future(onNoSuchCollection(language, collId))
@@ -38,10 +59,10 @@ trait ControllerHelpers extends Secured {
         }
     }
 
-  protected def withUserAndCompleteFlashcard(langId: Int, collId: Int, cardId: Int)
-                                          (f: (User, Language, Collection, CompleteFlashcard) => Request[AnyContent] => Result)
-                                          (implicit ec: ExecutionContext): EssentialAction =
-    futureWithUserAndCollection(langId, collId) { (user, language, collection) =>
+  protected def withUserAndCompleteFlashcard(adminRightsRequired: Boolean, langId: Int, collId: Int, cardId: Int)
+                                            (f: (User, Language, Collection, CompleteFlashcard) => Request[AnyContent] => Result)
+                                            (implicit ec: ExecutionContext): EssentialAction =
+    futureWithUserAndCollection(adminRightsRequired, langId, collId) { (user, language, collection) =>
       implicit request =>
         tableDefs.futureFlashcardById(collection, cardId) flatMap {
           case None            => Future(onNuSuchFlashcard(language, collection, cardId))
@@ -51,10 +72,10 @@ trait ControllerHelpers extends Secured {
         }
     }
 
-  protected def futureWithUserAndCompleteFlashcard(langId: Int, collId: Int, cardId: Int)
-                                                (f: (User, Language, Collection, CompleteFlashcard) => Request[AnyContent] => Future[Result])
-                                                (implicit ec: ExecutionContext): EssentialAction =
-    futureWithUserAndCollection(langId, collId) { (user, language, collection) =>
+  protected def futureWithUserAndCompleteFlashcard(adminRightsRequired: Boolean, langId: Int, collId: Int, cardId: Int)
+                                                  (f: (User, Language, Collection, CompleteFlashcard) => Request[AnyContent] => Future[Result])
+                                                  (implicit ec: ExecutionContext): EssentialAction =
+    futureWithUserAndCollection(adminRightsRequired, langId, collId) { (user, language, collection) =>
       implicit request =>
         tableDefs.futureFlashcardById(collection, cardId) flatMap {
           case None            => Future(onNuSuchFlashcard(language, collection, cardId))

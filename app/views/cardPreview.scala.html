@@ -1,0 +1,59 @@
+@import model.{User, CompleteFlashcard, CardType, Language, Collection}
+
+@(user: User, language: Language, collection: Collection, cards: Seq[CompleteFlashcard], readErrors: Seq[String])
+
+    @title = @{
+        "Vorschau importierte Karteikarten"
+    }
+
+    @main(title, Some(user)) {
+        @if(cards.nonEmpty) {
+
+            <div class="row">
+                <div class="col s12">
+                    <a href="@routes.AdminController.collectionAdmin(language.id, collection.id)" class="btn btn-large waves-effect waves-block green">
+                        Zurück zur Sammlung
+                    </a>
+                </div>
+            </div>
+
+            @for(completeCardGroup <- cards.grouped(2)) {
+                <div class="row">
+                @for(completeCard <- completeCardGroup) {
+                    <div class="col m6">
+                        <div class="card-panel">
+                            <p>
+                                @{
+                                    s"${completeCard.flashcard.langId}.${completeCard.flashcard.collId}.${completeCard.flashcard.id}"
+                                }: @completeCard.flashcard.question
+                            </p>
+
+                            @completeCard.flashcard.cardType match {
+                                case CardType.Vocable | CardType.Text => {
+                                    <p>Lösung: @completeCard.flashcard.meaning.getOrElse("")</p>
+                                }
+                                case CardType.SingleChoice | CardType.MultipleChoice => {
+                                    <hr>
+
+                                    @for(answer <- completeCard.choiceAnswers) {
+                                        <p><b>@if(answer.correctness != model.Correctness.Wrong) {
+                                            +
+                                        } else {
+                                            -
+                                        }</b>
+                                            @answer.answer
+                                        </p>
+                                    }
+                                }
+                            }
+
+                        </div>
+                    </div>
+                }
+                </div>
+            }
+
+        } else {
+            <p class="red-text">Konnte keine Karteikarten importieren!</p>
+        }
+    }

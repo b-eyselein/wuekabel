@@ -27,14 +27,13 @@ class LoginController @Inject()(cc: ControllerComponents, val dbConfigProvider: 
     }
 
     val onRead: RegisterFormValues => Future[Result] = { credentials =>
-      val newUser = User(credentials.username, credentials.name)
+      val newUser = User(credentials.username)
       val pwHash = UserPassword(credentials.username, credentials.pw.bcrypt)
 
       tableDefs.futureSaveUser(newUser) flatMap {
         case false => Future(BadRequest("Could not save user!"))
-        case true  => tableDefs.savePwHash(pwHash) map {
+        case true  => tableDefs.futureSavePwHash(pwHash) map {
           _ => Redirect(routes.LoginController.loginForm())
-          //              Ok(views.html.registered.render(credentials.username))
         }
       }
     }
