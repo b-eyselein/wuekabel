@@ -2,48 +2,47 @@
 
 @(user: User, language: Language, collection: Collection, flashcardCount: Int, toLearnCount: Int, toRepeatCount: Int)
 
-@title = {
-    Sammlung '@collection.name'
-}
+    @title = @{
+        s"Sammlung '${collection.name}'"
+    }
 
+    @main(title, Some(user)) {
+        <h2 class="center-align">@title</h2>
 
-@main(title.toString(), Some(user)) {
-    <h2 class="center-align">@title</h2>
+        <hr>
 
-    <hr>
+        <h5 class="center-align">Diese Sammlung enthält insgesamt @flashcardCount Karteikarten.</h5>
 
-    <h5 class="center-align">Diese Sammlung enthält insgesamt @flashcardCount Karteikarten.</h5>
+        <br>
 
-    <br>
-
-    <div class="row">
-        <div class="col s12">
-        @if(toLearnCount == 0) {
-            <a class="btn btn-large waves-effect waves-block white">
-                <span class="green-text">Sie haben alle Karteikarten gelernt.</span>
-            </a>
-        } else {
-            <a href="@routes.HomeController.startLearning(language.id, collection.id)"
-            class="btn btn-large waves-effect waves-block red">
-                Es existieren noch @toLearnCount neue Karteikarten.
-            </a>
-        }
+        <div class="row">
+            <div class="col s12">
+            @if(toLearnCount == 0) {
+                <a class="btn btn-large waves-effect waves-block white">
+                    <span class="green-text">Sie haben alle Karteikarten gelernt.</span>
+                </a>
+            } else {
+                <a href="@routes.HomeController.startLearning(language.id, collection.id, isRepeating = false)"
+                class="btn btn-large waves-effect waves-block red">
+                    Es existieren noch @toLearnCount neue Karteikarten.
+                </a>
+            }
+            </div>
         </div>
-    </div>
 
-    <div class="row">
-        <div class="col s12">
-        @if(toRepeatCount == 0) {
-            <a class="btn btn-large waves-effect waves-block white">
-                <span class="green-text">Sie haben alle Karteikarten wiederholt.</span>
-            </a>
-        } else {
-            <a href="@routes.HomeController.startRepeating(language.id, collection.id)"
-            class="btn btn-large waves-effect waves-block red">
-                Es existieren noch @toRepeatCount nicht wiederholte Karteikarten.
-            </a>
-        }
+        <div class="row">
+            <div class="col s12">
+            @if(toRepeatCount == 0) {
+                <a class="btn btn-large waves-effect waves-block white">
+                    <span class="green-text">Sie haben alle Karteikarten wiederholt.</span>
+                </a>
+            } else {
+                <a href="@routes.HomeController.startLearning(language.id, collection.id, isRepeating = true)"
+                class="btn btn-large waves-effect waves-block red">
+                    Es existieren noch @toRepeatCount nicht wiederholte Karteikarten.
+                </a>
+            }
+            </div>
         </div>
-    </div>
 
-}
+    }

@@ -63,14 +63,13 @@ function readSolution(cardType: string): Solution | null {
 function onCorrectionSuccess(result: CorrectionResult): void {
     // console.info(JSON.stringify(result, null, 2));
 
-    correctionTextPar.text('Ihre Lösung war ' + (result.correct ? '' : 'nicht ') + 'korrekt.');
+    correctionTextPar.text('Ihre Lösung war ' + (result.correct ? '' : 'nicht ') + 'korrekt.')
+        .removeClass(result.correct ? 'red-text' : 'green-text').addClass(result.correct ? 'green-text' : 'red-text');
+
+    checkSolutionBtn.prop('disabled', result.correct);
 
     if (result.correct) {
-        checkSolutionBtn.prop('disabled', true);
-
         $('#nextFlashcardBtn').removeClass('disabled');
-    } else {
-
     }
 
     switch (result.cardType) {

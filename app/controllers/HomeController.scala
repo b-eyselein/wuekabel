@@ -2,10 +2,9 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 import model._
-import play.api.libs.json.{JsError, JsSuccess}
 import play.api.mvc._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs: TableDefs)(implicit protected val ec: ExecutionContext)
@@ -64,48 +63,36 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
     }
 
 
-  def startLearning(langId: Int, collId: Int): EssentialAction =
+  def startLearning(langId: Int, collId: Int, isRepeating: Boolean): EssentialAction =
     futureWithUserAndCollection(adminRightsRequired = false, langId, collId) { (user, _, collection) =>
       implicit request =>
-        tableDefs.futureMaybeIdentifierNextFlashcardToLearn(user, collection) map {
+        val futureFlashcard = if (isRepeating)
+          tableDefs.futureMaybeIdentifierNextFlashcardToRepeat(user, collection)
+        else
+          tableDefs.futureMaybeIdentifierNextFlashcardToLearn(user, collection)
+
+        futureFlashcard map {
           case None             => Redirect(routes.HomeController.collection(langId, collId))
-          case Some(identifier) => Redirect(routes.HomeController.learn(identifier.langId, identifier.collId, identifier.cardId))
+          case Some(identifier) => Redirect(routes.HomeController.learn(identifier.langId, identifier.collId, identifier.cardId, isRepeating))
         }
     }
 
-  def learn(langId: Int, collId: Int, cardId: Int): EssentialAction =
+  def learn(langId: Int, collId: Int, cardId: Int, isRepeating: Boolean): EssentialAction =
     withUserAndCompleteFlashcard(adminRightsRequired = false, langId, collId, cardId) { (user, _, _, completeFlashcard) =>
-      implicit request => Ok(views.html.learn(user, completeFlashcard, isRepeating = false))
-    }
-
-  def startRepeating(langId: Int, collId: Int): EssentialAction =
-    futureWithUserAndCollection(adminRightsRequired = false, langId, collId) { (user, _, collection) =>
-      implicit request =>
-        tableDefs.futureMaybeIdentifierNextFlashcardToRepeat(user, collection) map {
-          case None             => Redirect(routes.HomeController.collection(langId, collId))
-          case Some(identifier) => Redirect(routes.HomeController.repeat(identifier.langId, identifier.collId, identifier.cardId))
-        }
-    }
-
-  def repeat(langId: Int, collId: Int, cardId: Int): EssentialAction =
-    withUserAndCompleteFlashcard(adminRightsRequired = false, langId, collId, cardId) { (user, _, _, completeFlashcard) =>
-      implicit request => Ok(views.html.learn(user, completeFlashcard, isRepeating = false))
+      implicit request => Ok(views.html.learn(user, completeFlashcard, isRepeating))
     }
 
   def checkSolution(langId: Int, collId: Int, cardId: Int): EssentialAction =
     futureWithUserAndCompleteFlashcard(adminRightsRequired = false, langId, collId, cardId) { (user, _, _, completeFlashcard) =>
       implicit request =>
-        request.body.asJson match {
-          case None       => ???
-          case Some(json) => JsonFormats.solutionFormat.reads(json) match {
-            case JsError(_)             => ???
-            case JsSuccess(solution, _) =>
-              val correctionResult = Corrector.correct(completeFlashcard, solution)
+        request.body.asJson flatMap (json => JsonFormats.solutionFormat.reads(json).asOpt) match {
+          case None           => Future(BadRequest("Could not read solution..."))
+          case Some(solution) =>
+            val correctionResult = Corrector.correct(completeFlashcard, solution)
 
-              tableDefs.futureInsertOrUpdateUserAnswer(user, completeFlashcard.flashcard, correctionResult.correct) map {
-                _ => Ok(JsonFormats.correctionResultWrites.writes(correctionResult))
-              }
-          }
+            tableDefs.futureInsertOrUpdateUserAnswer(user, completeFlashcard.flashcard, correctionResult.correct) map {
+              _ => Ok(JsonFormats.correctionResultWrites.writes(correctionResult))
+            }
         }
     }
 

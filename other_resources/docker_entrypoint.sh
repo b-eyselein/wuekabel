@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# TODO: wait for mysql db...
+# wait for mysql db startup completed ...
 while ! mysqladmin ping -h wuekabel_db --silent; do
     echo "Could not ping mysql server, waiting..."
     sleep 1

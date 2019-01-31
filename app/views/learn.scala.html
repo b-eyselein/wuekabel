@@ -37,9 +37,6 @@
                             <label for="translation_input">Übersetzung</label>
                         </div>
                     </div>
-
-                    <p id="correctionTextPar">&nbsp;</p>
-
                 }
                 case CardType.SingleChoice | CardType.MultipleChoice => {
                     @for(answer <- scala.util.Random.shuffle(completeFlashcard.choiceAnswers)) {
@@ -53,6 +50,8 @@
                 }
             }
 
+            <p id="correctionTextPar">&nbsp;</p>
+
         </section>
 
         <br>
@@ -62,12 +61,7 @@
             data-href="@routes.HomeController.checkSolution(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId, completeFlashcard.flashcard.id)">
                 Lösung testen
             </button>
-            <a
-                @if(isRepeating) {
-                    href="@routes.HomeController.startRepeating(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId)"
-                } else {
-                    href="@routes.HomeController.startLearning(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId)"
-                }
+            <a href="@routes.HomeController.startLearning(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId, isRepeating)"
             id="nextFlashcardBtn" class="btn btn-large waves-effect blue disabled">Weiter</a>
         </div>
     }

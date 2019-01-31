@@ -5,7 +5,7 @@ services:
     image: mariadb
     restart: always
     volumes:
-      - ./conf/create_all.sql:/docker-entrypoint-initdb.d/00_create_all.sql
+      - ./other_resources/create_all.sql:/docker-entrypoint-initdb.d/00_create_all.sql
     environment:
       - MYSQL_ROOT_PASSWORD=12344321
 

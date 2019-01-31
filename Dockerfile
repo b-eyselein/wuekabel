@@ -8,7 +8,7 @@ ADD --chown=wuekabel:wuekabel target/universal/wuekabel.tgz /home/wuekabel/
 
 WORKDIR /home/wuekabel/wuekabel
 
-COPY --chown=wuekabel:wuekabel conf/docker_entrypoint.sh .
+COPY --chown=wuekabel:wuekabel other_resources/docker_entrypoint.sh .
 
 EXPOSE 9000
 
