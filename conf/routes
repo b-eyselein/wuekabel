@@ -24,10 +24,7 @@ GET         /deselectLanguage/:langId                                           
 GET         /languages/:langId/collections/:collId                                         controllers.HomeController.collection(langId: Int, collId: Int)
 
 GET         /languages/:langId/collections/:collId/startLearning/:isRepeating              controllers.HomeController.startLearning(langId: Int, collId: Int, isRepeating: Boolean)
-
 GET         /languages/:langId/collections/:collId/cards/:cardId/learn/:isRepeating        controllers.HomeController.learn(langId: Int, collId: Int, cardId:Int, isRepeating: Boolean)
-
-#GET         /languages/:langId/collections/:collId/cards/:cardId/repeat               controllers.HomeController.repeat(langId: Int, collId: Int, cardId:Int)
 
 POST        /languages/:langId/collections/:collId/cards/:cardId/checkSolution             controllers.HomeController.checkSolution(langId:Int, collId: Int, cardId: Int)
 
@@ -44,10 +41,6 @@ POST        /languages/:langId/newCollection                                    
 GET         /languages/:langId/collections/:collId/admin                                   controllers.AdminController.collectionAdmin(langId: Int, collId: Int)
 
 POST        /languages/:langId/collection/:collId/uploadCardsFile                          controllers.AdminController.uploadCardsFile(langId: Int, collId: Int)
-
-#GET         /languages/:langId/collections/:collId/importForm                         controllers.AdminController.importForm(langId: Int, collId: Int)
-#GET         /languages/:langId/collections/:collId/import                             controllers.AdminController.performImport(langId: Int, collId: Int)
-
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                                                                  controllers.Assets.versioned(path="/public", file: Asset)

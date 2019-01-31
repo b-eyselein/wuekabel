@@ -16,29 +16,28 @@ import scala.language.postfixOps
 class LoginController @Inject()(cc: ControllerComponents, val dbConfigProvider: DatabaseConfigProvider, val tableDefs: TableDefs)(implicit ec: ExecutionContext)
   extends AbstractController(cc) with HasDatabaseConfigProvider[JdbcProfile] with play.api.i18n.I18nSupport {
 
-  def lti: Action[AnyContent] = Action.async {
-    implicit request =>
-      request.body.asFormUrlEncoded match {
-        case None       => Future(BadRequest("Body did not contain awaited values..."))
-        case Some(data) =>
+  def lti: Action[AnyContent] = Action.async { implicit request =>
+    request.body.asFormUrlEncoded match {
+      case None       => Future(BadRequest("Body did not contain awaited values..."))
+      case Some(data) =>
 
-          def onError: Form[LtiFormValues] => Future[Result] = { formWithErrors =>
-            formWithErrors.errors.foreach(println)
-            Future(BadRequest("The form was not valid!"))
-          }
+        def onError: Form[LtiFormValues] => Future[Result] = { formWithErrors =>
+          formWithErrors.errors.foreach(println)
+          Future(BadRequest("The form was not valid!"))
+        }
 
-          def onRead: LtiFormValues => Future[Result] = { ltiFormValues =>
+        def onRead: LtiFormValues => Future[Result] = { ltiFormValues =>
 
-            for {
-              user <- selectOrInsertUser(ltiFormValues.username)
-              course <- selectOrInsertCourse(ltiFormValues.courseIdentifier, ltiFormValues.courseName)
-              _ <- selectOrInsertUserInCourse(user, course)
-            } yield Redirect(routes.HomeController.index()).withSession(idName -> user.username)
+          for {
+            user <- selectOrInsertUser(ltiFormValues.username)
+            course <- selectOrInsertCourse(ltiFormValues.courseIdentifier, ltiFormValues.courseName)
+            _ <- selectOrInsertUserInCourse(user, course)
+          } yield Redirect(routes.HomeController.index()).withSession(idName -> user.username)
 
-          }
+        }
 
-          FormMappings.ltiValuesForm.bindFromRequest().fold(onError, onRead)
-      }
+        FormMappings.ltiValuesForm.bindFromRequest().fold(onError, onRead)
+    }
   }
 
   private def selectOrInsertUser(username: String): Future[User] = tableDefs.futureUserByUserName(username) flatMap {
