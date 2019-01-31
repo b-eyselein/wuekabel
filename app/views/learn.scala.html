@@ -1,6 +1,7 @@
-@import model.{CardType, CompleteFlashcard, User}
+@import model.{CardType, CompleteFlashcard, User, UserAnsweredFlashcard}
 
-@(user: User, completeFlashcard: CompleteFlashcard, isRepeating: Boolean)(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
+@(user: User, completeFlashcard: CompleteFlashcard, oldAnswer: Option[UserAnsweredFlashcard], isRepeating: Boolean)(
+        implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
 
     @title = @{
         "Lernen"
@@ -22,47 +23,52 @@
 
         @helper.CSRF.formField
 
-        <section id="flashcardDiv" data-cardtype="@completeFlashcard.flashcard.cardType">
-            <div class="card-panel">
-                <h4 class="center-align">@completeFlashcard.flashcard.question</h4>
-            </div>
+        <div class="row">
+            <div class="col s12 l8 offset-l2" id="flashcardDiv" data-cardtype="@completeFlashcard.flashcard.cardType">
+                <div class="card-panel">
+                    <h4 class="center-align">@completeFlashcard.flashcard.question</h4>
+                </div>
 
-            <br>
+                <p class="center-align">
+                    <code>
+                        Stapel: @oldAnswer.map(_.bucketId).getOrElse("-"), Versuch: <span id="triesSpan">@oldAnswer.map(_.tries).getOrElse(0)</span></code>
+                </p>
 
-            @completeFlashcard.flashcard.cardType match {
-                case CardType.Vocable | CardType.Text => {
-                    <div class="row">
-                        <div class="input-field col s12">
-                            <input type="text" id="translation_input">
-                            <label for="translation_input">Übersetzung</label>
+                @completeFlashcard.flashcard.cardType match {
+                    case CardType.Vocable | CardType.Text => {
+                        <div class="row">
+                            <div class="input-field col s12">
+                                <input type="text" id="translation_input">
+                                <label for="translation_input">Übersetzung</label>
+                            </div>
                         </div>
-                    </div>
-                }
-                case CardType.SingleChoice | CardType.MultipleChoice => {
-                    @for(answer <- scala.util.Random.shuffle(completeFlashcard.choiceAnswers)) {
-                        <p>
-                            <label for="choice_@answer.id">
-                                <input id="choice_@answer.id" name="choice_answers" type="@choiceInputType" data-choiceid="@answer.id">
-                                <span>@answer.answer</span>
-                            </label>
-                        </p>
+                    }
+                    case CardType.SingleChoice | CardType.MultipleChoice => {
+                        @for(answer <- scala.util.Random.shuffle(completeFlashcard.choiceAnswers)) {
+                            <p>
+                                <label for="choice_@answer.id">
+                                    <input id="choice_@answer.id" name="choice_answers" type="@choiceInputType" data-choiceid="@answer.id">
+                                    <span>@answer.answer</span>
+                                </label>
+                            </p>
+                        }
                     }
                 }
-            }
 
-            <p id="correctionTextPar">&nbsp;</p>
+                <p id="correctionTextPar">&nbsp;</p>
 
-        </section>
+                <button class="btn btn-large waves-effect green" onclick="checkSolution();" id="checkSolutionBtn"
+                data-href="@routes.HomeController.checkSolution(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId, completeFlashcard.flashcard.id)">
+                    Lösung testen
+                </button>
+
+                <a href="@routes.HomeController.startLearning(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId, isRepeating)"
+                id="nextFlashcardBtn" class="btn btn-large waves-effect blue disabled">Weiter</a>
+
+            </div>
+        </div>
+
 
         <br>
-
-        <div class="row" id="btnsRow">
-            <button class="btn btn-large waves-effect green" onclick="checkSolution();" id="checkSolutionBtn"
-            data-href="@routes.HomeController.checkSolution(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId, completeFlashcard.flashcard.id)">
-                Lösung testen
-            </button>
-            <a href="@routes.HomeController.startLearning(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId, isRepeating)"
-            id="nextFlashcardBtn" class="btn btn-large waves-effect blue disabled">Weiter</a>
-        </div>
     }
 

@@ -41,6 +41,8 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
     db.run(query)
   }
 
+  // Queries - UserLearnsLanguage
+
   def futureUserLearnsLanguage(user: User, language: Language): Future[Boolean] = db.run(userLearnsLanguageTQ.filter {
     ull => ull.username === user.username && ull.langId === language.id
   }.result.headOption.map(_.isDefined))
@@ -62,6 +64,8 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
     db.run(userLearnsLanguageTQ.filter {
       ull => ull.username === user.username && ull.langId === language.id
     }.delete).transform(_ == 1, identity)
+
+  // Queries - FlashcardToLearn View
 
   def futureFlashcardsToLearnCount(user: User, collection: Collection): Future[Int] = db.run(flashcardsToLearnTQ.filter {
     fctl => fctl.collId === collection.id && fctl.langId === collection.langId && fctl.username === user.username
@@ -103,6 +107,13 @@ ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
 
     db.run(query).transform(_ == 1, identity)
   }
+
+  // Queries - UserAnsweredFlashcard
+
+  def futureUserAnswerForFlashcard(user: User, flashcard: Flashcard): Future[Option[UserAnsweredFlashcard]] =
+    db.run(usersAnsweredFlashcardsTQ.filter {
+      uaf => uaf.username === user.username && uaf.cardId === flashcard.id && uaf.collId === flashcard.collId && uaf.langId === flashcard.langId
+    }.result.headOption)
 
   // Column types
 

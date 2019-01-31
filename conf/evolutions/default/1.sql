@@ -90,12 +90,13 @@ create table if not exists buckets
   distance_days int not null
 );
 
+-- distance_days == 3 ^ (id - 1)
 insert into buckets (id, distance_days)
 values (1, 1),
        (2, 3),
-       (3, 10),
-       (4, 30),
-       (5, 90);
+       (3, 9),
+       (4, 27),
+       (5, 81);
 
 -- Flashcard collections
 

@@ -1,6 +1,7 @@
 package model
 
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 import enumeratum.{EnumEntry, PlayEnum}
 
@@ -74,4 +75,8 @@ final case class CompleteFlashcard(flashcard: Flashcard, choiceAnswers: Seq[Choi
 
 // User answered flashcard
 
-final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, langId: Int, bucketId: Int, dateAnswered: LocalDate, correct: Boolean, tries: Int)
+final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, langId: Int, bucketId: Int, dateAnswered: LocalDate, correct: Boolean, tries: Int) {
+
+  def isActive: Boolean = dateAnswered.until(LocalDate.now(), ChronoUnit.DAYS) < Math.pow(3, bucketId - 1)
+
+}

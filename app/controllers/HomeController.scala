@@ -1,5 +1,8 @@
 package controllers
 
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+
 import javax.inject.{Inject, Singleton}
 import model._
 import play.api.mvc._
@@ -78,8 +81,18 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
     }
 
   def learn(langId: Int, collId: Int, cardId: Int, isRepeating: Boolean): EssentialAction =
-    withUserAndCompleteFlashcard(adminRightsRequired = false, langId, collId, cardId) { (user, _, _, completeFlashcard) =>
-      implicit request => Ok(views.html.learn(user, completeFlashcard, isRepeating))
+    futureWithUserAndCompleteFlashcard(adminRightsRequired = false, langId, collId, cardId) { (user, _, _, completeFlashcard) =>
+      implicit request =>
+        val futureMaybeOldAnswer: Future[Option[UserAnsweredFlashcard]] = if (isRepeating) {
+          tableDefs.futureUserAnswerForFlashcard(user, completeFlashcard.flashcard)
+        } else Future.successful(None)
+
+
+        futureMaybeOldAnswer map { maybeOldAnswer =>
+          //          val oldAnswerIsActive = maybeOldAnswer.exists(_.isActive)
+          //          println(oldAnswerIsActive)
+          Ok(views.html.learn(user, completeFlashcard, maybeOldAnswer, isRepeating))
+        }
     }
 
   def checkSolution(langId: Int, collId: Int, cardId: Int): EssentialAction =
@@ -88,7 +101,7 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
         request.body.asJson flatMap (json => JsonFormats.solutionFormat.reads(json).asOpt) match {
           case None           => Future(BadRequest("Could not read solution..."))
           case Some(solution) =>
-            val correctionResult = Corrector.correct(completeFlashcard, solution)
+            val correctionResult: CorrectionResult = Corrector.correct(completeFlashcard, solution)
 
             tableDefs.futureInsertOrUpdateUserAnswer(user, completeFlashcard.flashcard, correctionResult.correct) map {
               _ => Ok(JsonFormats.correctionResultWrites.writes(correctionResult))
