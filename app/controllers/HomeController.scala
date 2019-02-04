@@ -83,15 +83,17 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
   def learn(langId: Int, collId: Int, cardId: Int, isRepeating: Boolean): EssentialAction =
     futureWithUserAndCompleteFlashcard(adminRightsRequired = false, langId, collId, cardId) { (user, _, _, completeFlashcard) =>
       implicit request =>
-        val futureMaybeOldAnswer: Future[Option[UserAnsweredFlashcard]] = if (isRepeating) {
-          tableDefs.futureUserAnswerForFlashcard(user, completeFlashcard.flashcard)
-        } else Future.successful(None)
+        val futureMaybeOldAnswer: Future[Option[UserAnsweredFlashcard]] =
+          tableDefs.futureUserAnswerForFlashcard(user, completeFlashcard)
 
 
         futureMaybeOldAnswer map { maybeOldAnswer =>
-          //          val oldAnswerIsActive = maybeOldAnswer.exists(_.isActive)
-          //          println(oldAnswerIsActive)
-          Ok(views.html.learn(user, completeFlashcard, maybeOldAnswer, isRepeating))
+          if (!isRepeating && maybeOldAnswer.isDefined) {
+            // TODO: Something went wrong, take next flashcard?
+            Redirect(routes.HomeController.startLearning(langId, collId, isRepeating))
+          } else {
+            Ok(views.html.learn(user, completeFlashcard, maybeOldAnswer, isRepeating))
+          }
         }
     }
 
@@ -101,10 +103,23 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
         request.body.asJson flatMap (json => JsonFormats.solutionFormat.reads(json).asOpt) match {
           case None           => Future(BadRequest("Could not read solution..."))
           case Some(solution) =>
-            val correctionResult: CorrectionResult = Corrector.correct(completeFlashcard, solution)
 
-            tableDefs.futureInsertOrUpdateUserAnswer(user, completeFlashcard.flashcard, correctionResult.correct) map {
-              _ => Ok(JsonFormats.correctionResultWrites.writes(correctionResult))
+            val futurePreviousTries: Future[Int] = tableDefs.futureUserAnswerForFlashcard(user, completeFlashcard) map {
+              case None                        => 0
+              case Some(userAnsweredFlashcard) => userAnsweredFlashcard.tries
+            }
+
+            futurePreviousTries flatMap { previousTries =>
+
+              if (previousTries >= 2) {
+                ???
+              } else {
+                val correctionResult: CorrectionResult = Corrector.correct(completeFlashcard, solution, previousTries)
+
+                tableDefs.futureInsertOrUpdateUserAnswer(user, completeFlashcard.flashcard, correctionResult.correct) map {
+                  _ => Ok(JsonFormats.correctionResultWrites.writes(correctionResult))
+                }
+              }
             }
         }
     }

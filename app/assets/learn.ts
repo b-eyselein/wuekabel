@@ -21,6 +21,8 @@ interface CorrectionResult {
     learnerSolution: Solution,
     operations: EditOperation[],
     answerSelection: AnswerSelectionResult
+    newTriesCount: number
+    maybeSampleSol: string | null
 }
 
 let correctionTextPar: JQuery<HTMLParagraphElement>;
@@ -61,16 +63,24 @@ function readSolution(cardType: string): Solution | null {
 }
 
 function onCorrectionSuccess(result: CorrectionResult): void {
-    // console.info(JSON.stringify(result, null, 2));
+    console.info(JSON.stringify(result, null, 2));
 
-    correctionTextPar.text('Ihre Lösung war ' + (result.correct ? '' : 'nicht ') + 'korrekt.')
-        .removeClass(result.correct ? 'red-text' : 'green-text').addClass(result.correct ? 'green-text' : 'red-text');
+    let correctionText = 'Ihre Lösung war ' + (result.correct ? '' : 'nicht ') + 'korrekt.';
 
-    checkSolutionBtn.prop('disabled', result.correct);
+    if ((result.newTriesCount >= 2) && (result.maybeSampleSol != null)) {
+        correctionText += ` Die korrekte Lösung lautet '<code>${result.maybeSampleSol}</code>'.`;
+    }
 
-    if (result.correct) {
+    correctionTextPar.html(correctionText).removeClass(result.correct ? 'red-text' : 'green-text').addClass(result.correct ? 'green-text' : 'red-text');
+
+    checkSolutionBtn.prop('disabled', result.correct || (result.newTriesCount >= 2));
+
+    if (result.correct || result.newTriesCount >= 2) {
         $('#nextFlashcardBtn').removeClass('disabled');
     }
+
+    $('#triesSpan').text(result.newTriesCount);
+
 
     switch (result.cardType) {
         case 'Vocable':

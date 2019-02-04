@@ -15,10 +15,14 @@ object Consts {
   val idName   : String = "id"
   val indexName: String = "index"
 
-  val meaningName: String = "meaning"
-  val missingName: String = "missing"
+  val learnerSolutionName: String = "learnerSolution"
 
-  val nameName: String = "name"
+  val maybeSampleSolName: String = "maybeSampleSol"
+  val meaningName       : String = "meaning"
+  val missingName       : String = "missing"
+
+  val nameName         : String = "name"
+  val newTriesCountName: String = "newTriesCount"
 
   val operationsName   : String = "operations"
   val operationTypeName: String = "operationType"
@@ -30,7 +34,6 @@ object Consts {
   val repeatPwName: String = "repeatPw"
 
   val selectedAnswersName: String = "selectedAnswers"
-  val learnerSolutionName: String = "learnerSolution"
 
   val triesName: String = "tries"
 

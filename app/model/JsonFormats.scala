@@ -30,18 +30,20 @@ object JsonFormats {
       (__ \ charName).writeNullable[Char]
     ) (unlift(EditOperation.unapply))
 
-  private val answerSelectionResultWrites: Writes[AnswerSelectionResult] = (
+  private implicit val answerSelectionResultWrites: Writes[AnswerSelectionResult] = (
     (__ \ wrongName).write[Seq[Int]] and
       (__ \ correctName).write[Seq[Int]] and
       (__ \ missingName).write[Seq[Int]]
     ) (unlift(AnswerSelectionResult.unapply))
 
-  val correctionResultWrites: Writes[CorrectionResult] = (
+  def correctionResultWrites: Writes[CorrectionResult] = (
     (__ \ correctName).write[Boolean] and
       (__ \ cardTypeName).write[CardType] and
       (__ \ learnerSolutionName).write[Solution](solutionFormat) and
       (__ \ operationsName).write[Seq[EditOperation]] and
-      (__ \ answerSelectionName).writeNullable[AnswerSelectionResult](answerSelectionResultWrites)
+      (__ \ answerSelectionName).write[Option[AnswerSelectionResult]] and
+      (__ \ newTriesCountName).write[Int] and
+      (__ \ maybeSampleSolName).write[Option[String]]
     ) (unlift(CorrectionResult.unapply))
 
 }

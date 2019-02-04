@@ -71,7 +71,21 @@ final case class Flashcard(id: Int, collId: Int, langId: Int, cardType: CardType
 
 final case class ChoiceAnswer(id: Int, cardId: Int, collId: Int, langId: Int, answer: String, correctness: Correctness)
 
-final case class CompleteFlashcard(flashcard: Flashcard, choiceAnswers: Seq[ChoiceAnswer])
+final case class CompleteFlashcard(flashcard: Flashcard, choiceAnswers: Seq[ChoiceAnswer]) {
+
+  def id: Int = flashcard.id
+
+  def collId: Int = flashcard.collId
+
+  def langId: Int = flashcard.langId
+
+  def cardType: CardType = flashcard.cardType
+
+  def question: String = flashcard.question
+
+  def meaning: Option[String] = flashcard.meaning
+
+}
 
 // User answered flashcard
 

@@ -110,7 +110,7 @@ ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
 
   // Queries - UserAnsweredFlashcard
 
-  def futureUserAnswerForFlashcard(user: User, flashcard: Flashcard): Future[Option[UserAnsweredFlashcard]] =
+  def futureUserAnswerForFlashcard(user: User, flashcard: CompleteFlashcard): Future[Option[UserAnsweredFlashcard]] =
     db.run(usersAnsweredFlashcardsTQ.filter {
       uaf => uaf.username === user.username && uaf.cardId === flashcard.id && uaf.collId === flashcard.collId && uaf.langId === flashcard.langId
     }.result.headOption)

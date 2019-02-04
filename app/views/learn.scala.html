@@ -12,7 +12,7 @@
     }
 
     @choiceInputType = @{
-        completeFlashcard.flashcard.cardType match {
+        completeFlashcard.cardType match {
             case CardType.SingleChoice => "radio"
             case CardType.MultipleChoice => "checkbox"
             case _ => ""
@@ -24,17 +24,17 @@
         @helper.CSRF.formField
 
         <div class="row">
-            <div class="col s12 l8 offset-l2" id="flashcardDiv" data-cardtype="@completeFlashcard.flashcard.cardType">
+            <div class="col s12 l8 offset-l2" id="flashcardDiv" data-cardtype="@completeFlashcard.cardType">
                 <div class="card-panel">
-                    <h4 class="center-align">@completeFlashcard.flashcard.question</h4>
+                    <h4 class="center-align">@completeFlashcard.question</h4>
                 </div>
 
                 <p class="center-align">
                     <code>
-                        Stapel: @oldAnswer.map(_.bucketId).getOrElse("-"), Versuch: <span id="triesSpan">@oldAnswer.map(_.tries).getOrElse(0)</span></code>
+                        Stapel: @oldAnswer.map(_.bucketId).getOrElse(1), Versuche: <span id="triesSpan">@oldAnswer.map(_.tries).getOrElse(0)</span></code>
                 </p>
 
-                @completeFlashcard.flashcard.cardType match {
+                @completeFlashcard.cardType match {
                     case CardType.Vocable | CardType.Text => {
                         <div class="row">
                             <div class="input-field col s12">
@@ -58,11 +58,11 @@
                 <p id="correctionTextPar">&nbsp;</p>
 
                 <button class="btn btn-large waves-effect green" onclick="checkSolution();" id="checkSolutionBtn"
-                data-href="@routes.HomeController.checkSolution(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId, completeFlashcard.flashcard.id)">
+                data-href="@routes.HomeController.checkSolution(completeFlashcard.langId, completeFlashcard.collId, completeFlashcard.id)">
                     Lösung testen
                 </button>
 
-                <a href="@routes.HomeController.startLearning(completeFlashcard.flashcard.langId, completeFlashcard.flashcard.collId, isRepeating)"
+                <a href="@routes.HomeController.startLearning(completeFlashcard.langId, completeFlashcard.collId, isRepeating)"
                 id="nextFlashcardBtn" class="btn btn-large waves-effect blue disabled">Weiter</a>
 
             </div>

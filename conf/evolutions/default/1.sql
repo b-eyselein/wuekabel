@@ -210,7 +210,7 @@ from flashcards f
                  on uaf.card_id = f.id and uaf.coll_id = f.coll_id and uaf.lang_id = f.lang_id
        join buckets b on uaf.bucket_id = b.id
 where datediff(now(), date_answered) >= b.distance_days
-   or uaf.correct = false;
+   or (uaf.correct = false and uaf.tries < 2);
 
 # --- !Downs
 

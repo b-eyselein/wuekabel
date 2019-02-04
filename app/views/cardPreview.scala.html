@@ -24,13 +24,13 @@
                         <div class="card-panel">
                             <p>
                                 @{
-                                    s"${completeCard.flashcard.langId}.${completeCard.flashcard.collId}.${completeCard.flashcard.id}"
-                                }: @completeCard.flashcard.question
+                                    s"${completeCard.langId}.${completeCard.collId}.${completeCard.id}"
+                                }: @completeCard.question
                             </p>
 
-                            @completeCard.flashcard.cardType match {
+                            @completeCard.cardType match {
                                 case CardType.Vocable | CardType.Text => {
-                                    <p>Lösung: @completeCard.flashcard.meaning.getOrElse("")</p>
+                                    <p>Lösung: @completeCard.meaning.getOrElse("")</p>
                                 }
                                 case CardType.SingleChoice | CardType.MultipleChoice => {
                                     <hr>
