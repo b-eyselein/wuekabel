@@ -1,8 +1,5 @@
 package controllers
 
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
-
 import javax.inject.{Inject, Singleton}
 import model._
 import model.persistence.TableDefs
@@ -82,10 +79,10 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
     }
 
   def learn(langId: Int, collId: Int, cardId: Int, isRepeating: Boolean): EssentialAction =
-    futureWithUserAndCompleteFlashcard(adminRightsRequired = false, langId, collId, cardId) { (user, _, _, completeFlashcard) =>
+    futureWithUserAndCompleteFlashcard(adminRightsRequired = false, langId, collId, cardId) { (user, _, _, flashcard) =>
       implicit request =>
         val futureMaybeOldAnswer: Future[Option[UserAnsweredFlashcard]] =
-          tableDefs.futureUserAnswerForFlashcard(user, completeFlashcard)
+          tableDefs.futureUserAnswerForFlashcard(user, flashcard)
 
 
         futureMaybeOldAnswer map { maybeOldAnswer =>
@@ -93,19 +90,19 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
             // TODO: Something went wrong, take next flashcard?
             Redirect(routes.HomeController.startLearning(langId, collId, isRepeating))
           } else {
-            Ok(views.html.learn(user, completeFlashcard, maybeOldAnswer, isRepeating))
+            Ok(views.html.learn(user, flashcard, maybeOldAnswer, isRepeating))
           }
         }
     }
 
   def checkSolution(langId: Int, collId: Int, cardId: Int): EssentialAction =
-    futureWithUserAndCompleteFlashcard(adminRightsRequired = false, langId, collId, cardId) { (user, _, _, completeFlashcard) =>
+    futureWithUserAndCompleteFlashcard(adminRightsRequired = false, langId, collId, cardId) { (user, _, _, flashcard) =>
       implicit request =>
         request.body.asJson flatMap (json => JsonFormats.solutionFormat.reads(json).asOpt) match {
           case None           => Future(BadRequest("Could not read solution..."))
           case Some(solution) =>
 
-            val futurePreviousTries: Future[Int] = tableDefs.futureUserAnswerForFlashcard(user, completeFlashcard) map {
+            val futurePreviousTries: Future[Int] = tableDefs.futureUserAnswerForFlashcard(user, flashcard) map {
               case None                        => 0
               case Some(userAnsweredFlashcard) => userAnsweredFlashcard.tries
             }
@@ -115,9 +112,9 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
               if (previousTries >= 2) {
                 ???
               } else {
-                val correctionResult: CorrectionResult = Corrector.correct(completeFlashcard, solution, previousTries)
+                val correctionResult: CorrectionResult = Corrector.correct(flashcard, solution, previousTries)
 
-                tableDefs.futureInsertOrUpdateUserAnswer(user, completeFlashcard.flashcard, correctionResult.correct) map {
+                tableDefs.futureInsertOrUpdateUserAnswer(user, flashcard, correctionResult.correct) map {
                   _ => Ok(JsonFormats.correctionResultWrites.writes(correctionResult))
                 }
               }

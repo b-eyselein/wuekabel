@@ -1,6 +1,6 @@
-@import model.{User, CompleteFlashcard, CardType, Language, Collection}
+@import model.{User, Flashcard, CardType, Language, Collection, WordFlashcard, TextFlashcard, BlanksFlashcard, ChoiceFlashcard}
 
-@(user: User, language: Language, collection: Collection, cards: Seq[CompleteFlashcard], readErrors: Seq[String])
+@(user: User, language: Language, collection: Collection, cards: Seq[Flashcard], readErrors: Seq[String])
 
 @title = @{
     "Vorschau importierte Karteikarten"
@@ -30,18 +30,28 @@
                     <div class="card-panel">
                         <p>
                             @{
-                                s"${completeCard.langId}.${completeCard.collId}.${completeCard.id}"
+                                s"${completeCard.langId}.${completeCard.collId}.${completeCard.cardId}"
                             }: @completeCard.question
                         </p>
 
-                        @completeCard.cardType match {
-                            case CardType.Vocable | CardType.Text | CardType.Blank => {
-                                <p>Lösung: @completeCard.meaning.getOrElse("")</p>
+                        @completeCard match {
+                            case vfc: WordFlashcard => {
+                                <p>Lösung: @vfc.meaning</p>
                             }
-                            case CardType.SingleChoice | CardType.MultipleChoice => {
+                            case tfc: TextFlashcard => {
+                                <p>Lösung: @tfc.meaning</p>
+                            }
+                            case bfc: BlanksFlashcard => {
                                 <hr>
 
-                                @for(answerGroup <- completeCard.choiceAnswers.grouped(2)) {
+                                @for(answer <- bfc.answers) {
+                                    <p>@answer.answer</p>
+                                }
+                            }
+                            case cfc: ChoiceFlashcard => {
+                                <hr>
+
+                                @for(answerGroup <- cfc.choiceAnswers.grouped(2)) {
                                     <div class="row">
                                     @for(answer <- answerGroup) {
                                         <div class="col m6 s12">

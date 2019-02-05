@@ -162,6 +162,20 @@ values (1, 4, 1, 1, 'Maskulinum', 'CORRECT'),
        (3, 5, 1, 1, 'Wörter auf -x sind meist weiblich', 'CORRECT'),
        (4, 5, 1, 1, 'Wörter auf -en sind immer neutrum', 'CORRECT');
 
+create table if not exists blanks_answers
+(
+  id      int  not null auto_increment,
+  card_id int  not null,
+  coll_id int  not null,
+  lang_id int  not null,
+
+  answer  text not null,
+
+  primary key (id, card_id, coll_id, lang_id),
+  foreign key (card_id, coll_id, lang_id) references flashcards (id, coll_id, lang_id)
+    on update cascade on delete cascade
+);
+
 -- User <-> Flashcard
 
 create table if not exists users_answered_flashcards
@@ -220,6 +234,8 @@ drop view if exists flashcards_to_learn;
 drop table if exists users_answered_flashcards;
 
 drop table if exists buckets;
+
+drop table if exists blanks_answers;
 
 drop table if exists choice_answers;
 

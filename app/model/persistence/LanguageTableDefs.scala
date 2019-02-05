@@ -8,6 +8,7 @@ import slick.lifted.{ForeignKeyQuery, PrimaryKey, ProvenShape}
 
 import scala.concurrent.{ExecutionContext, Future}
 
+
 trait LanguageTableDefs extends HasDatabaseConfigProvider[JdbcProfile] {
 
   protected val dbConfigProvider: DatabaseConfigProvider
@@ -25,6 +26,8 @@ trait LanguageTableDefs extends HasDatabaseConfigProvider[JdbcProfile] {
   protected val flashcardsTQ: TableQuery[FlashcardsTable] = TableQuery[FlashcardsTable]
 
   protected val choiceAnswersTQ: TableQuery[ChoiceAnswersTable] = TableQuery[ChoiceAnswersTable]
+
+  protected val blanksAnswersTQ: TableQuery[BlanksAnswersTable] = TableQuery[BlanksAnswersTable]
 
   // Queries - Language
 
@@ -54,37 +57,85 @@ trait LanguageTableDefs extends HasDatabaseConfigProvider[JdbcProfile] {
 
   // Queries - Flashcard
 
-  def futureFlashcardsForCollection(collection: Collection): Future[Seq[Flashcard]] =
-    db.run(flashcardsTQ.filter(fc => fc.collId === collection.id && fc.langId === collection.langId).result)
+  private def blanksAnswersForDbFlashcard(dbfc: DBFlashcard): Future[Seq[BlanksAnswer]] = {
+    val blanksAnswersForDbFlashcardQuery = blanksAnswersTQ.filter {
+      ba => ba.cardId === dbfc.cardId && ba.collId === dbfc.collId && ba.langId === dbfc.langId
+    }.result
 
-  def futureFlashcardById(collection: Collection, cardId: Int): Future[Option[Flashcard]] =
-    db.run(flashcardsTQ.filter {
+    db.run(blanksAnswersForDbFlashcardQuery)
+  }
+
+  private def choiceAnswersForDbFlashcard(dbfc: DBFlashcard): Future[Seq[ChoiceAnswer]] = {
+
+    val dbChoiceAnswersForDbFlashcardQuery = choiceAnswersTQ.filter {
+      ca => ca.cardId === dbfc.cardId && ca.collId === dbfc.collId && ca.langId === dbfc.langId
+    }.result
+
+    db.run(dbChoiceAnswersForDbFlashcardQuery)
+  }
+
+  def futureFlashcardsForCollection(collection: Collection): Future[Seq[Flashcard]] = {
+    val dbFlashcardsForFollQuery = flashcardsTQ.filter {
+      fc => fc.collId === collection.id && fc.langId === collection.langId
+    }.result
+
+    db.run(dbFlashcardsForFollQuery) flatMap { dbFlashcards: Seq[DBFlashcard] =>
+      Future.sequence(dbFlashcards map { dbFlashcard =>
+
+        for {
+          choiceAnswers <- choiceAnswersForDbFlashcard(dbFlashcard)
+          blanksAnswers <- blanksAnswersForDbFlashcard(dbFlashcard)
+        } yield PersistenceModels.dbFlashcardToFlashcard(DBCompleteFlashcard(dbFlashcard, choiceAnswers, blanksAnswers))
+
+      })
+    }
+  }
+
+  def futureFlashcardById(collection: Collection, cardId: Int): Future[Option[Flashcard]] = {
+    val dbFlashcardByIdQuery = flashcardsTQ.filter {
       fc => fc.id === cardId && fc.collId === collection.id && fc.langId === collection.langId
-    }.result.headOption)
+    }.result.headOption
+
+    db.run(dbFlashcardByIdQuery) flatMap {
+      case None                           => Future.successful(None)
+      case Some(dbFlashcard: DBFlashcard) =>
+        for {
+          choiceAnswersForDBFlashcard <- choiceAnswersForDbFlashcard(dbFlashcard)
+          blanksAnswersForDbFlashcard <- blanksAnswersForDbFlashcard(dbFlashcard)
+        } yield Some(PersistenceModels.dbFlashcardToFlashcard(DBCompleteFlashcard(dbFlashcard, choiceAnswersForDBFlashcard, blanksAnswersForDbFlashcard)))
+    }
+  }
 
   def futureChoiceAnswersForFlashcard(flashcard: Flashcard): Future[Seq[ChoiceAnswer]] =
     db.run(choiceAnswersTQ.filter {
-      ca => ca.cardId === flashcard.id && ca.collId === flashcard.collId && ca.langId === flashcard.langId
+      ca => ca.cardId === flashcard.cardId && ca.collId === flashcard.collId && ca.langId === flashcard.langId
     }.result)
 
   def futureFlashcardCountForCollection(collection: Collection): Future[Int] =
     db.run(flashcardsTQ.filter(fc => fc.collId === collection.id && fc.langId === collection.langId).size.result)
 
 
-  def futureInsertCompleteFlashcard(completeFlashcard: CompleteFlashcard): Future[CompleteFlashcard] =
-    futureInsertFlashcard(completeFlashcard.flashcard) flatMap { flashcard =>
+  def futureInsertCompleteFlashcard(completeFlashcard: Flashcard): Future[Boolean] = {
+    val dbCompleteFlashcard = PersistenceModels.flashcardToDbFlashcard(completeFlashcard)
 
-      val futureSavedAnswers = Future.sequence(completeFlashcard.choiceAnswers.map { choiceAnswer =>
-        futureInsertChoiceAnswer(choiceAnswer.copy(cardId = flashcard.id))
+    futureInsertFlashcard(dbCompleteFlashcard.flashcard) flatMap { dbFlashcard =>
+
+      val futureSavedChoiceAnswers = Future.sequence(dbCompleteFlashcard.choiceAnswers.map { dbChoiceAnswer =>
+        futureInsertChoiceAnswer(dbChoiceAnswer.copy(cardId = dbFlashcard.cardId))
       })
 
-      futureSavedAnswers.map {
-        savedAnswers => CompleteFlashcard(flashcard, savedAnswers)
+      val futureSavedBlanksAnswers = Future.sequence(dbCompleteFlashcard.blanksAnswers.map { dbBlanksAnswer =>
+        futureInsertBlanksAnswer(dbBlanksAnswer.copy(cardId = dbFlashcard.cardId))
+      })
+
+      futureSavedChoiceAnswers.map {
+        savedAnswers => true
       }
     }
+  }
 
-  def futureInsertFlashcard(flashcard: Flashcard): Future[Flashcard] = {
-    val query = flashcardsTQ returning flashcardsTQ.map(_.id) into ((fc, newId) => fc.copy(id = newId))
+  def futureInsertFlashcard(flashcard: DBFlashcard): Future[DBFlashcard] = {
+    val query = flashcardsTQ returning flashcardsTQ.map(_.id) into ((fc, newId) => fc.copy(cardId = newId))
 
     db.run(query += flashcard)
   }
@@ -93,6 +144,12 @@ trait LanguageTableDefs extends HasDatabaseConfigProvider[JdbcProfile] {
     val query = choiceAnswersTQ returning choiceAnswersTQ.map(_.id) into ((ca, newId) => ca.copy(id = newId))
 
     db.run(query += choiceAnswer)
+  }
+
+  def futureInsertBlanksAnswer(blanksAnswer: BlanksAnswer): Future[BlanksAnswer] = {
+    val query = blanksAnswersTQ returning blanksAnswersTQ.map(_.id) into ((ca, newId) => ca.copy(answerId = newId))
+
+    db.run(query += blanksAnswer)
   }
 
   // Column types
@@ -134,7 +191,7 @@ trait LanguageTableDefs extends HasDatabaseConfigProvider[JdbcProfile] {
 
   }
 
-  class FlashcardsTable(tag: Tag) extends Table[Flashcard](tag, "flashcards") {
+  class FlashcardsTable(tag: Tag) extends Table[DBFlashcard](tag, "flashcards") {
 
     def id: Rep[Int] = column[Int](idName, O.AutoInc)
 
@@ -154,7 +211,7 @@ trait LanguageTableDefs extends HasDatabaseConfigProvider[JdbcProfile] {
     def collFk: ForeignKeyQuery[CollectionsTable, Collection] = foreignKey("fc_coll_fk", (collId, langId), collectionsTQ)(c => (c.id, c.langId))
 
 
-    override def * : ProvenShape[Flashcard] = (id, collId, langId, flashcardType, question, meaning) <> (Flashcard.tupled, Flashcard.unapply)
+    override def * : ProvenShape[DBFlashcard] = (id, collId, langId, flashcardType, question, meaning) <> (DBFlashcard.tupled, DBFlashcard.unapply)
 
   }
 
@@ -175,11 +232,34 @@ trait LanguageTableDefs extends HasDatabaseConfigProvider[JdbcProfile] {
 
     def pk: PrimaryKey = primaryKey("ca_pk", (id, cardId, collId, langId))
 
-    def cardFk: ForeignKeyQuery[FlashcardsTable, Flashcard] = foreignKey("ca_card_fk", (cardId, collId, langId), flashcardsTQ)(fc => (fc.id, fc.collId, fc.langId))
+    def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("ca_card_fk", (cardId, collId, langId), flashcardsTQ)(fc => (fc.id, fc.collId, fc.langId))
 
 
     override def * : ProvenShape[ChoiceAnswer] = (id, cardId, collId, langId, answer, correctness) <> (ChoiceAnswer.tupled, ChoiceAnswer.unapply)
 
   }
+
+  class BlanksAnswersTable(tag: Tag) extends Table[BlanksAnswer](tag, "blanks_answers") {
+
+    def id: Rep[Int] = column[Int](idName, O.AutoInc)
+
+    def cardId: Rep[Int] = column[Int]("card_id")
+
+    def collId: Rep[Int] = column[Int]("coll_id")
+
+    def langId: Rep[Int] = column[Int]("lang_id")
+
+    def answer: Rep[String] = column[String](answerName)
+
+
+    def pk: PrimaryKey = primaryKey("ca_pk", (id, cardId, collId, langId))
+
+    def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("ca_card_fk", (cardId, collId, langId), flashcardsTQ)(fc => (fc.id, fc.collId, fc.langId))
+
+
+    override def * : ProvenShape[BlanksAnswer] = (id, cardId, collId, langId, answer) <> (BlanksAnswer.tupled, BlanksAnswer.unapply)
+
+  }
+
 
 }

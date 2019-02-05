@@ -61,28 +61,24 @@ trait ControllerHelpers extends Secured {
     }
 
   protected def withUserAndCompleteFlashcard(adminRightsRequired: Boolean, langId: Int, collId: Int, cardId: Int)
-                                            (f: (User, Language, Collection, CompleteFlashcard) => Request[AnyContent] => Result)
+                                            (f: (User, Language, Collection, Flashcard) => Request[AnyContent] => Result)
                                             (implicit ec: ExecutionContext): EssentialAction =
     futureWithUserAndCollection(adminRightsRequired, langId, collId) { (user, language, collection) =>
       implicit request =>
-        tableDefs.futureFlashcardById(collection, cardId) flatMap {
-          case None            => Future(onNuSuchFlashcard(language, collection, cardId))
-          case Some(flashcard) => tableDefs.futureChoiceAnswersForFlashcard(flashcard) map {
-            answers => f(user, language, collection, CompleteFlashcard(flashcard, answers))(request)
-          }
+        tableDefs.futureFlashcardById(collection, cardId) map {
+          case None            => onNuSuchFlashcard(language, collection, cardId)
+          case Some(flashcard) => f(user, language, collection, flashcard)(request)
         }
     }
 
   protected def futureWithUserAndCompleteFlashcard(adminRightsRequired: Boolean, langId: Int, collId: Int, cardId: Int)
-                                                  (f: (User, Language, Collection, CompleteFlashcard) => Request[AnyContent] => Future[Result])
+                                                  (f: (User, Language, Collection, Flashcard) => Request[AnyContent] => Future[Result])
                                                   (implicit ec: ExecutionContext): EssentialAction =
     futureWithUserAndCollection(adminRightsRequired, langId, collId) { (user, language, collection) =>
       implicit request =>
         tableDefs.futureFlashcardById(collection, cardId) flatMap {
           case None            => Future(onNuSuchFlashcard(language, collection, cardId))
-          case Some(flashcard) => tableDefs.futureChoiceAnswersForFlashcard(flashcard) flatMap {
-            answers => f(user, language, collection, CompleteFlashcard(flashcard, answers))(request)
-          }
+          case Some(flashcard) => f(user, language, collection, flashcard)(request)
         }
     }
 

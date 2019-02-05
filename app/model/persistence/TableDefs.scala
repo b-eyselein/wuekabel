@@ -100,7 +100,7 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
     val query: DBIO[Int] =
       sqlu"""
 INSERT INTO users_answered_flashcards (username, card_id, coll_id, lang_id, bucket_id, date_answered, correct, tries)
-VALUE (${user.username}, ${flashcard.id}, ${flashcard.collId}, ${flashcard.langId}, 1, NOW(), $correct, 1)
+VALUE (${user.username}, ${flashcard.cardId}, ${flashcard.collId}, ${flashcard.langId}, 1, NOW(), $correct, 1)
 ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
                         bucket_id = IF($correct, bucket_id + 1, bucket_id),
                         tries = IF($correct, tries, tries + 1);"""
@@ -110,9 +110,9 @@ ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
 
   // Queries - UserAnsweredFlashcard
 
-  def futureUserAnswerForFlashcard(user: User, flashcard: CompleteFlashcard): Future[Option[UserAnsweredFlashcard]] =
+  def futureUserAnswerForFlashcard(user: User, flashcard: Flashcard): Future[Option[UserAnsweredFlashcard]] =
     db.run(usersAnsweredFlashcardsTQ.filter {
-      uaf => uaf.username === user.username && uaf.cardId === flashcard.id && uaf.collId === flashcard.collId && uaf.langId === flashcard.langId
+      uaf => uaf.username === user.username && uaf.cardId === flashcard.cardId && uaf.collId === flashcard.collId && uaf.langId === flashcard.langId
     }.result.headOption)
 
   // Column types
@@ -176,7 +176,7 @@ ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
 
     def userFk: ForeignKeyQuery[UsersTable, User] = foreignKey("uaf_user_fk", username, usersTQ)(_.username)
 
-    def cardFk: ForeignKeyQuery[FlashcardsTable, Flashcard] = foreignKey("uaf_card_fk", (cardId, collId, langId), flashcardsTQ)(fc => (fc.id, fc.collId, fc.langId))
+    def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("uaf_card_fk", (cardId, collId, langId), flashcardsTQ)(fc => (fc.id, fc.collId, fc.langId))
 
 
     override def * : ProvenShape[UserAnsweredFlashcard] = (username, cardId, collId, langId, bucketId, dateAnswered, correct, tries) <> (UserAnsweredFlashcard.tupled, UserAnsweredFlashcard.unapply)
@@ -200,7 +200,7 @@ ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
 
     def userFk: ForeignKeyQuery[UsersTable, User] = foreignKey("fcs_to_learn_user_fk", username, usersTQ)(_.username)
 
-    def cardFk: ForeignKeyQuery[FlashcardsTable, Flashcard] = foreignKey("fcs_to_learn_card_fk", (cardId, collId, langId), flashcardsTQ)(fc => (fc.id, fc.collId, fc.langId))
+    def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("fcs_to_learn_card_fk", (cardId, collId, langId), flashcardsTQ)(fc => (fc.id, fc.collId, fc.langId))
 
 
     override def * : ProvenShape[(Int, Int, Int, String)] = (cardId, collId, langId, username)

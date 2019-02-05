@@ -30,7 +30,7 @@ object Importer {
       }
     }
 
-  def importFlashcards(langId: Int, collId: Int, file: File = stdFile): (Seq[String], Seq[CompleteFlashcard]) = {
+  def importFlashcards(langId: Int, collId: Int, file: File = stdFile): (Seq[String], Seq[Flashcard]) = {
     val workbook = new XSSFWorkbook(file.path.toAbsolutePath.toFile)
 
     val sheet = workbook.getSheetAt(workbook.getActiveSheetIndex)
@@ -50,7 +50,7 @@ object Importer {
     partitionEitherSeq(readFlashcards)
   }
 
-  private def readChoiceRow(row: ExcelRow, langId: Int, collId: Int, cardType: CardType, question: String): Either[String, CompleteFlashcard] = {
+  private def readChoiceRow(row: ExcelRow, langId: Int, collId: Int, question: String): Either[String, Flashcard] = {
 
     val cardId = row.getRowNum
 
@@ -70,23 +70,36 @@ object Importer {
     })
 
 
-    Right(CompleteFlashcard(
-      Flashcard(cardId, collId, langId, cardType, question, meaning = None),
-      choiceAnswers = answers
-    ))
+    Right(ChoiceFlashcard(cardId, collId, langId, question, answers))
 
   }
 
-  private def readTextRow(row: ExcelRow, langId: Int, collId: Int, cardType: CardType, question: String): Either[String, CompleteFlashcard] =
+  private def readWordRow(row: ExcelRow, langId: Int, collId: Int, question: String): Either[String, Flashcard] =
     readStringCell(row, meaningCellIndex) map { meaning =>
-      CompleteFlashcard(
-        Flashcard(0 /*row.getRowNum*/ , collId, langId, cardType, question, Some(meaning)),
-        choiceAnswers = Seq[ChoiceAnswer]()
-      )
+      WordFlashcard(0, collId, langId, question, meaning)
     }
 
+  private def readTextRow(row: ExcelRow, langId: Int, collId: Int, question: String): Either[String, Flashcard] =
+    readStringCell(row, meaningCellIndex) map { meaning =>
+      TextFlashcard(0 /*row.getRowNum*/ , collId, langId, question, meaning)
+    }
 
-  private def readRow(row: ExcelRow, langId: Int, collId: Int): Either[String, CompleteFlashcard] =
+  private def readBlankRow(row: ExcelRow, langId: Int, collId: Int, question: String): Either[String, Flashcard] = {
+    val cardId = row.getRowNum
+
+    val (_, answers): (Seq[String], Seq[BlanksAnswer]) = partitionEitherSeq((meaningCellIndex to row.getLastCellNum).map { cellIndex =>
+      readStringCell(row, cellIndex) map {
+        answer =>
+          val id = cellIndex - meaningCellIndex
+          BlanksAnswer(id, cardId, collId, langId, answer)
+      }
+    })
+
+    Right(BlanksFlashcard(cardId, collId, langId, question, answers))
+  }
+
+
+  private def readRow(row: ExcelRow, langId: Int, collId: Int): Either[String, Flashcard] =
     readStringCell(row, cardTypeCellIndex) flatMap { cardTypeString: String =>
 
       cardTypeFromString(cardTypeString) flatMap { cardType: CardType =>
@@ -94,8 +107,10 @@ object Importer {
         readStringCell(row, questionCellIndex) flatMap { question: String =>
 
           cardType match {
-            case CardType.Vocable | CardType.Text | CardType.Blank => readTextRow(row, langId, collId, cardType, question)
-            case CardType.SingleChoice | CardType.MultipleChoice   => readChoiceRow(row, langId, collId, cardType, question)
+            case CardType.Vocable                                => readWordRow(row, langId, collId, question)
+            case CardType.Text                                   => readTextRow(row, langId, collId, question)
+            case CardType.Blank                                  => readBlankRow(row, langId, collId, question)
+            case CardType.SingleChoice | CardType.MultipleChoice => readChoiceRow(row, langId, collId, question)
           }
 
         }

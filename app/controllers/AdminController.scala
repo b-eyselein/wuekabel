@@ -89,7 +89,7 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
           ))
 
           futureImportedFlashcardsSaved map { importedFlashcardsSaved =>
-            Ok(views.html.cardPreview(admin, language, collection, importedFlashcardsSaved, failureStrings))
+            Ok(views.html.cardPreview(admin, language, collection, importedFlashcards, failureStrings))
           }
       }
 
