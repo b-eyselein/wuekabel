@@ -17,7 +17,7 @@ interface AnswerSelectionResult {
 
 interface CorrectionResult {
     correct: boolean,
-    cardType: 'Vocable' | 'Text' | 'SingleChoice' | 'MultipleChoice'
+    cardType: 'Vocable' | 'Text' | 'Blank' | 'SingleChoice' | 'MultipleChoice'
     learnerSolution: Solution,
     operations: EditOperation[],
     answerSelection: AnswerSelectionResult
@@ -28,11 +28,13 @@ interface CorrectionResult {
 let correctionTextPar: JQuery<HTMLParagraphElement>;
 let checkSolutionBtn: JQuery<HTMLButtonElement>;
 let checkSolutionUrl: string;
+let canSolve: boolean = true;
 
 function readSolution(cardType: string): Solution | null {
     switch (cardType) {
         case 'Vocable':
         case 'Text':
+        case 'Blank':
             const learnerSolution: string = $('#translation_input').val() as string;
 
             if (learnerSolution.length === 0) {
@@ -71,6 +73,8 @@ function onCorrectionSuccess(result: CorrectionResult): void {
         correctionText += ` Die korrekte Lösung lautet '<code>${result.maybeSampleSol}</code>'.`;
     }
 
+    canSolve = !result.correct && result.newTriesCount <= 2;
+
     correctionTextPar.html(correctionText).removeClass(result.correct ? 'red-text' : 'green-text').addClass(result.correct ? 'green-text' : 'red-text');
 
     checkSolutionBtn.prop('disabled', result.correct || (result.newTriesCount >= 2));
@@ -85,6 +89,7 @@ function onCorrectionSuccess(result: CorrectionResult): void {
     switch (result.cardType) {
         case 'Vocable':
         case 'Text':
+        case 'Blank':
             $('#translation_input').removeClass(result.correct ? 'invalid' : 'valid').addClass(result.correct ? 'valid' : 'invalid');
             break;
         case 'SingleChoice':
@@ -131,4 +136,14 @@ $(() => {
     correctionTextPar = $('#correctionTextPar');
     checkSolutionBtn = $('#checkSolutionBtn');
     checkSolutionUrl = checkSolutionBtn.data('href');
+
+    $(window).bind('keypress', (event) => {
+        if (event.keyCode === 13) {
+            if (canSolve) {
+                checkSolution();
+            } else {
+                document.getElementById('nextFlashcardBtn').click();
+            }
+        }
+    });
 });

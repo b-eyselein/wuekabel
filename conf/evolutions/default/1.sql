@@ -118,13 +118,12 @@ values (1, 1, 'Beispielsammlung');
 
 create table if not exists flashcards
 (
-  id              int                                                        not null auto_increment,
-  coll_id         int                                                        not null,
-  lang_id         int                                                        not null,
-  flash_card_type enum ('Vocable', 'Text', 'SingleChoice', 'MultipleChoice') not null default 'Vocable',
-  question        text                                                       not null,
-
-  meaning         text,
+  id              int                                                                 not null auto_increment,
+  coll_id         int                                                                 not null,
+  lang_id         int                                                                 not null,
+  flash_card_type enum ('Vocable', 'Text', 'Blank', 'SingleChoice', 'MultipleChoice') not null default 'Vocable',
+  question        text                                                                not null,
+  meaning         text, -- can be null!
 
   primary key (id, coll_id, lang_id),
   foreign key (coll_id, lang_id) references collections (id, lang_id)

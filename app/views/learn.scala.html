@@ -20,7 +20,7 @@
     }
 
     @main(title, Some(user), scripts) {
-
+        @*<form onsubmit="checkSolution(); return false;">*@
         @helper.CSRF.formField
 
         <div class="row">
@@ -35,10 +35,10 @@
                 </p>
 
                 @completeFlashcard.cardType match {
-                    case CardType.Vocable | CardType.Text => {
+                    case CardType.Vocable | CardType.Text | CardType.Blank => {
                         <div class="row">
                             <div class="input-field col s12">
-                                <input type="text" id="translation_input">
+                                <input type="text" id="translation_input" autofocus autocomplete="off">
                                 <label for="translation_input">Übersetzung</label>
                             </div>
                         </div>
@@ -67,8 +67,7 @@
 
             </div>
         </div>
-
-
+        @*</form>*@
         <br>
     }
 

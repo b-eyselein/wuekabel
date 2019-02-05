@@ -2,6 +2,7 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 import model._
+import model.persistence.TableDefs
 import play.api.data.Form
 import play.api.libs.Files.TemporaryFile
 import play.api.mvc._
@@ -80,6 +81,8 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
 
         case Some(filePart: MultipartFormData.FilePart[TemporaryFile]) =>
           val (failureStrings, importedFlashcards) = Importer.importFlashcards(langId, collId, filePart.ref.path)
+
+          failureStrings.foreach(println)
 
           val futureImportedFlashcardsSaved = Future.sequence(importedFlashcards.map(
             tableDefs.futureInsertCompleteFlashcard

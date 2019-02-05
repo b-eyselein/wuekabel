@@ -1,11 +1,11 @@
-package model
+package model.persistence
 
 import java.sql.{Date => SqlDate}
 import java.time.LocalDate
 
 import javax.inject.Inject
 import model.Consts._
-import model.persistence.{LanguageTableDefs, UserTableDefs}
+import model._
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 import slick.lifted.{ForeignKeyQuery, PrimaryKey, ProvenShape}

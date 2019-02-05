@@ -37,6 +37,8 @@ case object CardType extends PlayEnum[CardType] {
 
   case object Text extends CardType
 
+  case object Blank extends CardType
+
   case object SingleChoice extends CardType
 
   case object MultipleChoice extends CardType

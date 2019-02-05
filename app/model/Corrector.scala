@@ -35,7 +35,7 @@ object Corrector {
 
   def correct(completeFlashcard: CompleteFlashcard, solution: Solution, previousTriesCount: Int): CorrectionResult = {
     val (correct, editOps, ansSelection) = completeFlashcard.cardType match {
-      case CardType.Vocable | CardType.Text =>
+      case CardType.Vocable | CardType.Text | CardType.Blank =>
 
         val editOperations = correctTextualFlashcard(completeFlashcard, solution, previousTriesCount)
 

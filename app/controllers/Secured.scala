@@ -2,7 +2,7 @@ package controllers
 
 import model.User
 import model.Consts.idName
-import model.TableDefs
+import model.persistence.TableDefs
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}

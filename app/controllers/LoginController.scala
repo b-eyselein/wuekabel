@@ -5,6 +5,7 @@ import javax.inject._
 import model.RegisterFormValues
 import model.Consts._
 import model._
+import model.persistence.TableDefs
 import play.api.data.Form
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import play.api.mvc._

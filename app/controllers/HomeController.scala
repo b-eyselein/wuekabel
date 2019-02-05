@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit
 
 import javax.inject.{Inject, Singleton}
 import model._
+import model.persistence.TableDefs
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
