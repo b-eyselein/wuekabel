@@ -17,11 +17,22 @@ final case class UserPassword(username: String, pwHash: String)
 
 final case class Course(id: String, name: String)
 
+// User <-> Course
+
+final case class UserInCourse(username: String, courseId: String)
+
+// Collection
+
+final case class Collection(id: Int, name: String)
+
+// Course <-> Collection
+
+final case class CollectionInCourse(collId: Int, courseId: String)
+
 // Languages and Collections
 
+// TODO: remove Languague?
 final case class Language(id: Int, name: String)
-
-final case class Collection(id: Int, langId: Int, name: String)
 
 final case class Bucket(id: Int, distanceDays: Int)
 
@@ -59,15 +70,15 @@ case object Correctness extends PlayEnum[Correctness] {
 
 }
 
-final case class FlashcardIdentifier(cardId: Int, collId: Int, langId: Int) {
+final case class FlashcardIdentifier(cardId: Int, collId: Int) {
 
-  def asString = s"$langId.$collId.$cardId"
+  def asString = s"$collId.$cardId"
 
 }
 
 // User answered flashcard
 
-final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, langId: Int, bucketId: Int, dateAnswered: LocalDate, correct: Boolean, tries: Int) {
+final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, bucketId: Int, dateAnswered: LocalDate, correct: Boolean, tries: Int) {
 
   def isActive: Boolean = dateAnswered.until(LocalDate.now(), ChronoUnit.DAYS) < Math.pow(3, bucketId - 1)
 

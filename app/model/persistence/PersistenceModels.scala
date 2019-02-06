@@ -23,7 +23,7 @@ object PersistenceModels {
     }
 
     DBCompleteFlashcard(
-      flashcard = DBFlashcard(fc.cardId, fc.collId, fc.langId, fc.cardType, fc.question, maybeMeaning),
+      flashcard = DBFlashcard(fc.cardId, fc.collId, fc.cardType, fc.question, maybeMeaning),
       choiceAnswers = dbChoiceAnswers,
       blanksAnswers = dbBlanksAnswers
     )
@@ -31,27 +31,25 @@ object PersistenceModels {
   }
 
   def dbFlashcardToFlashcard(dbfc: DBCompleteFlashcard): Flashcard = dbfc.flashcard.cardType match {
-    case CardType.Vocable => WordFlashcard(dbfc.cardId, dbfc.collId, dbfc.langId, dbfc.question, dbfc.meaning.getOrElse(???))
-    case CardType.Text    => TextFlashcard(dbfc.cardId, dbfc.collId, dbfc.langId, dbfc.question, dbfc.meaning.getOrElse(???))
+    case CardType.Vocable => WordFlashcard(dbfc.cardId, dbfc.collId, dbfc.question, dbfc.meaning.getOrElse(???))
+    case CardType.Text    => TextFlashcard(dbfc.cardId, dbfc.collId, dbfc.question, dbfc.meaning.getOrElse(???))
 
-    case CardType.Blank => BlanksFlashcard(dbfc.cardId, dbfc.collId, dbfc.langId, dbfc.question, dbfc.blanksAnswers)
+    case CardType.Blank => BlanksFlashcard(dbfc.cardId, dbfc.collId, dbfc.question, dbfc.blanksAnswers)
 
     case CardType.SingleChoice | CardType.MultipleChoice =>
-      ChoiceFlashcard(dbfc.cardId, dbfc.collId, dbfc.langId, dbfc.question, dbfc.choiceAnswers)
+      ChoiceFlashcard(dbfc.cardId, dbfc.collId, dbfc.question, dbfc.choiceAnswers)
   }
 
 }
 
 
-final case class DBFlashcard(cardId: Int, collId: Int, langId: Int, cardType: CardType, question: String, meaning: Option[String])
+final case class DBFlashcard(cardId: Int, collId: Int, cardType: CardType, question: String, meaning: Option[String])
 
 final case class DBCompleteFlashcard(flashcard: DBFlashcard, choiceAnswers: Seq[ChoiceAnswer], blanksAnswers: Seq[BlanksAnswer]) {
 
   def cardId: Int = flashcard.cardId
 
   def collId: Int = flashcard.collId
-
-  def langId: Int = flashcard.langId
 
   def question: String = flashcard.question
 

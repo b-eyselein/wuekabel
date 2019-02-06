@@ -32,6 +32,7 @@ class LoginController @Inject()(cc: ControllerComponents, val dbConfigProvider: 
           for {
             user <- selectOrInsertUser(ltiFormValues.username)
             course <- selectOrInsertCourse(ltiFormValues.courseIdentifier, ltiFormValues.courseName)
+            maybePw <- tableDefs.futurePwHashForUser(user)
             _ <- selectOrInsertUserInCourse(user, course)
           } yield Redirect(routes.HomeController.index()).withSession(idName -> user.username)
 
@@ -101,7 +102,7 @@ class LoginController @Inject()(cc: ControllerComponents, val dbConfigProvider: 
 
       tableDefs.futureUserByUserName(credentials.username) flatMap {
         case None       => Future(Redirect(controllers.routes.LoginController.registerForm()))
-        case Some(user) => tableDefs.futurePwHashForUser(credentials.username) map {
+        case Some(user) => tableDefs.futurePwHashForUser(user) map {
           case None               => BadRequest("Cannot change password!")
           case Some(userPassword) =>
             if (credentials.password isBcrypted userPassword.pwHash) {

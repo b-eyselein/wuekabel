@@ -17,7 +17,7 @@
         @for(collection <- collections) {
             <div class="row">
                 <div class="col s12">
-                    <a href="@routes.HomeController.collection(language.id, collection.id)"
+                    <a href="@routes.HomeController.collection( collection.id)"
                     class="btn btn-large waves-effect waves-block green">@collection.id: @collection.name</a>
                 </div>
             </div>

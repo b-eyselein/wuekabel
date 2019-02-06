@@ -1,0 +1,37 @@
+@import model.{User, Course, Collection}
+
+@(user: User, course: Course, x: Seq[(Collection, Boolean)])
+
+
+@title = @{
+    s"Kurs '${course.name}', Sammlungen importieren"
+}
+
+@main(title, Some(user)) {
+
+    <h2 class="center-align">@title</h2>
+
+    <hr>
+
+    @if(x.nonEmpty) {
+
+        @for(xGroup <- x.grouped(2)) {
+            <div class="row">
+            @for((collection, isImported) <- xGroup) {
+                <div class="col s6">
+                @if(isImported) {
+                    <a href="@routes.AdminController.deallocateCollectionFromCourse(course.id, collection.id)"
+                    class="btn btn-large waves-effect waves-block green">Import @collection.name beenden</a>
+                } else {
+                    <a href="@routes.AdminController.allocateCollectionToCourse(course.id, collection.id)"
+                    class="btn btn-large waves-effect waves-block red">@collection.name importieren</a>
+                }
+                </div>
+            }
+            </div>
+        }
+    } else {
+        <p class="red-text">Konnte keine Sammlungen finden...</p>
+    }
+
+}

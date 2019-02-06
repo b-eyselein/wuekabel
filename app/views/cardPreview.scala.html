@@ -1,6 +1,6 @@
-@import model.{User, Flashcard, CardType, Language, Collection, WordFlashcard, TextFlashcard, BlanksFlashcard, ChoiceFlashcard}
+@import model.{User, Flashcard, CardType, Collection, WordFlashcard, TextFlashcard, BlanksFlashcard, ChoiceFlashcard}
 
-@(user: User, language: Language, collection: Collection, cards: Seq[Flashcard], readErrors: Seq[String])
+@(user: User, collection: Collection, cards: Seq[Flashcard], readErrors: Seq[String])
 
 @title = @{
     "Vorschau importierte Karteikarten"
@@ -15,7 +15,7 @@
 
         <div class="row">
             <div class="col s12">
-                <a href="@routes.AdminController.collectionAdmin(language.id, collection.id)" class="btn btn-large waves-effect waves-block green">
+                <a href="@routes.AdminController.collectionAdmin(collection.id)" class="btn btn-large waves-effect waves-block green">
                     Zurück zur Sammlung
                 </a>
             </div>
@@ -30,7 +30,7 @@
                     <div class="card-panel">
                         <p>
                             @{
-                                s"${completeCard.langId}.${completeCard.collId}.${completeCard.cardId}"
+                                s"${completeCard.collId}.${completeCard.cardId}"
                             }: @completeCard.question
                         </p>
 

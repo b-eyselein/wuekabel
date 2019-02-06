@@ -1,54 +1,48 @@
-@import model.{User, Language, Consts}
+@import model.{User, Language, Course, Consts}
 
-@(user: User, languages: Seq[Language], newLanguageForm: Form[String])(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
+@(user: User, courses: Seq[Course] /*, newLanguageForm: Form[String]*/)(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
 
 @title = @{
     "Administrator"
 }
 
 @main(title, Some(user)) {
-    <section>
-        <h2 class="center-align">Sprachen</h2>
+    <h2 class="center-align">Kurse</h2>
 
-        <hr>
+    <hr>
 
-        @if(languages.nonEmpty) {
+    @if(courses.nonEmpty) {
 
-            @for(languageGroup <- languages.grouped(2)) {
-                <div class="row">
-                @for(language <- languageGroup) {
-                    <div class="col m6">
-                        <a class="btn btn-large waves-effect waves-block blue" href="@routes.AdminController.languageAdmin(language.id)">@language.name</a>
-                    </div>
-                }
+        @for(languageGroup <- courses.grouped(2)) {
+            <div class="row">
+            @for(language <- languageGroup) {
+                <div class="col m6">
+                    <a class="btn btn-large waves-effect waves-block blue" href="@routes.AdminController.courseAdmin(language.id)">@language.name</a>
                 </div>
             }
-
-        } else {
-            <h4 class="red-text">Es existieren noch keine Sprachen.</h4>
-
-            <br>
+            </div>
         }
 
-        <hr>
+    } else {
+        <h4 class="red-text">Es existieren noch keine Kurse.</h4>
 
+        <br>
+    }
+    @* <hr>
 
-        <div class="row">
-            <div class="col s12">
-                <h4 class="center-align">Sprache erstellen</h4>
+    <div class="row">
+    <div class="col s12">
+    <h4 class="center-align">Neuen Kurs erstellen</h4>
 
-                @helper.form(routes.AdminController.newLanguage) {
+    @helper.form(routes.AdminController.newCourse) {
 
-                    @helper.CSRF.formField
+    @helper.CSRF.formField
 
-                    @myhelpers.input(newLanguageForm(Consts.nameName), labelContent = "Name", isRequired = true)
+    @myhelpers.input(newLanguageForm(Consts.nameName), labelContent = "Name", isRequired = true)
 
-                    <button class="btn btn-large waves-effect waves-block green">Sprache erstellen</button>
+    <button class="btn btn-large waves-effect waves-block green">Sprache erstellen</button>
 
-                }
-            </div>
-        </div>
-
-    </section>
-
+    }
+    </div>
+    </div>*@
 }

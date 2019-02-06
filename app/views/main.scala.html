@@ -2,64 +2,64 @@
 
 @(title: String, maybeUser: Option[User], scripts: Html = Html(""))(content: Html)
 
-@navigation = {
-@maybeUser match {
-    case Some(user) => {
-        @if(user.isAdmin) {
-            <li><a href="@routes.AdminController.index">Administration</a></li>
+    @navigation = {
+        @maybeUser match {
+            case Some(user) => {
+                @if(user.isAdmin) {
+                    <li><a href="@routes.AdminController.index">Administration</a></li>
+                }
+                <li><a href="@routes.HomeController.userPage">Nutzer: @user.username </a></li>
+                <li><a href="@routes.HomeController.allLanguages">Alle Sprachen</a></li>
+                <li><a href="@routes.LoginController.logout">Logout</a></li>
+            }
+            case None => {
+                <li><a href="@routes.LoginController.loginForm">Login</a></li>
+                <li><a href="@routes.LoginController.registerForm">Registrieren</a></li>
+            }
         }
-        <li><a>Nutzer: @user.username </a></li>
-        <li><a href="@routes.HomeController.allLanguages">Alle Sprachen</a></li>
-        <li><a href="@routes.LoginController.logout()">Logout</a></li>
     }
-    case None => {
-        <li><a href="@routes.LoginController.loginForm">Login</a></li>
-        <li><a href="@routes.LoginController.registerForm">Registrieren</a></li>
-    }
-}
-}
 
-<!DOCTYPE html>
-<html lang="de">
-    <head>
-        <meta charset="UTF-8">
-        <title>WuekabelApp: @title</title>
+    <!DOCTYPE html>
+    <html lang="de">
+        <head>
+            <meta charset="UTF-8">
+            <title>WuekabelApp: @title</title>
 
-        <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
-        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-        <link rel="stylesheet" href="@routes.Assets.versioned("lib/materialize-css/dist/css/materialize.css")">
-    </head>
-    <body>
+            <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
+            <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+            <link rel="stylesheet" href="@routes.Assets.versioned("lib/materialize-css/dist/css/materialize.css")">
+        </head>
+        <body>
 
-        <nav>
-            <div class="nav-wrapper green">
-                <a href="@routes.HomeController.index" class="brand-logo">WuekabelApp</a>
+            <nav>
+                <div class="nav-wrapper green">
+                    <a href="@routes.HomeController.index" class="brand-logo">WuekabelApp</a>
 
-                <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+                    <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
 
-                <ul id="nav-mobile" class="right hide-on-med-and-down">
-                @navigation
-                </ul>
+                    <ul id="nav-mobile" class="right hide-on-med-and-down">
+                    @navigation
+                    </ul>
+                </div>
+            </nav>
+
+            <ul class="sidenav" id="mobile-demo">@navigation</ul>
+
+            <br>
+
+            <div class="container">
+            @content
             </div>
-        </nav>
 
-        <ul class="sidenav" id="mobile-demo">{{ navigation }}</ul>
-
-        <br>
-
-        <div class="container">
-        @content
-        </div>
-
-        <script src="@routes.Assets.versioned("lib/jquery/dist/jquery.js")"></script>
-        <script src="@routes.Assets.versioned("lib/materialize-css/dist/js/materialize.js")"></script>
-        <script>
+            <script src="@routes.Assets.versioned("lib/jquery/dist/jquery.js")"></script>
+            <script src="@routes.Assets.versioned("lib/materialize-css/dist/js/materialize.js")"></script>
+            <script>
                 $(document).ready(function () {
                     $('.sidenav').sidenav();
                 });
         </script>
 
-        @scripts
+            @scripts
 
-    </body>
-</html>
+        </body>
+    </html>

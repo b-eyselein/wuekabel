@@ -30,7 +30,7 @@ object Corrector {
   private def correctChoiceFlashcard(flashcard: ChoiceFlashcard, solution: Solution, previousTriesCount: Int): AnswerSelectionResult = {
 
     val selectedAnswerIds: Seq[Int] = solution.selectedAnswers
-    val correctAnswerIds: Seq[Int] = flashcard.choiceAnswers.filter(_.correctness != Correctness.Wrong).map(_.id)
+    val correctAnswerIds: Seq[Int] = flashcard.choiceAnswers.filter(_.correctness != Correctness.Wrong).map(_.answerId)
 
     matchAnswerIds(selectedAnswerIds, correctAnswerIds)
   }

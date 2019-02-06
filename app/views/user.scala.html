@@ -1,0 +1,27 @@
+@import model.{User, Course}
+
+@(user: User, courses: Seq[Course])
+
+    @title = @{
+        s"Nutzer '${user.username}'"
+    }
+
+    @main(title, Some(user)) {
+        <h2 class="center-align">@title</h2>
+
+        <hr>
+
+        <section>
+            <h4>Meine Kurse</h4>
+            @if(courses.nonEmpty) {
+                <ul class="collection">
+                @for(course <- courses) {
+                    <li class="collection-item">@course.name</li>
+                }
+                </ul>
+            } else {
+                <p class="red-text">Sie sind noch nicht in einem Kurs registriert.</p>
+            }
+        </section>
+
+    }

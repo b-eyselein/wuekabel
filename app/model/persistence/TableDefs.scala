@@ -13,7 +13,7 @@ import slick.lifted.{ForeignKeyQuery, PrimaryKey, ProvenShape}
 import scala.concurrent.{ExecutionContext, Future}
 
 class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfigProvider)(implicit val ec: ExecutionContext)
-  extends HasDatabaseConfigProvider[JdbcProfile] with UserTableDefs with LanguageTableDefs {
+  extends HasDatabaseConfigProvider[JdbcProfile] with UserInCourseTableDefs with CollectionInCourseTableDefs with FlashcardTableDefs with LanguageTableDefs {
 
   import profile.api._
 
@@ -68,39 +68,39 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
   // Queries - FlashcardToLearn View
 
   def futureFlashcardsToLearnCount(user: User, collection: Collection): Future[Int] = db.run(flashcardsToLearnTQ.filter {
-    fctl => fctl.collId === collection.id && fctl.langId === collection.langId && fctl.username === user.username
+    fctl => fctl.collId === collection.id && fctl.username === user.username
   }.size.result)
 
   def futureMaybeIdentifierNextFlashcardToLearn(user: User, collection: Collection): Future[Option[FlashcardIdentifier]] =
     db.run(flashcardsToLearnTQ
-      .filter { fctl => fctl.collId === collection.id && fctl.langId === collection.langId && fctl.username === user.username }
+      .filter { fctl => fctl.collId === collection.id && fctl.username === user.username }
       .result
       .headOption
       .map {
-        case None                              => None
-        case Some((cardId, collId, langId, _)) => Some(FlashcardIdentifier(cardId, collId, langId))
+        case None                      => None
+        case Some((cardId, collId, _)) => Some(FlashcardIdentifier(cardId, collId))
       })
 
   def futureMaybeIdentifierNextFlashcardToRepeat(user: User, collection: Collection): Future[Option[FlashcardIdentifier]] =
     db.run(flashcardsToRepeatTQ
-      .filter { fctr => fctr.collId === collection.id && fctr.langId === collection.langId && fctr.username === user.username }
+      .filter { fctr => fctr.collId === collection.id && fctr.username === user.username }
       .result
       .headOption
       .map {
-        case None                                    => None
-        case Some((cardId, collId, langId, _, _, _)) => Some(FlashcardIdentifier(cardId, collId, langId))
+        case None                            => None
+        case Some((cardId, collId, _, _, _)) => Some(FlashcardIdentifier(cardId, collId))
       })
 
   def futureFlashcardsToRepeatCount(user: User, collection: Collection): Future[Int] =
     db.run(flashcardsToRepeatTQ.filter {
-      fctr => fctr.collId === collection.id && fctr.langId === collection.langId && fctr.username === user.username
+      fctr => fctr.collId === collection.id && fctr.username === user.username
     }.size.result)
 
   def futureInsertOrUpdateUserAnswer(user: User, flashcard: Flashcard, correct: Boolean): Future[Boolean] = {
     val query: DBIO[Int] =
       sqlu"""
-INSERT INTO users_answered_flashcards (username, card_id, coll_id, lang_id, bucket_id, date_answered, correct, tries)
-VALUE (${user.username}, ${flashcard.cardId}, ${flashcard.collId}, ${flashcard.langId}, 1, NOW(), $correct, 1)
+INSERT INTO users_answered_flashcards (username, card_id, coll_id, bucket_id, date_answered, correct, tries)
+VALUE (${user.username}, ${flashcard.cardId}, ${flashcard.collId}, 1, NOW(), $correct, 1)
 ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
                         bucket_id = IF($correct, bucket_id + 1, bucket_id),
                         tries = IF($correct, tries, tries + 1);"""
@@ -112,7 +112,7 @@ ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
 
   def futureUserAnswerForFlashcard(user: User, flashcard: Flashcard): Future[Option[UserAnsweredFlashcard]] =
     db.run(usersAnsweredFlashcardsTQ.filter {
-      uaf => uaf.username === user.username && uaf.cardId === flashcard.cardId && uaf.collId === flashcard.collId && uaf.langId === flashcard.langId
+      uaf => uaf.username === user.username && uaf.cardId === flashcard.cardId && uaf.collId === flashcard.collId
     }.result.headOption)
 
   // Column types
@@ -161,8 +161,6 @@ ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
 
     def collId: Rep[Int] = column[Int]("coll_id")
 
-    def langId: Rep[Int] = column[Int]("lang_id")
-
     def bucketId: Rep[Int] = column[Int]("bucket_id")
 
     def dateAnswered: Rep[LocalDate] = column[LocalDate]("date_answered")
@@ -172,48 +170,44 @@ ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
     def tries: Rep[Int] = column[Int](triesName)
 
 
-    def pk: PrimaryKey = primaryKey("uaf_pk", (username, cardId, collId, langId))
+    def pk: PrimaryKey = primaryKey("uaf_pk", (username, cardId, collId))
 
     def userFk: ForeignKeyQuery[UsersTable, User] = foreignKey("uaf_user_fk", username, usersTQ)(_.username)
 
-    def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("uaf_card_fk", (cardId, collId, langId), flashcardsTQ)(fc => (fc.id, fc.collId, fc.langId))
+    def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("uaf_card_fk", (cardId, collId), flashcardsTQ)(fc => (fc.id, fc.collId))
 
 
-    override def * : ProvenShape[UserAnsweredFlashcard] = (username, cardId, collId, langId, bucketId, dateAnswered, correct, tries) <> (UserAnsweredFlashcard.tupled, UserAnsweredFlashcard.unapply)
+    override def * : ProvenShape[UserAnsweredFlashcard] = (username, cardId, collId, bucketId, dateAnswered, correct, tries) <> (UserAnsweredFlashcard.tupled, UserAnsweredFlashcard.unapply)
 
   }
 
   // Views
 
-  class FlashcardsToLearnView(tag: Tag) extends Table[(Int, Int, Int, String)](tag, "flashcards_to_learn") {
+  class FlashcardsToLearnView(tag: Tag) extends Table[(Int, Int, String)](tag, "flashcards_to_learn") {
 
     def cardId: Rep[Int] = column[Int]("card_id")
 
     def collId: Rep[Int] = column[Int]("coll_id")
-
-    def langId: Rep[Int] = column[Int]("lang_id")
 
     def username: Rep[String] = column[String](usernameName)
 
 
-    def pk: PrimaryKey = primaryKey("fcs_to_learn_pk", (cardId, collId, langId, username))
+    def pk: PrimaryKey = primaryKey("fcs_to_learn_pk", (cardId, collId, username))
 
     def userFk: ForeignKeyQuery[UsersTable, User] = foreignKey("fcs_to_learn_user_fk", username, usersTQ)(_.username)
 
-    def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("fcs_to_learn_card_fk", (cardId, collId, langId), flashcardsTQ)(fc => (fc.id, fc.collId, fc.langId))
+    def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("fcs_to_learn_card_fk", (cardId, collId), flashcardsTQ)(fc => (fc.id, fc.collId))
 
 
-    override def * : ProvenShape[(Int, Int, Int, String)] = (cardId, collId, langId, username)
+    override def * : ProvenShape[(Int, Int, String)] = (cardId, collId, username)
 
   }
 
-  class FlashcardsToRepeatView(tag: Tag) extends Table[(Int, Int, Int, String, Boolean, Int)](tag, "flashcards_to_repeat") {
+  class FlashcardsToRepeatView(tag: Tag) extends Table[(Int, Int, String, Boolean, Int)](tag, "flashcards_to_repeat") {
 
     def cardId: Rep[Int] = column[Int]("card_id")
 
     def collId: Rep[Int] = column[Int]("coll_id")
-
-    def langId: Rep[Int] = column[Int]("lang_id")
 
     def username: Rep[String] = column[String](usernameName)
 
@@ -222,7 +216,7 @@ ON DUPLICATE KEY UPDATE date_answered = NOW(), correct = $correct,
     def tries: Rep[Int] = column[Int](triesName)
 
 
-    override def * : ProvenShape[(Int, Int, Int, String, Boolean, Int)] = (cardId, collId, langId, username, correct, tries)
+    override def * : ProvenShape[(Int, Int, String, Boolean, Int)] = (cardId, collId, username, correct, tries)
 
   }
 

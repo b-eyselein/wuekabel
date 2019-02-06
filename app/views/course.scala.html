@@ -1,0 +1,34 @@
+@import model.{User, Course, Collection}
+
+@(user: User, course: Course, collections: Seq[Collection])
+
+@title = @{
+    s"Kurs ${course.name}"
+}
+
+@main(title, Some(user)) {
+    <h2 class="center-align">@course.name</h2>
+
+    <hr>
+
+    @if(collections.nonEmpty) {
+
+        @for(collectionGroup <- collections.grouped(2)) {
+            <div class="row">
+            @for(collection <- collectionGroup) {
+                <div class="col s6">
+                    <a href="@routes.HomeController.collection(collection.id)"
+                    class="btn btn-large waves-effect waves-block green">@collection.name</a>
+                </div>
+            }
+            </div>
+        }
+
+    } else {
+        <p class="center-align red-text">
+            Für diesen Kurs existieren noch keine Sammlungen.
+            Wenden Sie Sich bitte an den oder die Kursverantwortliche(n).
+        </p>
+    }
+
+}

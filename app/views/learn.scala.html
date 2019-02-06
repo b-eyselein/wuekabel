@@ -3,80 +3,80 @@
 @(user: User, flashcard: Flashcard, oldAnswer: Option[UserAnsweredFlashcard], isRepeating: Boolean)(
         implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
 
-@title = @{
-    "Lernen"
-}
-
-@scripts = {
-    <script src="@routes.Assets.versioned("learn.js")"></script>
-}
-
-@choiceInputType = @{
-    flashcard.cardType match {
-        case CardType.SingleChoice => "radio"
-        case CardType.MultipleChoice => "checkbox"
-        case _ => ""
+    @title = @{
+        "Lernen"
     }
-}
 
-@main(title, Some(user), scripts) {
-    @helper.CSRF.formField
+    @scripts = {
+        <script src="@routes.Assets.versioned("learn.js")"></script>
+    }
 
-    <div class="row">
-        <div class="col s12 l8 offset-l2" id="flashcardDiv" data-cardtype="@flashcard.cardType">
-            <div class="card-panel">
-                <h4 class="center-align">@flashcard.question</h4>
-            </div>
+    @choiceInputType = @{
+        flashcard.cardType match {
+            case CardType.SingleChoice => "radio"
+            case CardType.MultipleChoice => "checkbox"
+            case _ => ""
+        }
+    }
 
-            <p class="center-align">
-                <code>
-                    Stapel: @oldAnswer.map(_.bucketId).getOrElse(1), Versuche: <span id="triesSpan">@oldAnswer.map(_.tries).getOrElse(0)</span></code>
-            </p>
+    @main(title, Some(user), scripts) {
+        @helper.CSRF.formField
 
-            @flashcard match {
-                case _: TextFlashcard | _: WordFlashcard => {
-                    <div class="row">
-                        <div class="input-field col s12">
-                            <input type="text" id="translation_input" autofocus autocomplete="off">
-                            <label for="translation_input">Übersetzung</label>
-                        </div>
-                    </div>
-                }
-                case bfc: BlanksFlashcard => {
+        <div class="row">
+            <div class="col s12 l8 offset-l2" id="flashcardDiv" data-cardtype="@flashcard.cardType">
+                <div class="card-panel">
+                    <h4 class="center-align">@flashcard.question</h4>
+                </div>
 
-                    @for(blanksAnswer <- bfc.answers) {
+                <p class="center-align">
+                    <code>
+                        Stapel: @oldAnswer.map(_.bucketId).getOrElse(1), Versuche: <span id="triesSpan">@oldAnswer.map(_.tries).getOrElse(0)</span></code>
+                </p>
+
+                @flashcard match {
+                    case _: TextFlashcard | _: WordFlashcard => {
                         <div class="row">
                             <div class="input-field col s12">
-                                <input type="text" id="blanksInput_@blanksAnswer.answerId" autofocus autocomplete="off">
-                                <label for="blanksInput_@blanksAnswer.answerId">Übersetzung</label>
+                                <input type="text" id="translation_input" autofocus autocomplete="off">
+                                <label for="translation_input">Übersetzung</label>
                             </div>
                         </div>
                     }
+                    case bfc: BlanksFlashcard => {
 
-                }
-                case cfc: ChoiceFlashcard => {
-                    @for(answer <- scala.util.Random.shuffle(cfc.choiceAnswers)) {
-                        <p>
-                            <label for="choice_@answer.id">
-                                <input id="choice_@answer.id" name="choice_answers" type="@choiceInputType" data-choiceid="@answer.id">
-                                <span>@answer.answer</span>
-                            </label>
-                        </p>
+                        @for(blanksAnswer <- bfc.answers) {
+                            <div class="row">
+                                <div class="input-field col s12">
+                                    <input type="text" id="blanksInput_@blanksAnswer.answerId" autofocus autocomplete="off">
+                                    <label for="blanksInput_@blanksAnswer.answerId">Übersetzung</label>
+                                </div>
+                            </div>
+                        }
+
+                    }
+                    case cfc: ChoiceFlashcard => {
+                        @for(answer <- scala.util.Random.shuffle(cfc.choiceAnswers)) {
+                            <p>
+                                <label for="choice_@answer.answerId">
+                                    <input id="choice_@answer.answerId" name="choice_answers" type="@choiceInputType" data-choiceid="@answer.answerId">
+                                    <span>@answer.answer</span>
+                                </label>
+                            </p>
+                        }
                     }
                 }
-            }
 
-            <p id="correctionTextPar">&nbsp;</p>
+                <p id="correctionTextPar">&nbsp;</p>
 
-            <button class="btn btn-large waves-effect green" onclick="checkSolution();" id="checkSolutionBtn"
-            data-href="@routes.HomeController.checkSolution(flashcard.langId, flashcard.collId, flashcard.cardId)">
-                Lösung testen
-            </button>
+                <button class="btn btn-large waves-effect green" onclick="checkSolution();" id="checkSolutionBtn"
+                data-href="@routes.HomeController.checkSolution(flashcard.collId, flashcard.cardId)">
+                    Lösung testen
+                </button>
 
-            <a href="@routes.HomeController.startLearning(flashcard.langId, flashcard.collId, isRepeating)"
-            id="nextFlashcardBtn" class="btn btn-large waves-effect blue disabled">Weiter</a>
+                <a href="@routes.HomeController.startLearning(flashcard.collId, isRepeating)"
+                id="nextFlashcardBtn" class="btn btn-large waves-effect blue disabled">Weiter</a>
 
+            </div>
         </div>
-    </div>
-}
+    }
 

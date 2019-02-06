@@ -1,0 +1,23 @@
+@import model.{User, Course}
+
+@(user: User, courses: Seq[Course])
+
+@title = @{
+    "Startseite"
+}
+
+@main(title, Some(user)) {
+
+    <h2 class="center-align">Meine Kurse</h2>
+
+    <hr>
+
+    @if(courses.nonEmpty) {
+        @for(course <- courses) {
+            <a href="@routes.HomeController.course(course.id)" class="btn btn-large waves-effect waves-block green">@course.name</a>
+        }
+    } else {
+        <p class="red-text">Sie sind noch nicht in einem Kurs registriert.</p>
+    }
+
+}

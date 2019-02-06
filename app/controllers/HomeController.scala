@@ -15,8 +15,15 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
 
   def index: EssentialAction = futureWithUser(adminRightsRequired = false) { user =>
     implicit request =>
-      tableDefs.futureLanguagesForUser(user) map { languages =>
-        Ok(views.html.myLanguages(user, languages))
+      tableDefs.futureCoursesForUser(user) map { courses =>
+        Ok(views.html.index(user, courses))
+      }
+  }
+
+  def userPage: EssentialAction = futureWithUser(adminRightsRequired = false) { user =>
+    implicit request =>
+      tableDefs.futureCoursesForUser(user) map {
+        courses => Ok(views.html.user(user, courses))
       }
   }
 
@@ -27,12 +34,20 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
       }
   }
 
+  def course(courseId: String): EssentialAction = futureWithUserAndCourse(adminRightsRequired = false, courseId) { (user, course) =>
+    implicit request =>
+      tableDefs.futureCollectionsForCourse(course) map {
+        collectionsForCourse => Ok(views.html.course(user, course,collectionsForCourse))
+      }
+  }
+
   def language(langId: Int): EssentialAction =
     futureWithUserAndLanguage(adminRightsRequired = false, langId) { (user, language) =>
       implicit request =>
-        tableDefs.futureCollectionsForLanguage(language) map {
-          collections => Ok(views.html.language(user, language, collections))
-        }
+        //        tableDefs.futureCollectionsForLanguage(language) map {
+        //          collections => Ok(views.html.language(user, language, collections))
+        //        }
+        ???
     }
 
   def selectLanguage(langId: Int): EssentialAction =
@@ -53,19 +68,19 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
         }
     }
 
-  def collection(langId: Int, collId: Int): EssentialAction =
-    futureWithUserAndCollection(adminRightsRequired = false, langId, collId) { (user, language, collection) =>
+  def collection(collId: Int): EssentialAction =
+    futureWithUserAndCollection(adminRightsRequired = false, collId) { (user, collection) =>
       implicit request =>
         for {
           flashcardCount <- tableDefs.futureFlashcardCountForCollection(collection)
           toLearnCount <- tableDefs.futureFlashcardsToLearnCount(user, collection)
           toRepeatCount <- tableDefs.futureFlashcardsToRepeatCount(user, collection)
-        } yield Ok(views.html.collection(user, language, collection, flashcardCount, toLearnCount, toRepeatCount))
+        } yield Ok(views.html.collection(user, collection, flashcardCount, toLearnCount, toRepeatCount))
     }
 
 
-  def startLearning(langId: Int, collId: Int, isRepeating: Boolean): EssentialAction =
-    futureWithUserAndCollection(adminRightsRequired = false, langId, collId) { (user, _, collection) =>
+  def startLearning(collId: Int, isRepeating: Boolean): EssentialAction =
+    futureWithUserAndCollection(adminRightsRequired = false, collId) { (user, collection) =>
       implicit request =>
         val futureFlashcard = if (isRepeating)
           tableDefs.futureMaybeIdentifierNextFlashcardToRepeat(user, collection)
@@ -73,13 +88,13 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
           tableDefs.futureMaybeIdentifierNextFlashcardToLearn(user, collection)
 
         futureFlashcard map {
-          case None             => Redirect(routes.HomeController.collection(langId, collId))
-          case Some(identifier) => Redirect(routes.HomeController.learn(identifier.langId, identifier.collId, identifier.cardId, isRepeating))
+          case None             => Redirect(routes.HomeController.collection(collId))
+          case Some(identifier) => Redirect(routes.HomeController.learn(identifier.collId, identifier.cardId, isRepeating))
         }
     }
 
-  def learn(langId: Int, collId: Int, cardId: Int, isRepeating: Boolean): EssentialAction =
-    futureWithUserAndCompleteFlashcard(adminRightsRequired = false, langId, collId, cardId) { (user, _, _, flashcard) =>
+  def learn(collId: Int, cardId: Int, isRepeating: Boolean): EssentialAction =
+    futureWithUserAndCompleteFlashcard(adminRightsRequired = false, collId, cardId) { (user, _, flashcard) =>
       implicit request =>
         val futureMaybeOldAnswer: Future[Option[UserAnsweredFlashcard]] =
           tableDefs.futureUserAnswerForFlashcard(user, flashcard)
@@ -88,15 +103,15 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
         futureMaybeOldAnswer map { maybeOldAnswer =>
           if (!isRepeating && maybeOldAnswer.isDefined) {
             // TODO: Something went wrong, take next flashcard?
-            Redirect(routes.HomeController.startLearning(langId, collId, isRepeating))
+            Redirect(routes.HomeController.startLearning(collId, isRepeating))
           } else {
             Ok(views.html.learn(user, flashcard, maybeOldAnswer, isRepeating))
           }
         }
     }
 
-  def checkSolution(langId: Int, collId: Int, cardId: Int): EssentialAction =
-    futureWithUserAndCompleteFlashcard(adminRightsRequired = false, langId, collId, cardId) { (user, _, _, flashcard) =>
+  def checkSolution(collId: Int, cardId: Int): EssentialAction =
+    futureWithUserAndCompleteFlashcard(adminRightsRequired = false, collId, cardId) { (user, _, flashcard) =>
       implicit request =>
         request.body.asJson flatMap (json => JsonFormats.solutionFormat.reads(json).asOpt) match {
           case None           => Future(BadRequest("Could not read solution..."))

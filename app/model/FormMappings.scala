@@ -10,7 +10,7 @@ final case class RegisterFormValues(username: String, pw: String, pwRepeat: Stri
 
 final case class NewCollectionFormValues()
 
-final case class LtiFormValues(username: String, courseName: String, courseIdentifier: String)
+final case class LtiFormValues(username: String, courseIdentifier: String, courseName: String)
 
 object FormMappings {
 
