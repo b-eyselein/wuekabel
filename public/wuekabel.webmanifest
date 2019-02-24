@@ -1,0 +1,9 @@
+{
+  "name": "Wuekabel",
+  "short_name": "wuekabel",
+  "icons": [],
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "black",
+  "background_color": "white"
+}

@@ -6,7 +6,11 @@
     "Startseite"
 }
 
-@main(title, Some(user)) {
+@scripts = {
+    <script src="@routes.Assets.versioned("app.js")"></script>
+}
+
+@main(title, Some(user), scripts) {
 
     <h2 class="center-align">Meine Kurse</h2>
 

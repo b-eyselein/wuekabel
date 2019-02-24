@@ -2,6 +2,12 @@
 
 GET         /                                                       controllers.HomeController.index
 
+# Service worker, etc.
+
+GET         /service-worker.js                                      controllers.Assets.at(path="/public", file="serviceWorker.js")
+GET         /manifest.json                                          controllers.Assets.at(path="/public", file="wuekabel.webmanifest")
+GET         /sw.js                                                  controllers.Assets.at(path="/public", file="sw.js")
+
 # User management
 
 GET         /registerForm                                           controllers.LoginController.registerForm
