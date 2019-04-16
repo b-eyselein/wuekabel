@@ -90,41 +90,30 @@ trait CoursesCollectionsFlashcardsTableQueries {
 
   // Saving
 
-  def futureInsertCompleteFlashcard(completeFlashcard: Flashcard): Future[Boolean] = {
-    val dbCompleteFlashcard = PersistenceModels.flashcardToDbFlashcard(completeFlashcard)
+  def futureInsertCompleteFlashcard(completeFlashcard: Flashcard): Future[Boolean] =
+    PersistenceModels.flashcardToDbFlashcard(completeFlashcard) match {
+      case DBCompleteFlashcard(flashcard, choiceAnswers, blanksAnswers) =>
 
-    futureInsertFlashcard(dbCompleteFlashcard.flashcard) flatMap { dbFlashcard =>
+        futureInsertFlashcard(flashcard) flatMap {
+          case false => Future.successful(false)
+          case true  =>
 
-      val futureSavedChoiceAnswers = Future.sequence(dbCompleteFlashcard.choiceAnswers.map { dbChoiceAnswer =>
-        futureInsertChoiceAnswer(dbChoiceAnswer.copy(cardId = dbFlashcard.cardId))
-      })
-
-      val futureSavedBlanksAnswers = Future.sequence(dbCompleteFlashcard.blanksAnswers.map { dbBlanksAnswer =>
-        futureInsertBlanksAnswer(dbBlanksAnswer.copy(cardId = dbFlashcard.cardId))
-      })
-
-      futureSavedChoiceAnswers.map {
-        savedAnswers => true
-      }
+            for {
+              futureSavedChoiceAnswers <- Future.sequence(choiceAnswers.map(futureInsertChoiceAnswer))
+              futureSavedBlanksAnswers <- Future.sequence(blanksAnswers.map(futureInsertBlanksAnswer))
+            } yield futureSavedChoiceAnswers.forall(identity) && futureSavedBlanksAnswers.forall(identity)
+        }
+        
     }
-  }
 
-  def futureInsertFlashcard(flashcard: DBFlashcard): Future[DBFlashcard] = {
-    val query = flashcardsTQ returning flashcardsTQ.map(_.id) into ((fc, newId) => fc.copy(cardId = newId))
 
-    db.run(query += flashcard)
-  }
+  def futureInsertFlashcard(flashcard: DBFlashcard): Future[Boolean] =
+    db.run(flashcardsTQ insertOrUpdate flashcard).transform(_ == 1, identity)
 
-  private def futureInsertChoiceAnswer(choiceAnswer: ChoiceAnswer): Future[ChoiceAnswer] = {
-    val query = choiceAnswersTQ returning choiceAnswersTQ.map(_.id) into ((ca, newId) => ca.copy(answerId = newId))
+  private def futureInsertChoiceAnswer(choiceAnswer: ChoiceAnswer): Future[Boolean] =
+    db.run(choiceAnswersTQ insertOrUpdate choiceAnswer).transform(_ == 1, identity)
 
-    db.run(query += choiceAnswer)
-  }
-
-  private def futureInsertBlanksAnswer(blanksAnswer: BlanksAnswer): Future[BlanksAnswer] = {
-    val query = blanksAnswersTQ returning blanksAnswersTQ.map(_.id) into ((ca, newId) => ca.copy(answerId = newId))
-
-    db.run(query += blanksAnswer)
-  }
+  private def futureInsertBlanksAnswer(blanksAnswer: BlanksAnswer): Future[Boolean] =
+    db.run(blanksAnswersTQ insertOrUpdate blanksAnswer).transform(_ == 1, identity)
 
 }

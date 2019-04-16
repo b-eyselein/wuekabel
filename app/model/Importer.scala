@@ -34,10 +34,10 @@ object Importer {
 
     val sheet = workbook.getSheetAt(workbook.getActiveSheetIndex)
 
-    val firstRowWithoutHeaderInex = sheet.getFirstRowNum + 1
+    val firstRowWithoutHeaderIndex = sheet.getFirstRowNum + 1
 
     // Ignore header ExcelRow
-    val readFlashcards = (firstRowWithoutHeaderInex to sheet.getLastRowNum) flatMap { rowIndex =>
+    val readFlashcards = (firstRowWithoutHeaderIndex to sheet.getLastRowNum) flatMap { rowIndex =>
       Option(sheet.getRow(rowIndex)) match {
         case None      => None
         case Some(row) => Some(readRow(row, courseId, collId))
@@ -68,19 +68,13 @@ object Importer {
       }
     })
 
-
-    Right(Flashcard(cardId, collId, courseId, CardType.Choice, question, meaning = "", choiceAnswers = answers))
+    Right(Flashcard(cardId, collId, courseId, CardType.Choice, question, choiceAnswers = answers))
 
   }
 
-  private def readWordRow(row: ExcelRow, courseId: Int, collId: Int, question: String): Either[String, Flashcard] =
+  private def readTextualRow(row: ExcelRow, courseId: Int, collId: Int, cardType: CardType, question: String): Either[String, Flashcard] =
     readStringCell(row, meaningCellIndex) map { meaning =>
-      Flashcard(row.getRowNum, collId, courseId, CardType.Vocable, question, meaning)
-    }
-
-  private def readTextRow(row: ExcelRow, courseId: Int, collId: Int, question: String): Either[String, Flashcard] =
-    readStringCell(row, meaningCellIndex) map { meaning =>
-      Flashcard(row.getRowNum, collId, courseId, CardType.Text, question, meaning)
+      Flashcard(row.getRowNum, collId, courseId, cardType, question, meaning)
     }
 
   private def readBlankRow(row: ExcelRow, courseId: Int, collId: Int, question: String): Either[String, Flashcard] = {
@@ -88,35 +82,24 @@ object Importer {
 
     val (_, answers): (Seq[String], Seq[BlanksAnswer]) = partitionEitherSeq((meaningCellIndex to row.getLastCellNum).map { cellIndex =>
       readStringCell(row, cellIndex) map {
-        answer =>
-          val id = cellIndex - meaningCellIndex
-          BlanksAnswer(id, cardId, collId, courseId, answer)
+        answer => BlanksAnswer(cellIndex - meaningCellIndex, cardId, collId, courseId, answer)
       }
     })
 
     Right(Flashcard(cardId, collId, courseId, CardType.Blank, question, meaning = "", answers))
   }
 
-
-  private def readRow(row: ExcelRow, courseId: Int, collId: Int): Either[String, Flashcard] =
-    readStringCell(row, cardTypeCellIndex) flatMap { cardTypeString: String =>
-
-      cardTypeFromString(cardTypeString) flatMap { cardType: CardType =>
-
-        readStringCell(row, questionCellIndex) flatMap { question: String =>
-
-          cardType match {
-            case CardType.Vocable => readWordRow(row, courseId, collId, question)
-            case CardType.Text    => readTextRow(row, courseId, collId, question)
-            case CardType.Blank   => readBlankRow(row, courseId, collId, question)
-            case CardType.Choice  => readChoiceRow(row, courseId, collId, question)
-          }
-
-        }
-
-      }
-
+  private def readRow(row: ExcelRow, courseId: Int, collId: Int): Either[String, Flashcard] = for {
+    cardTypeString <- readStringCell(row, cardTypeCellIndex)
+    cardType <- cardTypeFromString(cardTypeString)
+    question <- readStringCell(row, questionCellIndex)
+    flashcard <- cardType match {
+      case CardType.Vocable | CardType.Text => readTextualRow(row, courseId, collId, cardType, question)
+      case CardType.Blank                   => readBlankRow(row, courseId, collId, question)
+      case CardType.Choice                  => readChoiceRow(row, courseId, collId, question)
     }
+  } yield flashcard
+
 
   private def readStringCell(row: ExcelRow, index: Int): Either[String, String] = {
     val cell = row.getCell(index, MissingCellPolicy.CREATE_NULL_AS_BLANK)

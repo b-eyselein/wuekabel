@@ -86,6 +86,8 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
       FormMappings.newCollectionForm.bindFromRequest.fold(onError, onRead)
   }
 
+  // Flashcards
+
   def uploadCardsFile(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (admin, collection) =>
     implicit request =>
 
@@ -97,9 +99,7 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
 
           failureStrings.foreach(println)
 
-          val futureImportedFlashcardsSaved = Future.sequence(importedFlashcards.map(
-            tableDefs.futureInsertCompleteFlashcard
-          ))
+          val futureImportedFlashcardsSaved = Future.sequence(importedFlashcards.map(tableDefs.futureInsertCompleteFlashcard))
 
           futureImportedFlashcardsSaved map { importedFlashcardsSaved =>
             Ok(views.html.cardPreview(admin, courseId, collection, importedFlashcards, failureStrings))
