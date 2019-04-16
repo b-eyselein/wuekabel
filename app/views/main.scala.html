@@ -3,39 +3,38 @@
 @(title: String, maybeUser: Option[User], scripts: Html = Html(""))(content: Html)
 
     @navigation = {
-    @maybeUser match {
-        case Some(user) => {
-            @if(user.isAdmin) {
-                <li><a href="@routes.AdminController.index">Administration</a></li>
+        @maybeUser match {
+            case Some(user) => {
+                @if(user.isAdmin) {
+                    <li><a href="@routes.AdminController.index">Administration</a></li>
+                }
+                <li><a href="@routes.HomeController.userPage">Nutzer: @user.username </a></li>
+                <li><a href="@routes.LoginController.logout">Logout</a></li>
             }
-            <li><a href="@routes.HomeController.userPage">Nutzer: @user.username </a></li>
-            <li><a href="@routes.HomeController.allLanguages">Alle Sprachen</a></li>
-            <li><a href="@routes.LoginController.logout">Logout</a></li>
+            case None => {
+                <li><a href="@routes.LoginController.loginForm">Login</a></li>
+                <li><a href="@routes.LoginController.registerForm">Registrieren</a></li>
+            }
         }
-        case None => {
-            <li><a href="@routes.LoginController.loginForm">Login</a></li>
-            <li><a href="@routes.LoginController.registerForm">Registrieren</a></li>
-        }
-    }
     }
 
     <!DOCTYPE html>
     <html lang="de">
         <head>
             <meta charset="UTF-8">
-            <title>WuekabelApp: @title</title>
+            <title>Wuekabel: @title</title>
 
             <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
             <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
             <link rel="stylesheet" href="@routes.Assets.versioned("lib/materialize-css/dist/css/materialize.css")">
 
-            <link rel="manifest" href="/manifest.json">
+            @*<link rel="manifest" href="/manifest.json">*@
         </head>
         <body>
 
             <nav>
                 <div class="nav-wrapper green">
-                    <a href="@routes.HomeController.index" class="brand-logo">WuekabelApp</a>
+                    <a href="@routes.HomeController.index" class="brand-logo">WueKabel</a>
 
                     <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
 

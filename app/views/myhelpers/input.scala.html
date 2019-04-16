@@ -1,14 +1,20 @@
-@(field: Field, labelContent: String, fieldType: String = "text", inputWidth: Int = 12, placeHolder: Option[String] = None,
-        isRequired: Boolean = false, isReadOnly: Boolean = false)
-
+@(
+    field: Field, labelContent: String, fieldType: String = "text",
+    inputWidth: Int = 12, placeHolder: Option[String] = None,
+    isRequired: Boolean = false, isReadOnly: Boolean = false
+)
 
     @attributes = {
     @if(isRequired) { required } @if(isReadOnly) { readonly }
     }
 
+    @value = {
+    @field.value.map(x => Html(s""" value="$x" """)).getOrElse(Html(""))
+    }
+
     <div class="row">
         <div class="input-field col s@inputWidth">
-            <input type="@fieldType" id="@field.id" name="@field.name" class="validate" placeholder="@labelContent" @attributes>
+            <input type="@fieldType" id="@field.id" name="@field.name" @value class="validate" placeholder="@labelContent" @attributes>
             <label for="@field.id">@labelContent</label>
         </div>
     </div>

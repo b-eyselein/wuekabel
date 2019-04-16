@@ -15,26 +15,14 @@ final case class UserPassword(username: String, pwHash: String)
 
 // Course
 
-final case class Course(id: String, name: String)
+final case class Course(id: Int, shortName: String, name: String)
+
+final case class Collection(id: Int, courseId: Int, name: String)
 
 // User <-> Course
 
-final case class UserInCourse(username: String, courseId: String)
+final case class UserInCourse(username: String, courseId: Int)
 
-// Collection
-
-final case class Collection(id: Int, name: String)
-
-// Course <-> Collection
-
-final case class CollectionInCourse(collId: Int, courseId: String)
-
-// Languages and Collections
-
-// TODO: remove Languague?
-final case class Language(id: Int, name: String)
-
-final case class Bucket(id: Int, distanceDays: Int)
 
 // Flashcards
 
@@ -50,11 +38,38 @@ case object CardType extends PlayEnum[CardType] {
 
   case object Blank extends CardType
 
-  case object SingleChoice extends CardType
-
-  case object MultipleChoice extends CardType
+  case object Choice extends CardType
 
 }
+
+final case class Flashcard(
+  cardId: Int, collId: Int, courseId: Int,
+  cardType: CardType,
+  question: String,
+  meaning: String = "",
+  blanksAnswers: Seq[BlanksAnswer] = Seq.empty,
+  choiceAnswers: Seq[ChoiceAnswer] = Seq.empty
+) {
+
+  def identifier: FlashcardIdentifier = FlashcardIdentifier(cardId, collId, courseId)
+
+}
+
+sealed trait CardAnswer {
+  val answerId: Int
+  val cardId  : Int
+  val collId  : Int
+  val courseId: Int
+  val answer  : String
+}
+
+// Blanks
+
+final case class BlanksAnswer(answerId: Int, cardId: Int, collId: Int, courseId: Int, answer: String) extends CardAnswer
+
+// Single and Multiple choice
+
+final case class ChoiceAnswer(answerId: Int, cardId: Int, collId: Int, courseId: Int, answer: String, correctness: Correctness) extends CardAnswer
 
 sealed trait Correctness extends EnumEntry
 
@@ -70,16 +85,18 @@ case object Correctness extends PlayEnum[Correctness] {
 
 }
 
-final case class FlashcardIdentifier(cardId: Int, collId: Int) {
+final case class FlashcardIdentifier(cardId: Int, collId: Int, courseId: Int) {
 
-  def asString = s"$collId.$cardId"
+  def asString = s"$courseId.$collId.$cardId"
 
 }
 
 // User answered flashcard
 
-final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, bucketId: Int, dateAnswered: LocalDate, correct: Boolean, tries: Int) {
+final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, courseId: Int, bucket: Int, dateAnswered: LocalDate, correct: Boolean, tries: Int) {
 
-  def isActive: Boolean = dateAnswered.until(LocalDate.now(), ChronoUnit.DAYS) < Math.pow(3, bucketId - 1)
+  def cardIdentifier: FlashcardIdentifier = FlashcardIdentifier(cardId, collId, courseId)
+
+  def isActive: Boolean = dateAnswered.until(LocalDate.now(), ChronoUnit.DAYS) < Math.pow(3, bucket - 1)
 
 }

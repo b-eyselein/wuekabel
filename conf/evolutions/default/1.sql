@@ -4,8 +4,8 @@
 
 create table if not exists users
 (
-  username varchar(50) primary key,
-  is_admin boolean not null default false
+    username varchar(50) primary key,
+    is_admin boolean not null default false
 );
 
 insert into users (username, is_admin)
@@ -17,11 +17,11 @@ values ('first_user', true),
 
 create table if not exists user_passwords
 (
-  username      varchar(50) primary key,
-  password_hash varchar(100) not null,
+    username      varchar(50) primary key,
+    password_hash varchar(100) not null,
 
-  foreign key (username) references users (username)
-    on update cascade on delete cascade
+    foreign key (username) references users (username)
+        on update cascade on delete cascade
 );
 
 insert into user_passwords (username, password_hash)
@@ -33,203 +33,144 @@ values ('first_user', '$2a$10$6loikDKMzBkdP1HG33BeheyhF7e1.gNBx3mM1CiePRg2AaicJm
 
 create table if not exists courses
 (
-  id   varchar(100) primary key,
-  name varchar(100) not null
+    id         int primary key,
+    short_name varchar(100) not null,
+    title      varchar(100) not null
 );
+
+insert into courses(id, short_name, title)
+values (1, 'prop_french_1', 'Propädeutikum Französisch 1');
 
 -- Users <-> Courses
 
 create table if not exists users_in_courses
 (
-  username  varchar(50),
-  course_id varchar(100),
+    username  varchar(50),
+    course_id int,
 
-  primary key (username, course_id),
-  foreign key (username) references users (username)
-    on update cascade on delete cascade,
-  foreign key (course_id) references courses (id)
-    on update cascade on delete cascade
+    primary key (username, course_id),
+    foreign key (username) references users (username)
+        on update cascade on delete cascade,
+    foreign key (course_id) references courses (id)
+        on update cascade on delete cascade
 );
-
--- Language
-
-create table if not exists languages
-(
-  id   int primary key auto_increment,
-  name varchar(100) unique
-);
-
-insert into languages (id, name)
-values (1, 'Latein'),
-       (2, 'Französisch'),
-       (3, 'Englisch');
-
-
--- Users <-> Languages
-
-# create table user_learns_language
-# (
-#   username varchar(50) not null,
-#   lang_id  int         not null,
-#
-#   primary key (username, lang_id),
-#   foreign key (username) references users (username)
-#     on update cascade on delete cascade,
-#   foreign key (lang_id) references languages (id)
-#     on update cascade on delete cascade
-# );
-
-# insert into user_learns_language (username, lang_id)
-# values ('first_user', 1);
-
--- Buckets
-
-create table if not exists buckets
-(
-  id            int primary key,
-  distance_days int not null
-);
-
--- distance_days == 3 ^ (id - 1)
-insert into buckets (id, distance_days)
-values (1, 1),
-       (2, 3),
-       (3, 9),
-       (4, 27),
-       (5, 81);
 
 -- Collections
 
 create table if not exists collections
 (
-  id   int primary key not null auto_increment,
-  name varchar(100)    not null
+    id        int,
+    course_id int,
+    name      varchar(100) not null,
+
+    primary key (id, course_id),
+    foreign key (course_id) references courses (id)
+        on update cascade on delete cascade
 );
 
-insert into collections (id, name)
-values (1, 'Erste Sammlung'),
-       (2, 'Zweite Sammlung'),
-       (3, 'Dritte Sammlung');
-
--- Courses <-> Collections
-
-create table if not exists collections_in_courses
-(
-  coll_id   int,
-  course_id varchar(100),
-
-  primary key (coll_id, course_id),
-  foreign key (coll_id) references collections (id)
-    on update cascade on delete cascade,
-  foreign key (course_id) references courses (id)
-    on update cascade on delete cascade
-);
-
+insert into collections (id, course_id, name)
+values (1, 1, 'Erste Sammlung'),
+       (2, 1, 'Zweite Sammlung'),
+       (3, 1, 'Dritte Sammlung');
 
 -- FlashCards with answers
 
 create table if not exists flashcards
 (
-  id              int                                                                 not null auto_increment,
-  coll_id         int                                                                 not null,
-  flash_card_type enum ('Vocable', 'Text', 'Blank', 'SingleChoice', 'MultipleChoice') not null default 'Vocable',
-  question        text                                                                not null,
-  meaning         text, -- can be null!
+    id              int,
+    coll_id         int,
+    course_id       int,
+    flash_card_type enum ('Vocable', 'Text', 'Blank', 'Choice') not null default 'Vocable',
+    question        text                                        not null,
+    meaning         text                                        not null,
 
-  primary key (id, coll_id),
-  foreign key (coll_id) references collections (id)
-    on update cascade on delete cascade
+    primary key (id, coll_id, course_id),
+    foreign key (coll_id, course_id) references collections (id, course_id)
+        on update cascade on delete cascade
 );
 
-insert into flashcards (id, coll_id, flash_card_type, question, meaning)
-values (1, 1, 'Vocable', 'pater', 'Vater'),
-       (2, 1, 'Vocable', 'mater', 'Mutter'),
-       (3, 1, 'Text', 'magna domus', 'großes Haus'),
-       (4, 1, 'SingleChoice', 'Welches Geschlecht hat das Wort pater?', null),
-       (5, 1, 'MultipleChoice', 'Welche dieser Aussagen sind korrekt?', null);
+insert into flashcards (id, coll_id, course_id, flash_card_type, question, meaning)
+values (1, 1, 1, 'Vocable', 'pater', 'Vater'),
+       (2, 1, 1, 'Vocable', 'mater', 'Mutter'),
+       (3, 1, 1, 'Text', 'magna domus', 'großes Haus'),
+       (4, 1, 1, 'Choice', 'Welches Geschlecht hat das Wort pater?', ''),
+       (5, 1, 1, 'Choice', 'Welche dieser Aussagen sind korrekt?', '');
 
 create table if not exists choice_answers
 (
-  id          int                                   not null auto_increment,
-  card_id     int                                   not null,
-  coll_id     int                                   not null,
+    id          int,
+    card_id     int,
+    coll_id     int,
+    course_id   int,
 
-  answer      text                                  not null,
-  correctness enum ('CORRECT', 'OPTIONAL', 'WRONG') not null default 'WRONG',
+    answer      text                                  not null,
+    correctness enum ('CORRECT', 'OPTIONAL', 'WRONG') not null default 'WRONG',
 
-  primary key (id, card_id, coll_id),
-  foreign key (card_id, coll_id) references flashcards (id, coll_id)
-    on update cascade on delete cascade
+    primary key (id, card_id, coll_id, course_id),
+    foreign key (card_id, coll_id, course_id) references flashcards (id, coll_id, course_id)
+        on update cascade on delete cascade
 );
 
-
-insert into choice_answers (id, card_id, coll_id, answer, correctness)
-values (1, 4, 1, 'Maskulinum', 'CORRECT'),
-       (2, 4, 1, 'Femininum', 'WRONG'),
-       (3, 4, 1, 'Neutrum', 'WRONG'),
-       (1, 5, 1, 'Wörter auf -or sind meist männlich', 'CORRECT'),
-       (2, 5, 1, 'Wörter auf -is sind meist weiblich', 'WRONG'),
-       (3, 5, 1, 'Wörter auf -x sind meist weiblich', 'CORRECT'),
-       (4, 5, 1, 'Wörter auf -en sind immer neutrum', 'CORRECT');
+insert into choice_answers (id, card_id, coll_id, course_id, answer, correctness)
+values (1, 4, 1, 1, 'Maskulinum', 'CORRECT'),
+       (2, 4, 1, 1, 'Femininum', 'WRONG'),
+       (3, 4, 1, 1, 'Neutrum', 'WRONG'),
+       (1, 5, 1, 1, 'Wörter auf -or sind meist männlich', 'CORRECT'),
+       (2, 5, 1, 1, 'Wörter auf -is sind meist weiblich', 'WRONG'),
+       (3, 5, 1, 1, 'Wörter auf -x sind meist weiblich', 'CORRECT'),
+       (4, 5, 1, 1, 'Wörter auf -en sind immer neutrum', 'CORRECT');
 
 create table if not exists blanks_answers
 (
-  id      int  not null auto_increment,
-  card_id int  not null,
-  coll_id int  not null,
+    id        int,
+    card_id   int,
+    coll_id   int,
+    course_id int,
+    answer    text not null,
 
-  answer  text not null,
-
-  primary key (id, card_id, coll_id),
-  foreign key (card_id, coll_id) references flashcards (id, coll_id)
-    on update cascade on delete cascade
+    primary key (id, card_id, coll_id, course_id),
+    foreign key (card_id, coll_id, course_id) references flashcards (id, coll_id, course_id)
+        on update cascade on delete cascade
 );
 
 -- User <-> Flashcard
 
 create table if not exists users_answered_flashcards
 (
-  username      varchar(50) not null,
-  card_id       int         not null,
-  coll_id       int         not null,
-  bucket_id     int         not null,
-  date_answered date        not null,
-  correct       boolean     not null default false,
-  tries         int         not null default 1,
+    username      varchar(50),
+    card_id       int,
+    coll_id       int,
+    course_id     int,
 
-  primary key (username, card_id, coll_id),
+    bucket        int     not null,
+    date_answered date    not null,
+    correct       boolean not null default false,
+    tries         int     not null default 1,
 
-  foreign key (username) references users (username)
-    on update cascade on delete cascade,
-  foreign key (card_id, coll_id) references flashcards (id, coll_id)
-    on update cascade on delete cascade,
-  foreign key (bucket_id) references buckets (id)
-    on update cascade on delete cascade
+    constraint bucket_check check (bucket between 0 and 6),
+
+    primary key (username, card_id, coll_id, course_id),
+    foreign key (username) references users (username)
+        on update cascade on delete cascade,
+    foreign key (card_id, coll_id, course_id) references flashcards (id, coll_id, course_id)
+        on update cascade on delete cascade
 );
-
-# insert into users_answered_flashcards (username, card_id, coll_id, bucket_id, date_answered, correct,
-#                                        tries)
-# values ('first_user', 1, 1, 1, 1, subdate(current_date(), 1), false, 1),
-#        ('first_user', 2, 1, 1, 1, subdate(current_date(), 1), true, 2),
-#        ('first_user', 3, 1, 1, 1, subdate(current_date(), 2), false, 1);
 
 -- Views
 
 create view flashcards_to_learn as
-select id as card_id, fcs.coll_id, us.username
+select id as card_id, fcs.coll_id, fcs.course_id, us.username
 from flashcards fcs
-       join users us
-       left outer join users_answered_flashcards uaf
-                       on us.username = uaf.username and uaf.card_id = fcs.id and uaf.coll_id = fcs.coll_id
+         join users us
+         left outer join users_answered_flashcards uaf
+                         on us.username = uaf.username and uaf.card_id = fcs.id and uaf.coll_id = fcs.coll_id
 where card_id is null;
 
 create view flashcards_to_repeat as
-select f.id as card_id, f.coll_id as coll_id, username, correct, tries
+select f.id as card_id, f.coll_id as coll_id, f.course_id as course_id, username
 from flashcards f
-       left join users_answered_flashcards uaf
-                 on uaf.card_id = f.id and uaf.coll_id = f.coll_id
-       join buckets b on uaf.bucket_id = b.id
-where datediff(now(), date_answered) >= b.distance_days
+         left join users_answered_flashcards uaf on uaf.card_id = f.id and uaf.coll_id = f.coll_id
+where datediff(now(), date_answered) >= power(3, bucket)
    or (uaf.correct = false and uaf.tries < 2);
 
 # --- !Downs
@@ -248,13 +189,7 @@ drop table if exists choice_answers;
 
 drop table if exists flashcards;
 
-drop table if exists collections_in_courses;
-
 drop table if exists collections;
-
-drop table if exists user_learns_language;
-
-drop table if exists languages;
 
 drop table if exists users_in_courses;
 

@@ -1,81 +1,78 @@
-@import model.{User, Flashcard, CardType, Collection, WordFlashcard, TextFlashcard, BlanksFlashcard, ChoiceFlashcard}
+@import model.{User, Flashcard, CardType, Collection}
 
-@(user: User, collection: Collection, cards: Seq[Flashcard], readErrors: Seq[String])
+@(user: User, courseId: Int, collection: Collection, cards: Seq[Flashcard], readErrors: Seq[String])
 
-@title = @{
-    "Vorschau importierte Karteikarten"
-}
+    @title = @{
+        "Vorschau importierte Karteikarten"
+    }
 
-@cardsPerRow = @{
-    3
-}
+    @cardsPerRow = @{
+        3
+    }
 
-@main(title, Some(user)) {
-    @if(cards.nonEmpty) {
+    @main(title, Some(user)) {
+        @if(cards.nonEmpty) {
 
-        <div class="row">
-            <div class="col s12">
-                <a href="@routes.AdminController.collectionAdmin(collection.id)" class="btn btn-large waves-effect waves-block green">
-                    Zurück zur Sammlung
-                </a>
-            </div>
-        </div>
-
-        @for(completeCardGroup <- cards.grouped(cardsPerRow)) {
             <div class="row">
-            @for(completeCard <- completeCardGroup) {
-                <div class="col m@{
-                    12 / cardsPerRow
-                } s12">
-                    <div class="card-panel">
-                        <p>
-                            @{
-                                s"${completeCard.collId}.${completeCard.cardId}"
-                            }: @completeCard.question
-                        </p>
+                <div class="col s12">
+                    <a href="@routes.AdminController.collectionAdmin(courseId, collection.id)" class="btn btn-large waves-effect waves-block green">
+                        Zurück zur Sammlung
+                    </a>
+                </div>
+            </div>
 
-                        @completeCard match {
-                            case vfc: WordFlashcard => {
-                                <p>Lösung: @vfc.meaning</p>
-                            }
-                            case tfc: TextFlashcard => {
-                                <p>Lösung: @tfc.meaning</p>
-                            }
-                            case bfc: BlanksFlashcard => {
-                                <hr>
+            @for(completeCardGroup <- cards.grouped(cardsPerRow)) {
+                <div class="row">
+                @for(completeCard <- completeCardGroup) {
+                    <div class="col m@{
+                        12 / cardsPerRow
+                    } s12">
+                        <div class="card-panel">
+                            <p>
+                                @{
+                                    s"${completeCard.collId}.${completeCard.cardId}"
+                                }: @completeCard.question
+                            </p>
 
-                                @for(answer <- bfc.answers) {
-                                    <p>@answer.answer</p>
+                            @completeCard.cardType match {
+                                case CardType.Vocable | CardType.Text => {
+                                    <p>Lösung: @completeCard.meaning</p>
                                 }
-                            }
-                            case cfc: ChoiceFlashcard => {
-                                <hr>
+                                case CardType.Blank => {
+                                    <hr>
 
-                                @for(answerGroup <- cfc.choiceAnswers.grouped(2)) {
-                                    <div class="row">
-                                    @for(answer <- answerGroup) {
-                                        <div class="col m6 s12">
-                                            <b>@if(answer.correctness != model.Correctness.Wrong) {
-                                                +
-                                            } else {
-                                                -
-                                            }</b>
-                                            @answer.answer
-                                        </div>
-
+                                    @for(answer <- completeCard.blanksAnswers) {
+                                        <p>@answer.answer</p>
                                     }
-                                    </div>
+                                }
+                                case CardType.Choice => {
+                                    <hr>
+
+                                    @for(answerGroup <- completeCard.choiceAnswers.grouped(2)) {
+                                        <div class="row">
+                                        @for(answer <- answerGroup) {
+                                            <div class="col m6 s12">
+                                                <b>@if(answer.correctness != model.Correctness.Wrong) {
+                                                    +
+                                                } else {
+                                                    -
+                                                }</b>
+                                                @answer.answer
+                                            </div>
+
+                                        }
+                                        </div>
+                                    }
                                 }
                             }
-                        }
 
+                        </div>
                     </div>
+                }
                 </div>
             }
-            </div>
-        }
 
-    } else {
-        <p class="red-text">Konnte keine Karteikarten importieren!</p>
+        } else {
+            <p class="red-text">Konnte keine Karteikarten importieren!</p>
+        }
     }
-}

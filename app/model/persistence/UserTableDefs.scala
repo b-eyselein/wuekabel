@@ -33,6 +33,8 @@ trait UserTableDefs extends HasDatabaseConfigProvider[JdbcProfile] {
 
   def futureSavePwHash(userPassword: UserPassword): Future[Boolean] = db.run(userPasswordsTQ += userPassword).transform(_ == 1, identity)
 
+  def futureUpdatePwHashForUser(user: User, newPasswordHash: String): Future[Boolean] =
+    db.run(userPasswordsTQ.insertOrUpdate(UserPassword(user.username, newPasswordHash))).transform(_ == 1, identity)
 
   // Table definitions
 

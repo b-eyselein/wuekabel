@@ -1,6 +1,6 @@
-@import model.{User, Collection, Flashcard, Consts}
+@import model.{Collection, Consts, Flashcard, User}
 
-@(user: User, collection: Collection, flashcards: Seq[Flashcard])(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
+@(user: User, courseId: Int, collection: Collection, flashcards: Seq[Flashcard])(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
 
     @title = @{
         s"Sammlung '${collection.name}'"
@@ -35,7 +35,7 @@
             <div class="col s12">
                 <h4 class="center-align">Karteikarten hochladen</h4>
 
-                @helper.form(routes.AdminController.uploadCardsFile(collection.id), 'enctype -> "multipart/form-data") {
+                @helper.form(routes.AdminController.uploadCardsFile(courseId, collection.id), 'enctype -> "multipart/form-data") {
 
                     @helper.CSRF.formField
 

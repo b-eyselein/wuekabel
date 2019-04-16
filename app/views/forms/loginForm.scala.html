@@ -12,7 +12,7 @@
 
     <form action="@routes.LoginController.login" method="post" class="col s12">
 
-        @helper.CSRF.formField
+        @* @helper.CSRF.formField *@
 
         @myhelpers.input(loginForm(Consts.usernameName), "Nutzername", isRequired = true)
 

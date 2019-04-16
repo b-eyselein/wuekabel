@@ -8,7 +8,7 @@ import slick.lifted.{ForeignKeyQuery, PrimaryKey, ProvenShape}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait UserInCourseTableDefs extends HasDatabaseConfigProvider[JdbcProfile] with UserTableDefs with CourseTableDefs {
+trait UserInCourseTableDefs extends HasDatabaseConfigProvider[JdbcProfile] with UserTableDefs with CoursesCollectionsFlashcardsTableDefs {
 
   protected val dbConfigProvider: DatabaseConfigProvider
 
@@ -22,21 +22,30 @@ trait UserInCourseTableDefs extends HasDatabaseConfigProvider[JdbcProfile] with 
 
   // Queries
 
-  def futureUserInCourse(user: User, course: Course): Future[Boolean] =
-    db.run(usersInCoursesTQ.filter {
-      uic => uic.username === user.username && uic.courseId === course.id
-    }.result.map(_.nonEmpty))
+  def futureUserIsRegisteredForCourse(username: String, courseId: Int): Future[Boolean] = db.run(
+    usersInCoursesTQ.filter { uic => uic.username === username && uic.courseId === courseId }.result.map(_.nonEmpty)
+  )
 
-  def futureAddUserToCourse(user: User, course: Course): Future[Boolean] =
-    db.run(usersInCoursesTQ += UserInCourse(user.username, course.id)).transform(_ == 1, identity)
+  def futureRegisterUserForCourse(username: String, courseId: Int): Future[Boolean] =
+    db.run(usersInCoursesTQ += UserInCourse(username, courseId)).transform(_ == 1, identity)
 
-  def futureCoursesForUser(user: User): Future[Seq[Course]] = db.run(
+  def futureUnregisterUserFromCourse(username: String, courseId: Int): Future[Boolean] =
+    db.run(usersInCoursesTQ.filter { uic => uic.username === username && uic.courseId === courseId }.delete)
+      .transform(_ == 1, identity)
+
+  def futureCoursesForUser(username: String): Future[Seq[Course]] = db.run(
     usersInCoursesTQ
-      .filter(_.username === user.username)
+      .filter(_.username === username)
       .join(coursesTQ).on((uic, c) => uic.courseId === c.id)
       .map(_._2)
       .result
   )
+
+  def futureAllCoursesWithRegisterState(username: String): Future[Seq[(Course, Boolean)]] = futureAllCourses.flatMap { allCourses =>
+    Future.sequence(allCourses.map { course =>
+      futureUserIsRegisteredForCourse(username, course.id).map(isRegistered => (course, isRegistered))
+    })
+  }
 
   // Table definitions
 
@@ -44,7 +53,7 @@ trait UserInCourseTableDefs extends HasDatabaseConfigProvider[JdbcProfile] with 
 
     def username: Rep[String] = column[String](usernameName)
 
-    def courseId: Rep[String] = column[String]("course_id")
+    def courseId: Rep[Int] = column[Int]("course_id")
 
 
     def pk: PrimaryKey = primaryKey("pk", (username, courseId))

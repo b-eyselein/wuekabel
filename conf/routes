@@ -1,65 +1,84 @@
 # Routes
 
-GET         /                                                       controllers.HomeController.index
+GET         /                                                                         controllers.HomeController.index
 
 # Service worker, etc.
 
-GET         /service-worker.js                                      controllers.Assets.at(path="/public", file="serviceWorker.js")
-GET         /manifest.json                                          controllers.Assets.at(path="/public", file="wuekabel.webmanifest")
-GET         /sw.js                                                  controllers.Assets.at(path="/public", file="sw.js")
+#GET         /service-worker.js                                      controllers.Assets.at(path="/public", file="serviceWorker.js")
+#GET         /manifest.json                                          controllers.Assets.at(path="/public", file="wuekabel.webmanifest")
+#GET         /sw.js                                                  controllers.Assets.at(path="/public", file="sw.js")
 
 # User management
 
-GET         /registerForm                                           controllers.LoginController.registerForm
-POST        /register                                               controllers.LoginController.register
-GET         /loginForm                                              controllers.LoginController.loginForm
-POST        /login                                                  controllers.LoginController.login
-GET         /logout                                                 controllers.LoginController.logout
+GET         /registerForm                                                             controllers.LoginController.registerForm
+POST        /register                                                                 controllers.LoginController.register
+GET         /loginForm                                                                controllers.LoginController.loginForm
+POST        /login                                                                    controllers.LoginController.login
+GET         /logout                                                                   controllers.LoginController.logout
 
-GET         /user                                                   controllers.HomeController.userPage
+GET         /user                                                                     controllers.HomeController.userPage
+
+GET         /changePwForm                                                             controllers.LoginController.changePwForm
+POST        /changePw                                                                 controllers.LoginController.changePw
+
+# LTI
 
 + nocsrf
-POST        /lti                                                    controllers.LoginController.lti
+POST        /lti                                                                      controllers.LtiController.lti
+
++ nocsrf
+POST        /registerAsLtiProvider                                                    controllers.LtiController.registerAsLtiProvider
+
+# Admin routes
+
+GET         /admin/courses                                                            controllers.AdminController.index
+
+GET         /admin/courses/newCourseForm                                              controllers.AdminController.newCourseForm
+POST        /admin/courses                                                            controllers.AdminController.newCourse
+
+GET         /admin/courses/:courseId                                                  controllers.AdminController.courseAdmin(courseId: Int)
+
+GET         /admin/courses/:courseId/collections/newCollectionForm                    controllers.AdminController.newCollectionForm(courseId: Int)
+POST        /admin/courses/:courseId/collections                                      controllers.AdminController.newCollection(courseId: Int)
+
+GET         /admin/courses/:courseId/collections/:collId                              controllers.AdminController.collectionAdmin(courseId: Int, collId: Int)
+
+POST        /admin/courses/:courseId/collections/:collId/uploadCardsFile              controllers.AdminController.uploadCardsFile(courseId: Int, collId: Int)
+
+# User routes
+
+GET         /registerForCoursesForm                                                   controllers.HomeController.registerForCoursesForm
 
 # Languages
 
-GET         /languages                                              controllers.HomeController.allLanguages
-GET         /languages/:langId                                      controllers.HomeController.language(langId: Int)
+#GET         /languages                                                                controllers.HomeController.allLanguages
+#GET         /languages/:langId                                                        controllers.HomeController.language(langId: Int)
 
-GET         /course/:courseId                                       controllers.HomeController.course(courseId: String)
+GET         /courses/:courseId                                                        controllers.HomeController.course(courseId: Int)
 
-GET         /selectLanguage/:langId                                 controllers.HomeController.selectLanguage(langId: Int)
-GET         /deselectLanguage/:langId                               controllers.HomeController.deselectLanguage(langId: Int)
+GET         /courses/:courseId/register                                               controllers.HomeController.registerForCourse(courseId: Int)
+GET         /courses/:courseId/unregister                                             controllers.HomeController.unregisterForCourse(courseId: Int)
 
-GET         /collections/:collId                                    controllers.HomeController.collection( collId: Int)
+#GET         /selectLanguage/:langId                                                   controllers.HomeController.selectLanguage(langId: Int)
+#GET         /deselectLanguage/:langId                                                 controllers.HomeController.deselectLanguage(langId: Int)
 
-GET         /collections/:collId/startLearning                      controllers.HomeController.startLearning(collId: Int, isRepeating: Boolean = false)
-GET         /collections/:collId/startRepeating                     controllers.HomeController.startLearning(collId: Int, isRepeating: Boolean = true)
+GET         /courses/:courseId/collections/:collId                                    controllers.HomeController.collection(courseId: Int, collId: Int)
 
-GET         /collections/:collId/cards/:cardId/learn                controllers.HomeController.learn(collId: Int, cardId:Int, isRepeating: Boolean = false)
-GET         /collections/:collId/cards/:cardId/repeat               controllers.HomeController.learn(collId: Int, cardId:Int, isRepeating: Boolean = true)
+GET         /courses/:courseId/collections/:collId/startLearning                      controllers.HomeController.startLearning(courseId: Int, collId: Int, isRepeating: Boolean = false)
+GET         /courses/:courseId/collections/:collId/startRepeating                     controllers.HomeController.startLearning(courseId: Int, collId: Int, isRepeating: Boolean = true)
 
-POST        /collections/:collId/cards/:cardId/checkSolution        controllers.HomeController.checkSolution(collId: Int, cardId: Int)
+GET         /courses/:courseId/collections/:collId/cards/:cardId/learn                controllers.HomeController.learn(courseId: Int, collId: Int, cardId:Int, isRepeating: Boolean = false)
+GET         /courses/:courseId/collections/:collId/cards/:cardId/repeat               controllers.HomeController.learn(courseId: Int, collId: Int, cardId:Int, isRepeating: Boolean = true)
+
+PUT         /courses/:courseId/collections/:collId/cards/:cardId/checkSolution        controllers.HomeController.checkSolution(courseId: Int, collId: Int, cardId: Int)
 
 
-# Admin routes
-GET         /admin                                                  controllers.AdminController.index
+# API
 
-POST        /newLanguage                                            controllers.AdminController.newLanguage
+GET         /api/courses                                                              controllers.ApiController.courses
+GET         /api/courses/:courseId                                                    controllers.ApiController.course(courseId: Int)
+POST        /api/courses                                                              controllers.ApiController.newCourse
 
-GET         /languages/:langId/admin                                controllers.AdminController.languageAdmin(langId: Int)
-
-GET         /course/:courseId/admin                                 controllers.AdminController.courseAdmin(courseId: String)
-GET         /course/:courseId/allocateCollectionsForm               controllers.AdminController.allocateCollectionsToCourseForm(courseId: String)
-
-GET         /course/:courseId/allocateCollection/:collId            controllers.AdminController.allocateCollectionToCourse(courseId: String, collId: Int)
-GET         /course/:courseId/deallocateCollection/:collId          controllers.AdminController.deallocateCollectionFromCourse(courseId: String, collId: Int)
-
-POST        /newCollection                                          controllers.AdminController.newCollection
-
-GET         /collections/:collId/admin                              controllers.AdminController.collectionAdmin(collId: Int)
-
-POST        /collection/:collId/uploadCardsFile                     controllers.AdminController.uploadCardsFile(collId: Int)
 
 # Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file                                           controllers.Assets.versioned(path="/public", file: Asset)
+GET         /assets/*file                                                             controllers.Assets.versioned(path="/public", file: Asset)

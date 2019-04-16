@@ -1,0 +1,46 @@
+@import model.{User, ChangePwFormValues, Consts}
+
+@(user: User, pwForm: Form[ChangePwFormValues], hasPw: Boolean)(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
+
+@title = @{
+    s"""Passwort ${if(hasPw) "ändern" else "setzen"}"""
+}
+
+@scripts = {
+    <script>
+            function checkPasswords() {
+                const pw1 = document.getElementById('newPw1');
+                const pw2 = document.getElementById('newPw2');
+
+                const correct = pw1.value === pw2.value;
+
+                pw2.className = correct ? 'valid' : 'invalid';
+
+                return correct;
+            }
+    </script>
+}
+
+@main(title, Some(user), scripts) {
+
+    <h2 class="center-align">@title</h2>
+
+    <hr>
+
+    @helper.form(routes.LoginController.changePw, 'onsubmit -> "return checkPasswords();") {
+
+        @helper.CSRF.formField
+
+        @if(hasPw) {
+            @myhelpers.input(pwForm(Consts.oldPwName), "Altes Passwort", isRequired = !hasPw)
+        }
+
+        @myhelpers.input(pwForm(Consts.newPw1Name), "Neues Passwort", "password", isRequired = true)
+
+        @myhelpers.input(pwForm(Consts.newPw2Name), "Neues Passwort wiederholen", "password", isRequired = true)
+
+        <button class="btn btn-large waves-effect waves-block green">@title</button>
+
+    }
+
+}

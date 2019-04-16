@@ -1,144 +1,132 @@
-interface Solution {
-    learnerSolution: string
-    selectedAnswers: number[]
-}
+/// <reference path="interfaces.ts"/>
 
-interface EditOperation {
-    operationType: "Replace" | "Insert" | "Delete"
-    index: number
-    char: string | null
-}
-
-interface AnswerSelectionResult {
-    wrong: number[],
-    correct: number[],
-    missing: number[]
-}
-
-interface CorrectionResult {
-    correct: boolean,
-    cardType: 'Vocable' | 'Text' | 'Blank' | 'SingleChoice' | 'MultipleChoice'
-    learnerSolution: Solution,
-    operations: EditOperation[],
-    answerSelection: AnswerSelectionResult
-    newTriesCount: number
-    maybeSampleSol: string | null
-}
-
-let correctionTextPar: JQuery<HTMLParagraphElement>;
-let checkSolutionBtn: JQuery<HTMLButtonElement>;
+let correctionTextPar: HTMLParagraphElement;
+let checkSolutionBtn: HTMLButtonElement;
 let checkSolutionUrl: string;
 let canSolve: boolean = true;
 
-function readSolution(cardType: string): Solution | null {
+function readSolution(cardType: CardType): undefined | Solution {
     switch (cardType) {
         case 'Vocable':
         case 'Text':
         case 'Blank':
-            const learnerSolution: string = $('#translation_input').val() as string;
+            const solution: string = document.querySelector<HTMLInputElement>('#translation_input').value;
 
-            if (learnerSolution.length === 0) {
+            if (solution.length === 0) {
                 return null;
             }
 
-            return {learnerSolution, selectedAnswers: []};
+            return {solution, selectedAnswers: []};
 
-        case 'SingleChoice':
-        case 'MultipleChoice':
+        case 'Choice':
             const selectedAnswers: number[] = [];
 
-            $('input[name=choice_answers]').each((_, element: HTMLElement) => {
-                if (element instanceof HTMLInputElement && element.checked) {
-                    selectedAnswers.push(parseInt(element.dataset.choiceid));
-                }
-            });
+            document.querySelectorAll<HTMLInputElement>('input[name=choice_answers]').forEach(
+                (element: HTMLElement) => {
+                    if (element instanceof HTMLInputElement && element.checked) {
+                        selectedAnswers.push(parseInt(element.dataset.choiceid));
+                    }
+                });
 
             if (selectedAnswers.length === 0) {
                 return null;
             }
 
-            return {learnerSolution: "", selectedAnswers};
+            return {solution: "", selectedAnswers};
         default:
-            alert('There has been an internal error: ' + cardType);
-            return null;
+            console.error('There has been an internal error: ' + cardType);
+            return undefined;
     }
 }
 
-function onCorrectionSuccess(result: CorrectionResult): void {
+function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void {
     console.info(JSON.stringify(result, null, 2));
 
-    let correctionText = 'Ihre Lösung war ' + (result.correct ? '' : 'nicht ') + 'korrekt.';
+    let correctionText = `Ihre Lösung war ${result.correct ? '' : 'nicht '} korrekt.`;
 
     if ((result.newTriesCount >= 2) && (result.maybeSampleSol != null)) {
         correctionText += ` Die korrekte Lösung lautet '<code>${result.maybeSampleSol}</code>'.`;
     }
 
-    canSolve = !result.correct && result.newTriesCount <= 2;
+    canSolve = !(result.correct || result.newTriesCount >= 2);
 
-    correctionTextPar.html(correctionText).removeClass(result.correct ? 'red-text' : 'green-text').addClass(result.correct ? 'green-text' : 'red-text');
+    correctionTextPar.innerHTML = correctionText;
+    correctionTextPar.classList.remove(result.correct ? 'red-text' : 'green-text');
+    correctionTextPar.classList.add(result.correct ? 'green-text' : 'red-text');
 
-    checkSolutionBtn.prop('disabled', result.correct || (result.newTriesCount >= 2));
+    checkSolutionBtn.disabled = !canSolve;
 
     if (result.correct || result.newTriesCount >= 2) {
-        $('#nextFlashcardBtn').removeClass('disabled');
+        document.querySelector('#nextFlashcardBtn').classList.remove('disabled');
     }
 
-    $('#triesSpan').text(result.newTriesCount);
+    document.querySelector<HTMLSpanElement>('#triesSpan').innerText = result.newTriesCount.toString();
 
-
-    switch (result.cardType) {
+    switch (cardType) {
         case 'Vocable':
         case 'Text':
         case 'Blank':
-            $('#translation_input').removeClass(result.correct ? 'invalid' : 'valid').addClass(result.correct ? 'valid' : 'invalid');
+            const textInput = document.querySelector<HTMLInputElement>('#translation_input');
+            textInput.classList.remove(result.correct ? 'invalid' : 'valid');
+            textInput.classList.add(result.correct ? 'valid' : 'invalid');
             break;
-        case 'SingleChoice':
-        case 'MultipleChoice':
-            console.error(JSON.stringify(result.answerSelection));
+        case 'Choice':
+            console.error(JSON.stringify(result.answersSelection));
             break;
         default:
-            console.error(result.cardType);
+            console.error(cardType);
     }
 }
 
 function checkSolution(): void {
 
-    const cardType = $('#flashcardDiv').data('cardtype');
+    const cardType: CardType = document.querySelector<HTMLDivElement>('#flashcardDiv').dataset['cardtype'] as CardType;
 
-    const solution = readSolution(cardType);
+    const solution: Solution = readSolution(cardType);
 
     if (solution === null) {
         alert("Sie können keine leere Lösung abgeben!");
         return;
     }
 
-    // console.warn(JSON.stringify(solution, null, 2));
+    const headers: Headers = new Headers({
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Csrf-Token': document.querySelector<HTMLInputElement>('input[name="csrfToken"]').value
+    });
 
-    $.ajax({
-        url: checkSolutionUrl,
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(solution),
-        dataType: 'json',
-        beforeSend: (xhr) => {
-            const token = $('input[name="csrfToken"]').val() as string;
-            xhr.setRequestHeader("Csrf-Token", token)
-        },
-        success: onCorrectionSuccess,
-        error: (jqXHR) => {
-            console.error(jqXHR.responseText);
-        }
-    })
-
+    fetch(checkSolutionUrl, {method: 'PUT', body: JSON.stringify(solution), headers})
+        .then((response: Response) => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    response.text().then(text => console.error(text));
+                    return Promise.reject("Error code was " + response.status);
+                }
+            }
+        )
+        .then(obj => onCorrectionSuccess(obj, cardType))
+        .catch(reason => {
+            console.error(reason)
+        });
 }
 
-$(() => {
-    correctionTextPar = $('#correctionTextPar');
-    checkSolutionBtn = $('#checkSolutionBtn');
-    checkSolutionUrl = checkSolutionBtn.data('href');
+function domReady(callBack: () => void): void {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', callBack);
+    } else {
+        callBack();
+    }
+}
 
-    $(window).bind('keypress', (event) => {
-        if (event.keyCode === 13) {
+domReady(() => {
+    correctionTextPar = document.querySelector<HTMLParagraphElement>('#correctionTextPar');
+    checkSolutionBtn = document.querySelector<HTMLButtonElement>('#checkSolutionBtn');
+    checkSolutionUrl = checkSolutionBtn.dataset['href'];
+
+
+    document.addEventListener('keypress', event => {
+        if (event.key === 'Enter') {
             if (canSolve) {
                 checkSolution();
             } else {

@@ -13,38 +13,15 @@ trait ControllerHelpers extends Secured {
 
   protected val tableDefs: TableDefs
 
-  private def onNoSuchCourse(courseId: String): Result = NotFound(s"Es gibt keinen Kurs mit der ID '$courseId'")
+  private def onNoSuchCourse(courseId: Int): Result = NotFound(s"Es gibt keinen Kurs mit der ID '$courseId'")
 
-  private def onNoSuchLanguage(langId: Int): Result = NotFound(s"Es gibt keine Sprache mit der ID '$langId'")
-
-  private def onNoSuchCollection(collId: Int): Result = NotFound(s"Es gibt keine Sammlung mit der ID '$collId'")
+  private def onNoSuchCollection(courseId: Int, collId: Int): Result = NotFound(s"Es gibt keine Sammlung mit der ID '$collId' für den Kurs '$courseId'")
 
   private def onNuSuchFlashcard(collection: Collection, cardId: Int): Result =
     NotFound(s"Es gibt keine Karteikarte mit der ID '$cardId' für die Sammlung '${collection.name}'!")
 
-  protected def withUserAndLanguage(adminRightsRequired: Boolean, langId: Int)
-                                   (f: (User, Language) => Request[AnyContent] => Result): EssentialAction =
-    futureWithUser(adminRightsRequired) { user =>
-      implicit request =>
-        tableDefs.futureLanguageById(langId) map {
-          case None           => onNoSuchLanguage(langId)
-          case Some(language) => f(user, language)(request)
-        }
-    }
-
-  protected def futureWithUserAndLanguage(adminRightsRequired: Boolean, langId: Int)
-                                         (f: (User, Language) => Request[AnyContent] => Future[Result]): EssentialAction =
-    futureWithUser(adminRightsRequired) { user =>
-      implicit request =>
-        tableDefs.futureLanguageById(langId) flatMap {
-          case None           => Future.successful(onNoSuchLanguage(langId))
-          case Some(language) => f(user, language)(request)
-        }
-    }
-
-  protected def withUserAndCourse(adminRightsRequired: Boolean, courseId: String)
-                                 (f: (User, Course) => Request[AnyContent] => Result): EssentialAction =
-    futureWithUser(adminRightsRequired) { user =>
+  protected def withUserAndCourse(courseId: Int)(f: (User, Course) => Request[AnyContent] => Result): EssentialAction =
+    futureWithUser { user =>
       implicit request =>
         tableDefs.futureCourseById(courseId) map {
           case None         => onNoSuchCourse(courseId)
@@ -52,9 +29,8 @@ trait ControllerHelpers extends Secured {
         }
     }
 
-  protected def futureWithUserAndCourse(adminRightsRequired: Boolean, courseId: String)
-                                       (f: (User, Course) => Request[AnyContent] => Future[Result]): EssentialAction =
-    futureWithUser(adminRightsRequired) { user =>
+  protected def futureWithUserAndCourse(courseId: Int)(f: (User, Course) => Request[AnyContent] => Future[Result]): EssentialAction =
+    futureWithUser { user =>
       implicit request =>
         tableDefs.futureCourseById(courseId) flatMap {
           case None         => Future.successful(onNoSuchCourse(courseId))
@@ -63,40 +39,17 @@ trait ControllerHelpers extends Secured {
     }
 
 
-  protected def withUserAndCollection(adminRightsRequired: Boolean, collId: Int)
-                                     (f: (User, Collection) => Request[AnyContent] => Result): EssentialAction =
-    futureWithUser(adminRightsRequired) { user =>
+  protected def futureWithUserAndCollection(courseId: Int, collId: Int)(f: (User, Collection) => Request[AnyContent] => Future[Result]): EssentialAction =
+    futureWithUser { user =>
       implicit request =>
-        tableDefs.futureCollectionById(collId) map {
-          case None             => onNoSuchCollection(collId)
+        tableDefs.futureCollectionById(courseId, collId) flatMap {
+          case None             => Future.successful(onNoSuchCollection(courseId, collId))
           case Some(collection) => f(user, collection)(request)
         }
     }
 
-
-  protected def futureWithUserAndCollection(adminRightsRequired: Boolean, collId: Int)
-                                           (f: (User, Collection) => Request[AnyContent] => Future[Result]): EssentialAction =
-    futureWithUser(adminRightsRequired) { user =>
-      implicit request =>
-        tableDefs.futureCollectionById(collId) flatMap {
-          case None             => Future.successful(onNoSuchCollection(collId))
-          case Some(collection) => f(user, collection)(request)
-        }
-    }
-
-  protected def withUserAndCompleteFlashcard(adminRightsRequired: Boolean, langId: Int, collId: Int, cardId: Int)
-                                            (f: (User, Collection, Flashcard) => Request[AnyContent] => Result): EssentialAction =
-    futureWithUserAndCollection(adminRightsRequired, collId) { (user, collection) =>
-      implicit request =>
-        tableDefs.futureFlashcardById(collection, cardId) map {
-          case None            => onNuSuchFlashcard(collection, cardId)
-          case Some(flashcard) => f(user, collection, flashcard)(request)
-        }
-    }
-
-  protected def futureWithUserAndCompleteFlashcard(adminRightsRequired: Boolean, collId: Int, cardId: Int)
-                                                  (f: (User, Collection, Flashcard) => Request[AnyContent] => Future[Result]): EssentialAction =
-    futureWithUserAndCollection(adminRightsRequired, collId) { (user, collection) =>
+  protected def futureWithUserAndCompleteFlashcard(courseId: Int, collId: Int, cardId: Int)(f: (User, Collection, Flashcard) => Request[AnyContent] => Future[Result]): EssentialAction =
+    futureWithUserAndCollection(courseId, collId) { (user, collection) =>
       implicit request =>
         tableDefs.futureFlashcardById(collection, cardId) flatMap {
           case None            => Future.successful(onNuSuchFlashcard(collection, cardId))

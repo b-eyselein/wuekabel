@@ -1,27 +1,54 @@
 @import model.{User, Course}
 
-@(user: User, courses: Seq[Course])
+@(user: User, courses: Seq[Course], pwSet: Boolean)
 
-@title = @{
-    "Startseite"
-}
-
-@scripts = {
-    <script src="@routes.Assets.versioned("app.js")"></script>
-}
-
-@main(title, Some(user), scripts) {
-
-    <h2 class="center-align">Meine Kurse</h2>
-
-    <hr>
-
-    @if(courses.nonEmpty) {
-        @for(course <- courses) {
-            <a href="@routes.HomeController.course(course.id)" class="btn btn-large waves-effect waves-block green">@course.name</a>
-        }
-    } else {
-        <p class="red-text">Sie sind noch nicht in einem Kurs registriert.</p>
+    @title = @{
+        "Startseite"
     }
 
-}
+
+    @coursesPerRow = @{
+        2
+    }
+
+    @colWidth = @{
+        12 / coursesPerRow
+    }
+
+    @main(title, Some(user)) {
+
+        <h2 class="center-align">Meine Kurse</h2>
+
+        <hr>
+
+        @if(courses.nonEmpty) {
+            @for(courseGroup <- courses.grouped(coursesPerRow)) {
+                <div class="row">
+                @for(course <- courseGroup) {
+                    <div class="col m@colWidth s12">
+                        <a href="@routes.HomeController.course(course.id)" class="btn btn-large waves-effect waves-block green">@course.name</a>
+                    </div>
+                }
+                </div>
+            }
+
+        } else {
+            <p class="red-text">Sie sind noch nicht in einem Kurs registriert.</p>
+        }
+
+        @if(!pwSet) {
+            <hr>
+
+            <div class="card-panel red white-text">
+                Sie haben noch kein Passwort für diese Anwendung eingerichtet. Sie können Sie weiterhin nutzen, sich aber nur über WueCampus einloggen.
+                Sie können <a href="@routes.LoginController.changePwForm">hier</a> ein Passwort vergeben.
+            </div>
+        }
+
+        <hr>
+
+        <a class="btn btn-large waves-effect waves-block blue" href="@routes.HomeController.registerForCoursesForm">
+            In Kurse einschreiben</a>
+
+    }
+

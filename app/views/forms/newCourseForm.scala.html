@@ -1,0 +1,29 @@
+@import model.{Consts, Course, User}
+
+@(user: User, newCourseForm: Form[Course])(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
+
+@title = @{
+    "Neuen Kurs erstellen"
+}
+
+@main(title, Some(user)) {
+    <div class="row">
+        <div class="col s12">
+            <h4 class="center-align">Neuen Kurs erstellen</h4>
+
+            @helper.form(routes.AdminController.newCourse) {
+
+                @helper.CSRF.formField
+
+                @myhelpers.input(newCourseForm(Consts.idName), labelContent = "Id", fieldType = "number", isRequired = true)
+
+                @myhelpers.input(newCourseForm(Consts.shortNameName), labelContent = "Kurzname", isRequired = true)
+
+                @myhelpers.input(newCourseForm(Consts.nameName), labelContent = "Name", isRequired = true)
+
+                <button class="btn btn-large waves-effect waves-block green">Kurs erstellen</button>
+
+            }
+        </div>
+    </div>
+}

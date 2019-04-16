@@ -1,8 +1,13 @@
 package controllers
 
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+
 import javax.inject.{Inject, Singleton}
 import model._
 import model.persistence.TableDefs
+import play.api.Logger
+import play.api.libs.json.JsString
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -11,130 +16,143 @@ import scala.concurrent.{ExecutionContext, Future}
 class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs: TableDefs)(implicit protected val ec: ExecutionContext)
   extends AbstractController(cc) with ControllerHelpers with play.api.i18n.I18nSupport {
 
+  private val logger = Logger(classOf[HomeController])
+
+  override protected val adminRightsRequired: Boolean = false
+
   // Routes
 
-  def index: EssentialAction = futureWithUser(adminRightsRequired = false) { user =>
+  def index: EssentialAction = futureWithUser { user =>
     implicit request =>
-      tableDefs.futureCoursesForUser(user) map { courses =>
-        Ok(views.html.index(user, courses))
+      val pwSet = request.flash.get("no_pw_set").isEmpty
+
+      tableDefs.futureCoursesForUser(user.username) map { courses =>
+        Ok(views.html.index(user, courses, pwSet))
       }
   }
 
-  def userPage: EssentialAction = futureWithUser(adminRightsRequired = false) { user =>
+  def registerForCoursesForm: EssentialAction = futureWithUser { user =>
     implicit request =>
-      tableDefs.futureCoursesForUser(user) map {
+      tableDefs.futureAllCoursesWithRegisterState(user.username).map {
+        allCoursesAndRegisterState => Ok(views.html.forms.registerForCoursesForm(user, allCoursesAndRegisterState))
+      }
+  }
+
+  def registerForCourse(courseId: Int): EssentialAction = futureWithUser { user =>
+    implicit request =>
+      tableDefs.futureRegisterUserForCourse(user.username, courseId).map {
+        _ => Redirect(controllers.routes.HomeController.registerForCoursesForm())
+      }
+  }
+
+  def unregisterForCourse(courseId: Int): EssentialAction = futureWithUser { user =>
+    implicit request =>
+      tableDefs.futureUnregisterUserFromCourse(user.username, courseId).map {
+        _ => Redirect(controllers.routes.HomeController.registerForCoursesForm())
+      }
+  }
+
+  def userPage: EssentialAction = futureWithUser { user =>
+    implicit request =>
+      tableDefs.futureCoursesForUser(user.username) map {
         courses => Ok(views.html.user(user, courses))
       }
   }
 
-  def allLanguages: EssentialAction = futureWithUser(adminRightsRequired = false) { user =>
+  def course(courseId: Int): EssentialAction = futureWithUserAndCourse(courseId) { (user, course) =>
     implicit request =>
-      tableDefs.futureLanguagesAndUserLearns(user) map { languagesAndUserLearns =>
-        Ok(views.html.allLanguages(user, languagesAndUserLearns))
+      tableDefs.futureAllCollectionsInCourse(course.id) map {
+        collectionsForCourse => Ok(views.html.course(user, course, collectionsForCourse))
       }
   }
 
-  def course(courseId: String): EssentialAction = futureWithUserAndCourse(adminRightsRequired = false, courseId) { (user, course) =>
+  def collection(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, collection) =>
     implicit request =>
-      tableDefs.futureCollectionsForCourse(course) map {
-        collectionsForCourse => Ok(views.html.course(user, course,collectionsForCourse))
+      for {
+        flashcardCount <- tableDefs.futureFlashcardCountForCollection(collection)
+        toLearnCount <- tableDefs.futureFlashcardsToLearnCount(user, collection)
+        toRepeatCount <- tableDefs.futureFlashcardsToRepeatCount(user, collection)
+      } yield Ok(views.html.collection(user, courseId, collection, flashcardCount, toLearnCount, toRepeatCount))
+  }
+
+
+  def startLearning(courseId: Int, collId: Int, isRepeating: Boolean): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, collection) =>
+    implicit request =>
+      val futureFlashcard = if (isRepeating)
+        tableDefs.futureMaybeIdentifierNextFlashcardToRepeat(user, collection)
+      else
+        tableDefs.futureMaybeIdentifierNextFlashcardToLearn(user, collection)
+
+      futureFlashcard map {
+        case None             => Redirect(routes.HomeController.collection(courseId, collId))
+        case Some(identifier) => Redirect(routes.HomeController.learn(courseId, identifier.collId, identifier.cardId, isRepeating))
       }
   }
 
-  def language(langId: Int): EssentialAction =
-    futureWithUserAndLanguage(adminRightsRequired = false, langId) { (user, language) =>
+  def learn(courseId: Int, collId: Int, cardId: Int, isRepeating: Boolean): EssentialAction =
+    futureWithUserAndCompleteFlashcard(courseId, collId, cardId) { (user, _, flashcard) =>
       implicit request =>
-        //        tableDefs.futureCollectionsForLanguage(language) map {
-        //          collections => Ok(views.html.language(user, language, collections))
-        //        }
-        ???
-    }
 
-  def selectLanguage(langId: Int): EssentialAction =
-    futureWithUserAndLanguage(adminRightsRequired = false, langId) { (user, language) =>
-      implicit request =>
-        tableDefs.activateLanguageForUser(user, language) map {
-          case true  => Redirect(routes.HomeController.allLanguages())
-          case false => ???
-        }
-    }
-
-  def deselectLanguage(langId: Int): EssentialAction =
-    futureWithUserAndLanguage(adminRightsRequired = false, langId) { (user, language) =>
-      implicit request =>
-        tableDefs.deactivateLanguageForUser(user, language) map {
-          case true  => Redirect(routes.HomeController.allLanguages())
-          case false => ???
-        }
-    }
-
-  def collection(collId: Int): EssentialAction =
-    futureWithUserAndCollection(adminRightsRequired = false, collId) { (user, collection) =>
-      implicit request =>
-        for {
-          flashcardCount <- tableDefs.futureFlashcardCountForCollection(collection)
-          toLearnCount <- tableDefs.futureFlashcardsToLearnCount(user, collection)
-          toRepeatCount <- tableDefs.futureFlashcardsToRepeatCount(user, collection)
-        } yield Ok(views.html.collection(user, collection, flashcardCount, toLearnCount, toRepeatCount))
-    }
-
-
-  def startLearning(collId: Int, isRepeating: Boolean): EssentialAction =
-    futureWithUserAndCollection(adminRightsRequired = false, collId) { (user, collection) =>
-      implicit request =>
-        val futureFlashcard = if (isRepeating)
-          tableDefs.futureMaybeIdentifierNextFlashcardToRepeat(user, collection)
-        else
-          tableDefs.futureMaybeIdentifierNextFlashcardToLearn(user, collection)
-
-        futureFlashcard map {
-          case None             => Redirect(routes.HomeController.collection(collId))
-          case Some(identifier) => Redirect(routes.HomeController.learn(identifier.collId, identifier.cardId, isRepeating))
-        }
-    }
-
-  def learn(collId: Int, cardId: Int, isRepeating: Boolean): EssentialAction =
-    futureWithUserAndCompleteFlashcard(adminRightsRequired = false, collId, cardId) { (user, _, flashcard) =>
-      implicit request =>
-        val futureMaybeOldAnswer: Future[Option[UserAnsweredFlashcard]] =
-          tableDefs.futureUserAnswerForFlashcard(user, flashcard)
-
-
-        futureMaybeOldAnswer map { maybeOldAnswer =>
+        tableDefs.futureUserAnswerForFlashcard(user, flashcard).map { maybeOldAnswer =>
           if (!isRepeating && maybeOldAnswer.isDefined) {
             // TODO: Something went wrong, take next flashcard?
-            Redirect(routes.HomeController.startLearning(collId, isRepeating))
+            Redirect(routes.HomeController.startLearning(courseId, collId, isRepeating))
           } else {
             Ok(views.html.learn(user, flashcard, maybeOldAnswer, isRepeating))
           }
         }
+
     }
 
-  def checkSolution(collId: Int, cardId: Int): EssentialAction =
-    futureWithUserAndCompleteFlashcard(adminRightsRequired = false, collId, cardId) { (user, _, flashcard) =>
-      implicit request =>
-        request.body.asJson flatMap (json => JsonFormats.solutionFormat.reads(json).asOpt) match {
-          case None           => Future(BadRequest("Could not read solution..."))
-          case Some(solution) =>
+  def checkSolution(courseId: Int, collId: Int, cardId: Int): EssentialAction = futureWithUserAndCompleteFlashcard(courseId, collId, cardId) { (user, _, flashcard) =>
+    implicit request =>
+      request.body.asJson flatMap (json => JsonFormats.solutionFormat.reads(json).asOpt) match {
+        case None           => Future(BadRequest(JsString("Could not read solution...")))
+        case Some(solution) =>
 
-            val futurePreviousTries: Future[Int] = tableDefs.futureUserAnswerForFlashcard(user, flashcard) map {
-              case None                        => 0
-              case Some(userAnsweredFlashcard) => userAnsweredFlashcard.tries
-            }
+          tableDefs.futureUserAnswerForFlashcard(user, flashcard).flatMap { maybePreviousAnswer: Option[UserAnsweredFlashcard] =>
 
-            futurePreviousTries flatMap { previousTries =>
+            val previousTries = maybePreviousAnswer.map(_.tries).getOrElse(0)
 
-              if (previousTries >= 2) {
-                ???
-              } else {
-                val correctionResult: CorrectionResult = Corrector.correct(flashcard, solution, previousTries)
+            if (previousTries >= 2) {
+              Future.successful(BadRequest(JsString("More than 2 tries already...")))
+            } else {
 
-                tableDefs.futureInsertOrUpdateUserAnswer(user, flashcard, correctionResult.correct) map {
-                  _ => Ok(JsonFormats.correctionResultWrites.writes(correctionResult))
-                }
+              Corrector.correct(flashcard, solution) match {
+                case CorrectionResult(correct, operations, answersSelection) =>
+
+                  val today = LocalDate.now()
+
+                  val newAnswer: UserAnsweredFlashcard = maybePreviousAnswer match {
+                    case None            => UserAnsweredFlashcard(user.username, cardId, collId, courseId, bucket = 0, today, correct, tries = 0)
+                    case Some(oldAnswer) =>
+
+                      val newBucket = if (correct) oldAnswer.bucket + 1 else oldAnswer.bucket
+
+                      val daysSinceLastAnswer: Long = ChronoUnit.DAYS.between(today, oldAnswer.dateAnswered)
+
+                      val newTries: Int = if (daysSinceLastAnswer > Math.pow(3, oldAnswer.bucket)) {
+                        0
+                      } else if (correct) {
+                        oldAnswer.tries
+                      } else {
+                        oldAnswer.tries + 1
+                      }
+
+                      oldAnswer.copy(bucket = newBucket, dateAnswered = today, correct = correct, tries = newTries)
+                  }
+
+                  tableDefs.futureInsertOrUpdateUserAnswer(newAnswer) map {
+                    _ =>
+                      val completeCorrectionResult = CompleteCorrectionResult(correct, operations, answersSelection, newTriesCount = newAnswer.tries, maybeSampleSolution = None)
+
+                      Ok(JsonFormats.completeCorrectionResultFormat.writes(completeCorrectionResult))
+                  }
               }
+
             }
-        }
-    }
+          }
+      }
+  }
 
 }

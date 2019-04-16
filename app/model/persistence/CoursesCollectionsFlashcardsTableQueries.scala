@@ -1,30 +1,38 @@
 package model.persistence
 
-import model.Consts._
-import model._
-import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
-import slick.jdbc.JdbcProfile
-import slick.lifted.{ForeignKeyQuery, PrimaryKey, ProvenShape}
+import model.{BlanksAnswer, ChoiceAnswer, Collection, Course, Flashcard}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-trait FlashcardTableDefs extends HasDatabaseConfigProvider[JdbcProfile] with CollectionTableDefs {
-
-  protected val dbConfigProvider: DatabaseConfigProvider
-
-  implicit val ec: ExecutionContext
+trait CoursesCollectionsFlashcardsTableQueries {
+  self: CoursesCollectionsFlashcardsTableDefs =>
 
   import profile.api._
 
-  // TableQueries
+  // Numbers
 
-  protected val flashcardsTQ: TableQuery[FlashcardsTable] = TableQuery[FlashcardsTable]
+  def futureNextCourseId: Future[Int] = db.run(coursesTQ.map(_.id).max.result).map(_.getOrElse(0))
 
-  protected val choiceAnswersTQ: TableQuery[ChoiceAnswersTable] = TableQuery[ChoiceAnswersTable]
+  def futureNextCollectionIdInCourse(courseId: Int): Future[Int] = db.run(
+    collectionsTQ.filter { coll => coll.courseId === courseId }.map(_.id).max.result
+  ).map(_.getOrElse(0))
 
-  protected val blanksAnswersTQ: TableQuery[BlanksAnswersTable] = TableQuery[BlanksAnswersTable]
+  // Reading
 
-  // Queries
+  def futureAllCourses: Future[Seq[Course]] = db.run(coursesTQ.result)
+
+  def futureCourseById(id: Int): Future[Option[Course]] = db.run(coursesTQ.filter(_.id === id).result.headOption)
+
+  def futureInsertCourse(course: Course): Future[Boolean] = db.run(coursesTQ += course).transform(_ == 1, identity)
+
+
+  def futureAllCollectionsInCourse(courseId: Int): Future[Seq[Collection]] =
+    db.run(collectionsTQ.filter(_.courseId === courseId).result)
+
+  def futureCollectionById(courseId: Int, collId: Int): Future[Option[Collection]] =
+    db.run(collectionsTQ.filter { coll => coll.id === collId && coll.courseId === courseId }.result.headOption)
+
+  def futureInsertCollection(collection: Collection): Future[Boolean] = db.run(collectionsTQ += collection).transform(_ == 1, identity)
 
 
   private def blanksAnswersForDbFlashcard(dbfc: DBFlashcard): Future[Seq[BlanksAnswer]] = {
@@ -80,6 +88,7 @@ trait FlashcardTableDefs extends HasDatabaseConfigProvider[JdbcProfile] with Col
   def futureFlashcardCountForCollection(collection: Collection): Future[Int] =
     db.run(flashcardsTQ.filter(fc => fc.collId === collection.id).size.result)
 
+  // Saving
 
   def futureInsertCompleteFlashcard(completeFlashcard: Flashcard): Future[Boolean] = {
     val dbCompleteFlashcard = PersistenceModels.flashcardToDbFlashcard(completeFlashcard)
@@ -106,80 +115,16 @@ trait FlashcardTableDefs extends HasDatabaseConfigProvider[JdbcProfile] with Col
     db.run(query += flashcard)
   }
 
-  def futureInsertChoiceAnswer(choiceAnswer: ChoiceAnswer): Future[ChoiceAnswer] = {
+  private def futureInsertChoiceAnswer(choiceAnswer: ChoiceAnswer): Future[ChoiceAnswer] = {
     val query = choiceAnswersTQ returning choiceAnswersTQ.map(_.id) into ((ca, newId) => ca.copy(answerId = newId))
 
     db.run(query += choiceAnswer)
   }
 
-  def futureInsertBlanksAnswer(blanksAnswer: BlanksAnswer): Future[BlanksAnswer] = {
+  private def futureInsertBlanksAnswer(blanksAnswer: BlanksAnswer): Future[BlanksAnswer] = {
     val query = blanksAnswersTQ returning blanksAnswersTQ.map(_.id) into ((ca, newId) => ca.copy(answerId = newId))
 
     db.run(query += blanksAnswer)
-  }
-
-  // Column types
-
-  protected implicit val cardTypeColumnType: BaseColumnType[CardType] =
-    MappedColumnType.base[CardType, String](_.entryName, CardType.withNameInsensitive)
-
-  protected implicit val correctnessColumnType: BaseColumnType[Correctness] =
-    MappedColumnType.base[Correctness, String](_.entryName, Correctness.withNameInsensitive)
-
-  // Table Defs
-
-  class FlashcardsTable(tag: Tag) extends Table[DBFlashcard](tag, "flashcards") {
-
-    def id: Rep[Int] = column[Int](idName, O.AutoInc)
-
-    def collId: Rep[Int] = column[Int]("coll_id")
-
-    def flashcardType: Rep[CardType] = column[CardType]("flash_card_type")
-
-    def question: Rep[String] = column[String](questionName)
-
-    def meaning: Rep[Option[String]] = column[Option[String]](meaningName)
-
-
-    def pk: PrimaryKey = primaryKey("fc_pk", (id, collId))
-
-    def collFk: ForeignKeyQuery[CollectionsTable, Collection] = foreignKey("fc_coll_fk", collId, collectionsTQ)(_.id)
-
-
-    override def * : ProvenShape[DBFlashcard] = (id, collId, flashcardType, question, meaning) <> (DBFlashcard.tupled, DBFlashcard.unapply)
-
-  }
-
-  abstract class CardAnswersTable[CA <: CardAnswer](tag: Tag, tableName: String) extends Table[CA](tag, tableName) {
-
-    def id: Rep[Int] = column[Int](idName, O.AutoInc)
-
-    def cardId: Rep[Int] = column[Int]("card_id")
-
-    def collId: Rep[Int] = column[Int]("coll_id")
-
-    def answer: Rep[String] = column[String](answerName)
-
-
-    def pk: PrimaryKey = primaryKey("ca_pk", (id, cardId, collId))
-
-    def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("ca_card_fk", (cardId, collId), flashcardsTQ)(fc => (fc.id, fc.collId))
-
-  }
-
-  class ChoiceAnswersTable(tag: Tag) extends CardAnswersTable[ChoiceAnswer](tag, "choice_answers") {
-
-    def correctness: Rep[Correctness] = column[Correctness](correctnessName)
-
-
-    override def * : ProvenShape[ChoiceAnswer] = (id, cardId, collId, answer, correctness) <> (ChoiceAnswer.tupled, ChoiceAnswer.unapply)
-
-  }
-
-  class BlanksAnswersTable(tag: Tag) extends CardAnswersTable[BlanksAnswer](tag, "blanks_answers") {
-
-    override def * : ProvenShape[BlanksAnswer] = (id, cardId, collId, answer) <> (BlanksAnswer.tupled, BlanksAnswer.unapply)
-
   }
 
 }

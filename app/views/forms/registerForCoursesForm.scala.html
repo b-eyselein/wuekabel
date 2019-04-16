@@ -1,0 +1,32 @@
+@import model.{User, Course}
+
+@(user: User, allCoursesAndRegisterStates: Seq[(Course, Boolean)])
+
+@title = @{
+    "In Kurse einschreiben"
+}
+
+@main(title, Some(user)) {
+
+    <h2 class="center">@title</h2>
+
+    <hr>
+
+    @if(allCoursesAndRegisterStates.nonEmpty) {
+
+        @for((course, registered) <- allCoursesAndRegisterStates;
+        btnColor = if(registered) "red" else "green";
+        linkText = if(registered) s"Aus Kurs ${course.name} austragen" else s"In Kurs ${course.name} einschreiben";
+        linkHref = if(registered) routes.HomeController.unregisterForCourse(course.id) else routes.HomeController.registerForCourse(course.id)) {
+            <a href="@linkHref" class="btn btn-large waves-effect waves-block @btnColor">@linkText</a>
+        }
+
+    } else {
+        <h4 class="red-text">Es konnten keine Kurse gefunden werden!</h4>
+    }
+
+    <hr>
+
+    <a class="btn btn-large waves-effect waves-block blue" href="@routes.HomeController.index()">Zu den Kursen</a>
+
+}

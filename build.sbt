@@ -12,13 +12,13 @@ updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true
 resolveFromWebjarsNodeModulesDir := true
 
 val webJarDependencies = Seq(
-  "org.webjars.npm" % "jquery" % "3.3.1",
+  "org.webjars.npm" % "jquery" % "3.4.0",
   "org.webjars.npm" % "types__jquery" % "3.3.29",
 
   "org.webjars.npm" % "materialize-css" % "1.0.0",
 
   // javascript db
-  "org.webjars.npm" % "dexie" % "2.0.4"
+  //  "org.webjars.npm" % "dexie" % "2.0.4"
 
 )
 
@@ -26,6 +26,7 @@ dependencyOverrides ++= Seq(
   "org.webjars.npm" % "types__sizzle" % "2.3.2"
 )
 
+PlayKeys.playDefaultPort := 9090
 
 libraryDependencies ++= webJarDependencies
 
@@ -33,30 +34,23 @@ libraryDependencies ++= webJarDependencies
 libraryDependencies ++= Seq(
   guice,
 
-  "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test,
+  "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.1" % Test,
 
-  "mysql" % "mysql-connector-java" % "8.0.13",
-
+  "mysql" % "mysql-connector-java" % "8.0.15",
 
   // Better enums for scala
-  "com.beachape" %% "enumeratum-play" % "1.5.14",
-  "com.beachape" %% "enumeratum-play-json" % "1.5.14",
+  "com.beachape" %% "enumeratum-play" % "1.5.16",
+  "com.beachape" %% "enumeratum-play-json" % "1.5.16",
 
 
-  "com.typesafe.play" %% "play-slick" % "3.0.3",
-  "com.typesafe.play" %% "play-slick-evolutions" % "3.0.3",
+  "com.typesafe.play" %% "play-slick" % "4.0.0",
+  "com.typesafe.play" %% "play-slick-evolutions" % "4.0.0",
 
-  "com.github.t3hnar" %% "scala-bcrypt" % "3.1",
+  "com.github.t3hnar" %% "scala-bcrypt" % "4.0",
 
   // Betterfiles
-  "com.github.pathikrit" %% "better-files" % "3.7.0",
+  "com.github.pathikrit" %% "better-files" % "3.7.1",
 
-  "org.apache.poi" % "poi" % "4.0.1",
-  "org.apache.poi" % "poi-ooxml" % "4.0.1"
+  "org.apache.poi" % "poi" % "4.1.0",
+  "org.apache.poi" % "poi-ooxml" % "4.1.0"
 )
-
-// Adds additional packages into Twirl
-//TwirlKeys.templateImports += "de.uniwue.controllers._"
-
-// Adds additional packages into conf/routes
-// play.sbt.routes.RoutesKeys.routesImport += "de.uniwue.binders._"

@@ -2,27 +2,44 @@
 
 @(user: User, course: Course, collections: Seq[Collection])
 
-@title = @{
-    s"Administration Kurs '${course.name}'"
-}
-
-@main(title, Some(user)) {
-    <h2 class="center-align">@title</h2>
-
-    <hr>
-
-    @if(collections.nonEmpty) {
-        @collections
-    } else {
-        <p class="center-align red-text">
-            Dieser Kurs besitzt noch keine Sammlungen. Sie müssen dem Kurs erst Sammlungen zuordnen.
-        </p>
+    @title = @{
+        s"Administration Kurs '${course.name}'"
     }
 
+    @collsPerRow = @{
+        2
+    }
 
-    <hr>
+    @colWidth = @{
+        12 / collsPerRow
+    }
 
-    <a href="@routes.AdminController.allocateCollectionsToCourseForm(course.id)"
-    class="btn btn-large waves-effect waves-block blue">Sammlungen zuordnen</a>
+    @main(title, Some(user)) {
+        <h2 class="center-align">@title</h2>
 
-}
+        <hr>
+
+        @if(collections.nonEmpty) {
+
+            @for(collectionGroup <- collections.grouped(collsPerRow)) {
+                <div class="row">
+                @for(collection <- collectionGroup) {
+                    <div class="col m@colWidth s12">
+                        <a href="@routes.AdminController.collectionAdmin(course.id, collection.id)"
+                        class="btn btn-large waves-effect waves-block green">@collection.name</a>
+                    </div>
+                }
+                </div>
+            }
+        } else {
+            <p class="center-align red-text">
+                Dieser Kurs besitzt noch keine Sammlungen. Sie müssen dem Kurs erst Sammlungen zuordnen.
+            </p>
+        }
+
+        <hr>
+
+        <a href="@routes.AdminController.newCollectionForm(course.id)"
+        class="btn btn-large waves-effect waves-block blue">Sammlung erstellen</a>
+
+    }

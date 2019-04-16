@@ -13,114 +13,87 @@ import scala.concurrent.{ExecutionContext, Future}
 class AdminController @Inject()(cc: ControllerComponents, protected val tableDefs: TableDefs)(implicit protected val ec: ExecutionContext)
   extends AbstractController(cc) with ControllerHelpers with play.api.i18n.I18nSupport {
 
-  def index: EssentialAction = futureWithUser(adminRightsRequired = true) { admin =>
+  override protected val adminRightsRequired: Boolean = true
+
+
+  def index: EssentialAction = futureWithUser { admin =>
     implicit request =>
       tableDefs.futureAllCourses map {
-        allCourses => Ok(views.html.admin.adminIndex(admin, allCourses /*, FormMappings.newLanguageValuesForm*/))
+        allCourses => Ok(views.html.admin.adminIndex(admin, allCourses))
       }
   }
 
-  def courseAdmin(courseId: String): EssentialAction = futureWithUserAndCourse(adminRightsRequired = true, courseId) { (admin, course) =>
+  // Courses
+
+  def courseAdmin(courseId: Int): EssentialAction = futureWithUserAndCourse(courseId) { (admin, course) =>
     implicit request =>
-      tableDefs.futureCollectionsForCourse(course) map {
+      tableDefs.futureAllCollectionsInCourse(course.id) map {
         collections => Ok(views.html.admin.courseAdmin(admin, course, collections))
       }
   }
 
-  def allocateCollectionsToCourseForm(courseId: String): EssentialAction = futureWithUserAndCourse(adminRightsRequired = true, courseId) { (admin, course) =>
+  def newCourseForm: EssentialAction = futureWithUser { admin =>
     implicit request =>
-      tableDefs.futureCollectionsAndCourseImportState(course) map {
-        collectionsAndCourseImportState => Ok(views.html.admin.allocateCollectionsToCourseForm(admin, course, collectionsAndCourseImportState))
+      tableDefs.futureNextCourseId.map { nextCourseId =>
+        Ok(views.html.forms.newCourseForm(admin, FormMappings.newCourseForm.fill(Course(nextCourseId, "", ""))))
       }
   }
 
-  def allocateCollectionToCourse(courseId: String, collId: Int): EssentialAction = futureWithUserAndCourse(adminRightsRequired = true, courseId) { (admin, course) =>
+  def newCourse: EssentialAction = futureWithUser { admin =>
     implicit request =>
-      tableDefs.futureCollectionById(collId) flatMap {
-        case None             => ???
-        case Some(collection) =>
-          tableDefs.allocateCollectionToCourse(course, collection) map {
-            case true  => Redirect(routes.AdminController.allocateCollectionsToCourseForm(course.id))
-            case false => ???
-          }
+      def onError: Form[Course] => Future[Result] = { formWithErrors =>
+        Future.successful(BadRequest(views.html.forms.newCourseForm(admin, formWithErrors)))
       }
-  }
 
-  def deallocateCollectionFromCourse(courseId: String, collId: Int) : EssentialAction = futureWithUserAndCourse(adminRightsRequired =  true, courseId) {(admin, course) =>
-    implicit  request =>
-    tableDefs.futureCollectionById(collId) flatMap {
-      case None => ???
-      case Some(collection) =>
-        tableDefs.deallocateCollectionFromCourse(course, collection) map {
-          case true => Redirect(routes.AdminController.allocateCollectionsToCourseForm(courseId))
-          case false => ???
+      def onRead: Course => Future[Result] = { newCourse =>
+        tableDefs.futureInsertCourse(newCourse) map {
+          _ => Redirect(routes.AdminController.courseAdmin(newCourse.id))
         }
-    }
+      }
+
+      FormMappings.newCourseForm.bindFromRequest.fold(onError, onRead)
   }
 
-  def languageAdmin(langId: Int): EssentialAction = futureWithUserAndLanguage(adminRightsRequired = true, langId) { (admin, language) =>
-    implicit request =>
-      ???
-    //      tableDefs.futureCollectionsForLanguage(language) map {
-    //        collections => Ok(views.html.admin.languageAdmin(admin, language, collections, FormMappings.newCollectionValuesForm))
-    //      }
-  }
+  // Collections
 
-  def collectionAdmin(collId: Int): EssentialAction = futureWithUserAndCollection(adminRightsRequired = true, collId) { (admin, collection) =>
+  def collectionAdmin(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (admin, collection) =>
     implicit request =>
       tableDefs.futureFlashcardsForCollection(collection) map {
-        flashcards => Ok(views.html.admin.collectionAdmin(admin, collection, flashcards))
+        flashcards => Ok(views.html.admin.collectionAdmin(admin, courseId, collection, flashcards))
       }
   }
 
-  def newLanguage: EssentialAction = futureWithUser(adminRightsRequired = true) { admin =>
+
+  def newCollectionForm(courseId: Int): EssentialAction = futureWithUser { admin =>
     implicit request =>
-      def onError: Form[String] => Future[Result] = { formWithErrors =>
-        tableDefs.futureAllCourses map {
-          allCourses => BadRequest(views.html.admin.adminIndex(admin, allCourses /*, formWithErrors*/))
-        }
+      tableDefs.futureNextCollectionIdInCourse(courseId).map { nextCollectionId =>
+        Ok(views.html.forms.newCollectionForm(admin, courseId, FormMappings.newCollectionForm.fill(Collection(nextCollectionId, courseId, ""))))
       }
-
-      def onRead: String => Future[Result] = { newLanguageName =>
-        val newLanguage = Language(-1, newLanguageName)
-
-        tableDefs.futureInsertLanguage(newLanguage) map {
-          newLangId => Redirect(routes.AdminController.languageAdmin(newLangId))
-        }
-      }
-
-      FormMappings.newLanguageValuesForm.bindFromRequest.fold(onError, onRead)
   }
 
-  def newCollection: EssentialAction = futureWithUser(adminRightsRequired = true) { admin =>
+  def newCollection(courseId: Int): EssentialAction = futureWithUser { admin =>
     implicit request =>
-      def onError: Form[String] => Future[Result] = { formWithErrors =>
-        //        tableDefs.futureCollectionsForLanguage(language) map {
-        //          collections => BadRequest(views.html.admin.languageAdmin(admin, language, collections, formWithErrors))
-        //        }
-        ???
+      def onError: Form[Collection] => Future[Result] = { formWithErrors =>
+        Future.successful(BadRequest(views.html.forms.newCollectionForm(admin, courseId, formWithErrors)))
       }
 
-
-      def onRead: String => Future[Result] = { newCollectionName =>
-        val newCollection = Collection(-1, newCollectionName)
-
+      def onRead: Collection => Future[Result] = { newCollection =>
         tableDefs.futureInsertCollection(newCollection) map {
-          newCollId => Redirect(routes.AdminController.collectionAdmin(newCollId))
+          _ => Redirect(routes.AdminController.collectionAdmin(courseId, newCollection.id))
         }
       }
 
-      FormMappings.newCollectionValuesForm.bindFromRequest.fold(onError, onRead)
+      FormMappings.newCollectionForm.bindFromRequest.fold(onError, onRead)
   }
 
-  def uploadCardsFile(collId: Int): EssentialAction = futureWithUserAndCollection(adminRightsRequired = true, collId) { (admin, collection) =>
+  def uploadCardsFile(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (admin, collection) =>
     implicit request =>
 
       request.body.asMultipartFormData flatMap (_.file(Consts.excelFileName)) match {
-        case None => Future(Redirect(routes.AdminController.collectionAdmin(collId)))
+        case None => Future(Redirect(routes.AdminController.collectionAdmin(courseId, collId)))
 
         case Some(filePart: MultipartFormData.FilePart[TemporaryFile]) =>
-          val (failureStrings, importedFlashcards) = Importer.importFlashcards(collId, filePart.ref.path)
+          val (failureStrings, importedFlashcards) = Importer.importFlashcards(courseId, collId, filePart.ref.path)
 
           failureStrings.foreach(println)
 
@@ -129,7 +102,7 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
           ))
 
           futureImportedFlashcardsSaved map { importedFlashcardsSaved =>
-            Ok(views.html.cardPreview(admin, collection, importedFlashcards, failureStrings))
+            Ok(views.html.cardPreview(admin, courseId, collection, importedFlashcards, failureStrings))
           }
       }
 

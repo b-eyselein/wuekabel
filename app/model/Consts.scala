@@ -9,6 +9,7 @@ object Consts {
   val charName       : String = "char"
   val correctName    : String = "correct"
   val correctnessName: String = "correctness"
+  val courseIdName   : String = "courseId"
 
   val excelFileName: String = "excelFile"
 
@@ -22,8 +23,11 @@ object Consts {
   val missingName       : String = "missing"
 
   val nameName         : String = "name"
+  val newPw1Name       : String = "newPw1"
+  val newPw2Name       : String = "newPw2"
   val newTriesCountName: String = "newTriesCount"
 
+  val oldPwName        : String = "oldPw"
   val operationsName   : String = "operations"
   val operationTypeName: String = "operationType"
 
@@ -34,7 +38,9 @@ object Consts {
   val repeatPwName: String = "repeatPw"
 
   val selectedAnswersName: String = "selectedAnswers"
+  val shortNameName      : String = "shortName"
 
+  val titleName: String = "title"
   val triesName: String = "tries"
 
   val usernameName: String = "username"
