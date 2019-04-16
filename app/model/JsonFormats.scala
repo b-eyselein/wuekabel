@@ -1,9 +1,7 @@
 package model
 
-import play.api.libs.json._
-import Consts._
 import model.levenshtein._
-import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
 
 object JsonFormats {
