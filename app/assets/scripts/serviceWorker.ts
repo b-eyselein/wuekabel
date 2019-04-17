@@ -1,4 +1,4 @@
-// FIXME: use https://github.com/Microsoft/TypeScript/blob/b8def16e92f609327971f07232757fa6c7d29a56/lib/lib.webworker.d.ts
+// FIXME: use https://gist.github.com/tiernan/c18a380935e45a6d942ac1e88c5bbaf3
 
 self.addEventListener('install', event => {
     console.warn('Installing service worker...' + event);
