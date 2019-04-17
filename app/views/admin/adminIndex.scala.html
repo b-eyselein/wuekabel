@@ -2,42 +2,46 @@
 
 @(user: User, courses: Seq[Course])
 
-@title = @{
-    "Administrator"
-}
-
-@coursesPerRow = @{
-    2
-}
-
-@colWidth = @{
-    12 / coursesPerRow
-}
-
-@main(title, Some(user)) {
-    <h2 class="center-align">Kurse</h2>
-
-    <hr>
-
-    @if(courses.nonEmpty) {
-
-        @for(languageGroup <- courses.grouped(coursesPerRow)) {
-            <div class="row">
-            @for(language <- languageGroup) {
-                <div class="col m@colWidth s12">
-                    <a class="btn btn-large waves-effect waves-block blue" href="@routes.AdminController.courseAdmin(language.id)">@language.name</a>
-                </div>
-            }
-            </div>
-        }
-
-    } else {
-        <h4 class="red-text">Es existieren noch keine Kurse.</h4>
+    @title = @{
+        "Administrator"
     }
 
-    <hr>
+    @coursesPerRow = @{
+        2
+    }
 
-    <a href="@routes.AdminController.newCourseForm" class="btn btn-large waves-effect waves-block green">
-        Neuen Kurs erstellen</a>
+    @colWidth = @{
+        12 / coursesPerRow
+    }
 
-}
+    @main(title, Some(user)) {
+        <h2 class="center-align">Kurse</h2>
+
+        <hr>
+
+        @if(courses.nonEmpty) {
+
+            @for(languageGroup <- courses.grouped(coursesPerRow)) {
+                <div class="row">
+                @for(language <- languageGroup) {
+                    <div class="col m@colWidth s12">
+                        <a class="btn btn-large waves-effect waves-block @primaryColor" href="@routes.AdminController.courseAdmin(language.id)">@language.name</a>
+                    </div>
+                }
+                </div>
+            }
+
+        } else {
+            <h4 class="red-text center-align">Es existieren noch keine Kurse.</h4>
+        }
+
+        <hr>
+
+        <div class="row">
+            <div class="col s12">
+                <a href="@routes.AdminController.newCourseForm" class="btn btn-large waves-effect waves-block @accentColor">
+                    Neuen Kurs erstellen</a>
+            </div>
+        </div>
+
+    }

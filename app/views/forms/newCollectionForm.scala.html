@@ -2,25 +2,29 @@
 
 @(user: User, courseId: Int, newCollectionForm: Form[Collection])(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
 
-@title = @{
-    "Neue Sammlung erstellen"
-}
+    @title = @{
+        "Neue Sammlung erstellen"
+    }
 
-@main(title, Some(user)) {
-    <div class="row">
-        <div class="col s12">
-            <h4 class="center-align">Neue Sammlung erstellen</h4>
+    @main(title, Some(user)) {
+        <h2 class="center-align">@title</h2>
 
+        <div class="row">
+            <div class="col s12">
             @helper.form(routes.AdminController.newCollection(courseId)) {
 
                 @helper.CSRF.formField
 
+                @myhelpers.input(newCollectionForm(Consts.idName), labelContent = "Id", isRequired = true, isReadOnly = true)
+
+                @myhelpers.input(newCollectionForm(Consts.courseIdName), labelContent = "Kurs", isRequired = true, isReadOnly = true)
+
                 @myhelpers.input(newCollectionForm(Consts.nameName), labelContent = "Name", isRequired = true)
 
-                <button class="btn btn-large waves-effect waves-block green">Sammlung erstellen</button>
+                <button class="btn btn-large waves-effect waves-block @accentColor">Sammlung erstellen</button>
 
             }
+            </div>
         </div>
-    </div>
 
-}
+    }

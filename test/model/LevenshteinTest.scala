@@ -6,26 +6,28 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class LevenshteinTest extends FlatSpec with Matchers {
 
-  "The Levenshtein distance" should "calculate correct distances" in {
+  behavior of "Levenshtein"
 
-    assert(Levenshtein.distance("test", "tert") == 1)
+  it should "calculate correct distances" in {
 
-    assert(Levenshtein.distance("Jack", "John") == 3)
+    Levenshtein.distance("test", "tert") shouldBe 1
+
+    Levenshtein.distance("Jack", "John") shouldBe 3
 
   }
 
   it should "calculate backtraces correctly" in {
-    assert(Levenshtein.calculateBacktrace("tesst", "test") == List(EditOperation(Delete, 3)))
+    Levenshtein.calculateBacktrace("tesst", "test") shouldBe Seq(EditOperation(Delete, 3))
 
-    assert(Levenshtein.calculateBacktrace("test", "tert") == List(EditOperation(Replace, 2, Some('r'))))
+    Levenshtein.calculateBacktrace("test", "tert") shouldBe Seq(EditOperation(Replace, 2, Some('r')))
 
-    assert(Levenshtein.calculateBacktrace("tet", "test") == List(EditOperation(Insert, 2, Some('s'))))
+    Levenshtein.calculateBacktrace("tet", "test") shouldBe Seq(EditOperation(Insert, 2, Some('s')))
 
-    assert(Levenshtein.calculateBacktrace("Jack", "John") ==
-      List(EditOperation(Replace, 1, Some('o')), EditOperation(Replace, 2, Some('h')), EditOperation(Replace, 3, Some('n'))))
+    Levenshtein.calculateBacktrace("Jack", "John") shouldBe
+      Seq(EditOperation(Replace, 1, Some('o')), EditOperation(Replace, 2, Some('h')), EditOperation(Replace, 3, Some('n')))
 
-    assert(Levenshtein.calculateBacktrace("Jack", "James") ==
-      List(EditOperation(Replace, 2, Some('m')), EditOperation(Replace, 3, Some('e')), EditOperation(Insert, 4, Some('s'))))
+    Levenshtein.calculateBacktrace("Jack", "James") shouldBe
+      Seq(EditOperation(Replace, 2, Some('m')), EditOperation(Replace, 3, Some('e')), EditOperation(Insert, 4, Some('s')))
 
   }
 

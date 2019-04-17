@@ -3,7 +3,7 @@
 @(user: User, course: Course, collections: Seq[Collection])
 
     @title = @{
-        s"Administration Kurs '${course.name}'"
+        s"Kurs '${course.name}'"
     }
 
     @collsPerRow = @{
@@ -26,20 +26,21 @@
                 @for(collection <- collectionGroup) {
                     <div class="col m@colWidth s12">
                         <a href="@routes.AdminController.collectionAdmin(course.id, collection.id)"
-                        class="btn btn-large waves-effect waves-block green">@collection.name</a>
+                        class="btn btn-large waves-effect waves-block @primaryColor">@collection.name</a>
                     </div>
                 }
                 </div>
             }
         } else {
-            <p class="center-align red-text">
-                Dieser Kurs besitzt noch keine Sammlungen. Sie müssen dem Kurs erst Sammlungen zuordnen.
-            </p>
+            <h4 class="red-text center-align">Dieser Kurs besitzt noch keine Sammlungen.</h4>
         }
 
         <hr>
 
-        <a href="@routes.AdminController.newCollectionForm(course.id)"
-        class="btn btn-large waves-effect waves-block blue">Sammlung erstellen</a>
-
+        <div class="row">
+            <div class="col s12">
+                <a href="@routes.AdminController.newCollectionForm(course.id)"
+                class="btn btn-large waves-effect waves-block @accentColor">Sammlung erstellen</a>
+            </div>
+        </div>
     }

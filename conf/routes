@@ -43,6 +43,7 @@ POST        /admin/courses/:courseId/collections                                
 
 GET         /admin/courses/:courseId/collections/:collId                              controllers.AdminController.collectionAdmin(courseId: Int, collId: Int)
 
+GET         /admin/courses/:courseId/collections/:collId/uploadCardsFileForm          controllers.AdminController.uploadCardsFileForm(courseId: Int, collId: Int)
 POST        /admin/courses/:courseId/collections/:collId/uploadCardsFile              controllers.AdminController.uploadCardsFile(courseId: Int, collId: Int)
 
 # User routes

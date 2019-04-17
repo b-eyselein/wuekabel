@@ -28,15 +28,18 @@
             <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
             <link rel="stylesheet" href="@routes.Assets.versioned("lib/materialize-css/dist/css/materialize.css")">
 
+            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
             @*<link rel="manifest" href="/manifest.json">*@
         </head>
         <body>
 
             <nav>
-                <div class="nav-wrapper green">
-                    <a href="@routes.HomeController.index" class="brand-logo">WueKabel</a>
+                <div class="nav-wrapper @primaryColor">
+                    <a href="@routes.HomeController.index" class="brand-logo center">WueKabel</a>
 
                     <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+
+                    <ul class="left hide-on-med-and-down"></ul>
 
                     <ul id="nav-mobile" class="right hide-on-med-and-down">
                     @navigation

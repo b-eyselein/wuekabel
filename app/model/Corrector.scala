@@ -4,7 +4,7 @@ import model.levenshtein.Levenshtein
 
 object Corrector {
 
-  private def matchAnswerIds(selectedIds: Seq[Int], correctIds: Seq[Int]): AnswerSelectionResult = AnswerSelectionResult(
+  def matchAnswerIds(selectedIds: Seq[Int], correctIds: Seq[Int]): AnswerSelectionResult = AnswerSelectionResult(
     wrong = selectedIds diff correctIds,
     correct = selectedIds intersect correctIds,
     missing = correctIds diff selectedIds

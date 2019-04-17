@@ -4,7 +4,10 @@ organization := "de.uniwue"
 
 version := "1.0-SNAPSHOT"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala).settings(packageName in Universal := s"${name.value}")
+lazy val root = (project in file(".")).enablePlugins(PlayScala)
+  .settings(packageName in Universal := s"${name.value}")
+
+TwirlKeys.templateImports += "model.TemplateConsts._"
 
 scalaVersion := "2.12.8"
 

@@ -7,7 +7,7 @@ object Levenshtein {
   @inline
   private def minimum(i: Int*): Int = i.min
 
-  private def calcuateTable(s1: String, s2: String): Array[Array[Int]] = {
+  private def calculateTable(s1: String, s2: String): Array[Array[Int]] = {
     val dist = Array.tabulate(s1.length + 1, s2.length + 1) { (j, i) => if (j == 0) i else if (i == 0) j else 0 }
 
     for {
@@ -21,11 +21,10 @@ object Levenshtein {
   }
 
   def distance(s1: String, s2: String): Int = {
-    val dist = calcuateTable(s1, s2)
+    val dist = calculateTable(s1, s2)
 
     dist(s2.length)(s1.length)
   }
-
 
   def calculateBacktrace(start: String, target: String): Seq[EditOperation] = {
 
@@ -52,7 +51,7 @@ object Levenshtein {
 
       } else operations
 
-    val dist = calcuateTable(start, target)
+    val dist = calculateTable(start, target)
 
     go(dist, start.length, target.length, List[EditOperation]())
   }

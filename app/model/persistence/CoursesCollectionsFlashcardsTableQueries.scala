@@ -11,11 +11,17 @@ trait CoursesCollectionsFlashcardsTableQueries {
 
   // Numbers
 
-  def futureNextCourseId: Future[Int] = db.run(coursesTQ.map(_.id).max.result).map(_.getOrElse(0))
+  def futureNextCourseId: Future[Int] = db.run(coursesTQ.map(_.id).max.result).map {
+    case None            => 0
+    case Some(currentId) => currentId + 1
+  }
 
   def futureNextCollectionIdInCourse(courseId: Int): Future[Int] = db.run(
     collectionsTQ.filter { coll => coll.courseId === courseId }.map(_.id).max.result
-  ).map(_.getOrElse(0))
+  ).map {
+    case None            => 0
+    case Some(currentId) => currentId + 1
+  }
 
   // Reading
 
@@ -103,7 +109,7 @@ trait CoursesCollectionsFlashcardsTableQueries {
               futureSavedBlanksAnswers <- Future.sequence(blanksAnswers.map(futureInsertBlanksAnswer))
             } yield futureSavedChoiceAnswers.forall(identity) && futureSavedBlanksAnswers.forall(identity)
         }
-        
+
     }
 
 

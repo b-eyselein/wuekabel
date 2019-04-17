@@ -15,7 +15,6 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
 
   override protected val adminRightsRequired: Boolean = true
 
-
   def index: EssentialAction = futureWithUser { admin =>
     implicit request =>
       tableDefs.futureAllCourses map {
@@ -47,7 +46,7 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
 
       def onRead: Course => Future[Result] = { newCourse =>
         tableDefs.futureInsertCourse(newCourse) map {
-          _ => Redirect(routes.AdminController.courseAdmin(newCourse.id))
+          _ => Redirect(routes.AdminController.index())
         }
       }
 
@@ -79,7 +78,7 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
 
       def onRead: Collection => Future[Result] = { newCollection =>
         tableDefs.futureInsertCollection(newCollection) map {
-          _ => Redirect(routes.AdminController.collectionAdmin(courseId, newCollection.id))
+          _ => Redirect(routes.AdminController.courseAdmin(courseId))
         }
       }
 
@@ -87,6 +86,10 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
   }
 
   // Flashcards
+
+  def uploadCardsFileForm(courseId: Int, collId: Int): EssentialAction = withUser { user =>
+    implicit request => Ok(views.html.forms.uploadCardsForm(user, courseId, collId))
+  }
 
   def uploadCardsFile(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (admin, collection) =>
     implicit request =>

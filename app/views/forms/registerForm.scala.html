@@ -8,7 +8,7 @@
 
 @main(title, None) {
 
-    <h1 class="center-align">@title</h1>
+    <h2 class="center-align">@title</h2>
 
     @helper.form(routes.LoginController.register(), 'class -> "col s12") {
 
@@ -20,9 +20,7 @@
 
         @myhelpers.input(registerValuesForm(Consts.repeatPwName), "Passwort wiederholen", fieldType = "password", isRequired = true)
 
-        <div>
-            <button class="btn btn-large waves-effect waves-light green">Registrieren</button>
-        </div>
+        <button class="btn btn-large waves-effect waves-light @accentColor">Registrieren</button>
 
     }
 }
