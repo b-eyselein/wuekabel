@@ -9,7 +9,6 @@ function readSolution(cardType: CardType): undefined | Solution {
     switch (cardType) {
         case 'Vocable':
         case 'Text':
-        case 'Blank':
             const solution: string = document.querySelector<HTMLInputElement>('#translation_input').value;
 
             if (solution.length === 0) {
@@ -17,6 +16,10 @@ function readSolution(cardType: CardType): undefined | Solution {
             }
 
             return {solution, selectedAnswers: []};
+
+        case 'Blank':
+            throw cardType;
+        // return {solution: '', selectedAnswers: []};
 
         case 'Choice':
             const selectedAnswers: number[] = [];
@@ -123,7 +126,6 @@ domReady(() => {
     correctionTextPar = document.querySelector<HTMLParagraphElement>('#correctionTextPar');
     checkSolutionBtn = document.querySelector<HTMLButtonElement>('#checkSolutionBtn');
     checkSolutionUrl = checkSolutionBtn.dataset['href'];
-
 
     document.addEventListener('keypress', event => {
         if (event.key === 'Enter') {
