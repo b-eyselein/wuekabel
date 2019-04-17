@@ -5,7 +5,7 @@
 )
 
     @title = @{
-        "Lernen"
+        "Vokabeln " + (if(isRepeating) "wiederholen" else "Lernen")
     }
 
     @scripts = {
@@ -25,7 +25,7 @@
         <div class="row">
             <div class="col s12 l8 offset-l2" id="flashcardDiv" data-cardtype="@flashcard.cardType">
                 <div class="card-panel">
-                    <h4 class="center-align">@flashcard.question</h4>
+                    <h4 class="center-align">@flashcard.question @flashcard.questionHint.map(h => Html(s"<i>$h</i>")).getOrElse(Html(""))</h4>
                 </div>
 
                 <p class="center-align">

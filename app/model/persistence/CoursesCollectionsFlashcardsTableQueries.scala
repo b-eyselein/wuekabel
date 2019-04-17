@@ -1,6 +1,6 @@
 package model.persistence
 
-import model.{BlanksAnswer, ChoiceAnswer, Collection, Course, Flashcard}
+import model.{BlanksAnswerFragment, ChoiceAnswer, Collection, Course, Flashcard}
 
 import scala.concurrent.Future
 
@@ -41,7 +41,7 @@ trait CoursesCollectionsFlashcardsTableQueries {
   def futureInsertCollection(collection: Collection): Future[Boolean] = db.run(collectionsTQ += collection).transform(_ == 1, identity)
 
 
-  private def blanksAnswersForDbFlashcard(dbfc: DBFlashcard): Future[Seq[BlanksAnswer]] = {
+  private def blanksAnswersForDbFlashcard(dbfc: DBFlashcard): Future[Seq[BlanksAnswerFragment]] = {
     val blanksAnswersForDbFlashcardQuery = blanksAnswersTQ.filter {
       ba => ba.cardId === dbfc.cardId && ba.collId === dbfc.collId
     }.result
@@ -119,7 +119,7 @@ trait CoursesCollectionsFlashcardsTableQueries {
   private def futureInsertChoiceAnswer(choiceAnswer: ChoiceAnswer): Future[Boolean] =
     db.run(choiceAnswersTQ insertOrUpdate choiceAnswer).transform(_ == 1, identity)
 
-  private def futureInsertBlanksAnswer(blanksAnswer: BlanksAnswer): Future[Boolean] =
+  private def futureInsertBlanksAnswer(blanksAnswer: BlanksAnswerFragment): Future[Boolean] =
     db.run(blanksAnswersTQ insertOrUpdate blanksAnswer).transform(_ == 1, identity)
 
 }

@@ -28,7 +28,7 @@ trait CoursesCollectionsFlashcardsTableDefs
 
   protected val choiceAnswersTQ: TableQuery[ChoiceAnswersTable] = TableQuery[ChoiceAnswersTable]
 
-  protected val blanksAnswersTQ: TableQuery[BlanksAnswersTable] = TableQuery[BlanksAnswersTable]
+  protected val blanksAnswersTQ: TableQuery[BlanksAnswerFragmentsTable] = TableQuery[BlanksAnswerFragmentsTable]
 
   // Column types
 
@@ -84,7 +84,11 @@ trait CoursesCollectionsFlashcardsTableDefs
 
     def question: Rep[String] = column[String](questionName)
 
+    def questionHint: Rep[Option[String]] = column[Option[String]]("question_hint")
+
     def meaning: Rep[String] = column[String](meaningName)
+
+    def meaningHint: Rep[Option[String]] = column[Option[String]]("meaning_hint")
 
 
     def pk: PrimaryKey = primaryKey("fc_pk", (id, collId, courseId))
@@ -92,11 +96,11 @@ trait CoursesCollectionsFlashcardsTableDefs
     def collFk: ForeignKeyQuery[CollectionsTable, Collection] = foreignKey("fc_coll_fk", (collId, courseId), collectionsTQ)(coll => (coll.id, coll.courseId))
 
 
-    override def * : ProvenShape[DBFlashcard] = (id, collId, courseId, flashcardType, question, meaning) <> (DBFlashcard.tupled, DBFlashcard.unapply)
+    override def * : ProvenShape[DBFlashcard] = (id, collId, courseId, flashcardType, question, questionHint, meaning, meaningHint) <> (DBFlashcard.tupled, DBFlashcard.unapply)
 
   }
 
-  abstract class CardAnswersTable[CA <: CardAnswer](tag: Tag, tableName: String) extends Table[CA](tag, tableName) {
+  abstract class FlashcardComponentsTable[FC <: FlashcardComponent](tag: Tag, tableName: String) extends Table[FC](tag, tableName) {
 
     def id: Rep[Int] = column[Int](idName, O.AutoInc)
 
@@ -109,13 +113,13 @@ trait CoursesCollectionsFlashcardsTableDefs
     def answer: Rep[String] = column[String](answerName)
 
 
-    def pk: PrimaryKey = primaryKey("ca_pk", (id, cardId, collId))
+    def pk: PrimaryKey = primaryKey("ca_pk", (id, cardId, collId, courseId))
 
-    def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("ca_card_fk", (cardId, collId), flashcardsTQ)(fc => (fc.id, fc.collId))
+    def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("ca_card_fk", (cardId, collId, courseId), flashcardsTQ)(fc => (fc.id, fc.collId, fc.courseId))
 
   }
 
-  class ChoiceAnswersTable(tag: Tag) extends CardAnswersTable[ChoiceAnswer](tag, "choice_answers") {
+  class ChoiceAnswersTable(tag: Tag) extends FlashcardComponentsTable[ChoiceAnswer](tag, "choice_answers") {
 
     def correctness: Rep[Correctness] = column[Correctness](correctnessName)
 
@@ -124,9 +128,12 @@ trait CoursesCollectionsFlashcardsTableDefs
 
   }
 
-  class BlanksAnswersTable(tag: Tag) extends CardAnswersTable[BlanksAnswer](tag, "blanks_answers") {
+  class BlanksAnswerFragmentsTable(tag: Tag) extends FlashcardComponentsTable[BlanksAnswerFragment](tag, "blanks_answer_fragments") {
 
-    override def * : ProvenShape[BlanksAnswer] = (id, cardId, collId, courseId, answer) <> (BlanksAnswer.tupled, BlanksAnswer.unapply)
+    def isAnswer: Rep[Boolean] = column[Boolean]("is_answer")
+
+
+    override def * : ProvenShape[BlanksAnswerFragment] = (id, cardId, collId, courseId, answer, isAnswer) <> (BlanksAnswerFragment.tupled, BlanksAnswerFragment.unapply)
 
   }
 

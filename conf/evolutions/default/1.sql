@@ -82,7 +82,9 @@ create table if not exists flashcards
     course_id       int,
     flash_card_type enum ('Vocable', 'Text', 'Blank', 'Choice') not null default 'Vocable',
     question        text                                        not null,
+    question_hint   text,
     meaning         text                                        not null,
+    meaning_hint    text,
 
     primary key (id, coll_id, course_id),
     foreign key (coll_id, course_id) references collections (id, course_id)
@@ -120,13 +122,14 @@ values (1, 4, 1, 1, 'Maskulinum', 'CORRECT'),
        (3, 5, 1, 1, 'Wörter auf -x sind meist weiblich', 'CORRECT'),
        (4, 5, 1, 1, 'Wörter auf -en sind immer neutrum', 'CORRECT');
 
-create table if not exists blanks_answers
+create table if not exists blanks_answer_fragments
 (
     id        int,
     card_id   int,
     coll_id   int,
     course_id int,
-    answer    text not null,
+    answer    text    not null,
+    is_answer boolean not null default false,
 
     primary key (id, card_id, coll_id, course_id),
     foreign key (card_id, coll_id, course_id) references flashcards (id, coll_id, course_id)
@@ -183,7 +186,7 @@ drop table if exists users_answered_flashcards;
 
 drop table if exists buckets;
 
-drop table if exists blanks_answers;
+drop table if exists blanks_answer_fragments;
 
 drop table if exists choice_answers;
 
