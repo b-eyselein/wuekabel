@@ -73,9 +73,9 @@ trait CoursesCollectionsFlashcardsTableQueries {
     }
   }
 
-  def futureFlashcardById(collection: Collection, cardId: Int): Future[Option[Flashcard]] = {
+  def futureFlashcardById(courseId: Int, collId: Int, cardId: Int): Future[Option[Flashcard]] = {
     val dbFlashcardByIdQuery = flashcardsTQ.filter {
-      fc => fc.id === cardId && fc.collId === collection.id
+      fc => fc.id === cardId && fc.collId === collId && fc.courseId === courseId
     }.result.headOption
 
     db.run(dbFlashcardByIdQuery) flatMap {

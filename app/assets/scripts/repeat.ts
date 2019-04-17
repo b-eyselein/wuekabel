@@ -1,51 +1,66 @@
 /// <reference path="helpers.ts"/>
+/// <reference path="questionMaker.ts"/>
 
 let correctionTextPar: HTMLParagraphElement;
-let checkSolutionBtn: HTMLButtonElement;
 
-let cardId: number;
-let collId: number;
-let courseId: number;
+let checkSolutionBtn: HTMLButtonElement;
+let nextFlashcardBtn: HTMLButtonElement;
+
+let initialLoadBtn: HTMLButtonElement;
+
 let checkSolutionUrl: string;
 
 let canSolve: boolean = true;
 
+let flashcard: Flashcard;
+
+let repeatedFlashcards: number = 0;
 
 function readSolution(cardType: CardType): undefined | Solution {
+    let solution: string = '';
+    let selectedAnswers: number[] = [];
+
     switch (cardType) {
         case 'Vocable':
         case 'Text':
-            const solution: string = document.querySelector<HTMLInputElement>('#translation_input').value;
+            solution = document.querySelector<HTMLInputElement>('#translation_input').value;
 
             if (solution.length === 0) {
                 return null;
             }
-
-            return {cardId, collId, courseId, solution, selectedAnswers: []};
+            break;
 
         case 'Blank':
             throw cardType;
         // return {solution: '', selectedAnswers: []};
 
-        case 'Choice':
-            const selectedAnswers: number[] = [];
+        // break;
 
-            document.querySelectorAll<HTMLInputElement>('input[name=choice_answers]').forEach(
-                (element: HTMLElement) => {
-                    if (element instanceof HTMLInputElement && element.checked) {
-                        selectedAnswers.push(parseInt(element.dataset.choiceid));
-                    }
-                });
+        case 'Choice':
+            selectedAnswers = Array.from(document.querySelectorAll<HTMLInputElement>('input[name=choice_answers]'))
+                .filter((element: HTMLInputElement) => element.checked)
+                .map((element: HTMLInputElement) => parseInt(element.dataset.choiceid));
 
             if (selectedAnswers.length === 0) {
+                alert('Bitte wählen Sie mindestens eine Antwort aus.');
                 return null;
             }
 
-            return {cardId, collId, courseId, solution: "", selectedAnswers};
+            break;
+
         default:
+
             console.error('There has been an internal error: ' + cardType);
             return undefined;
     }
+
+    return {
+        cardId: flashcard.cardId,
+        collId: flashcard.collId,
+        courseId: flashcard.courseId,
+        solution,
+        selectedAnswers
+    };
 }
 
 function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void {
@@ -63,11 +78,9 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
     correctionTextPar.classList.remove(result.correct ? 'red-text' : 'green-text');
     correctionTextPar.classList.add(result.correct ? 'green-text' : 'red-text');
 
+    // Update buttons
     checkSolutionBtn.disabled = !canSolve;
-
-    if (result.correct || result.newTriesCount >= 2) {
-        document.querySelector('#nextFlashcardBtn').classList.remove('disabled');
-    }
+    nextFlashcardBtn.disabled = canSolve;
 
     document.querySelector<HTMLSpanElement>('#triesSpan').innerText = result.newTriesCount.toString();
 
@@ -88,10 +101,7 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
 }
 
 function checkSolution(): void {
-
-    const cardType: CardType = document.querySelector<HTMLDivElement>('#flashcardDiv').dataset['cardtype'] as CardType;
-
-    const solution: Solution = readSolution(cardType);
+    const solution: Solution = readSolution(flashcard.cardType);
 
     if (solution === null) {
         alert("Sie können keine leere Lösung abgeben!");
@@ -114,19 +124,57 @@ function checkSolution(): void {
                 }
             }
         )
-        .then(obj => onCorrectionSuccess(obj, cardType))
+        .then(obj => onCorrectionSuccess(obj, flashcard.cardType))
         .catch(reason => {
             console.error(reason)
         });
 }
 
+function loadNextFlashcard(): void {
+    if (flashcard !== undefined && repeatedFlashcards++ > 10) {
+        console.warn(repeatedFlashcards);
+    }
+
+    const loadFlashcardUrl: string = initialLoadBtn.dataset['href'];
+    fetch(loadFlashcardUrl)
+        .then(response => {
+                if (response.status === 200) {
+                    return response.json().then(loadedFlashcard => {
+                        flashcard = loadedFlashcard;
+
+                        canSolve = true;
+
+                        // Update buttons
+                        checkSolutionBtn.disabled = !canSolve;
+                        nextFlashcardBtn.disabled = canSolve;
+
+                        correctionTextPar.innerHTML = '&nbsp;';
+
+                        updateView(flashcard);
+                    });
+                } else if (response.status === 404) {
+                    // FIXME Keine weitere Karteikarte mehr...
+                    alert("Sie haben alle Karteikarten wiederholt...");
+                    window.location.href = '/';
+                }
+            }
+        )
+        .catch(reason => console.error(reason));
+}
+
+function performInitialFlashcardLoad(): void {
+    initialLoadBtn.remove();
+    loadNextFlashcard();
+}
+
 domReady(() => {
+    initialLoadBtn = document.querySelector<HTMLButtonElement>('#loadFlashcardButton');
+    initialLoadBtn.click();
+
     correctionTextPar = document.querySelector<HTMLParagraphElement>('#correctionTextPar');
+    nextFlashcardBtn = document.querySelector<HTMLButtonElement>('#nextFlashcardBtn');
     checkSolutionBtn = document.querySelector<HTMLButtonElement>('#checkSolutionBtn');
 
-    cardId = parseInt(checkSolutionBtn.dataset['cardid']);
-    collId = parseInt(checkSolutionBtn.dataset['collid']);
-    courseId = parseInt(checkSolutionBtn.dataset['courseid']);
     checkSolutionUrl = checkSolutionBtn.dataset['href'];
 
     document.addEventListener('keypress', event => {

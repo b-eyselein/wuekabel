@@ -13,11 +13,11 @@ trait ControllerHelpers extends Secured {
 
   protected val tableDefs: TableDefs
 
-  private def onNoSuchCourse(courseId: Int): Result = NotFound(s"Es gibt keinen Kurs mit der ID '$courseId'")
+  protected def onNoSuchCourse(courseId: Int): Result = NotFound(s"Es gibt keinen Kurs mit der ID '$courseId'")
 
-  private def onNoSuchCollection(courseId: Int, collId: Int): Result = NotFound(s"Es gibt keine Sammlung mit der ID '$collId' für den Kurs '$courseId'")
+  protected def onNoSuchCollection(courseId: Int, collId: Int): Result = NotFound(s"Es gibt keine Sammlung mit der ID '$collId' für den Kurs '$courseId'")
 
-  private def onNuSuchFlashcard(collection: Collection, cardId: Int): Result =
+  protected def onNoSuchFlashcard(collection: Collection, cardId: Int): Result =
     NotFound(s"Es gibt keine Karteikarte mit der ID '$cardId' für die Sammlung '${collection.name}'!")
 
   protected def withUserAndCourse(courseId: Int)(f: (User, Course) => Request[AnyContent] => Result): EssentialAction =
@@ -47,15 +47,5 @@ trait ControllerHelpers extends Secured {
           case Some(collection) => f(user, collection)(request)
         }
     }
-
-  protected def futureWithUserAndCompleteFlashcard(courseId: Int, collId: Int, cardId: Int)(f: (User, Collection, Flashcard) => Request[AnyContent] => Future[Result]): EssentialAction =
-    futureWithUserAndCollection(courseId, collId) { (user, collection) =>
-      implicit request =>
-        tableDefs.futureFlashcardById(collection, cardId) flatMap {
-          case None            => Future.successful(onNuSuchFlashcard(collection, cardId))
-          case Some(flashcard) => f(user, collection, flashcard)(request)
-        }
-    }
-
 
 }

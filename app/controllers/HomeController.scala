@@ -75,7 +75,6 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
       } yield Ok(views.html.collection(user, courseId, collection, flashcardCount, toLearnCount, toRepeatCount))
   }
 
-
   def startLearning(courseId: Int, collId: Int, isRepeating: Boolean): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, collection) =>
     implicit request =>
       val futureFlashcard = if (isRepeating)
@@ -89,68 +88,91 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
       }
   }
 
-  def learn(courseId: Int, collId: Int, cardId: Int, isRepeating: Boolean): EssentialAction =
-    futureWithUserAndCompleteFlashcard(courseId, collId, cardId) { (user, _, flashcard) =>
-      implicit request =>
+  def learn(courseId: Int, collId: Int, cardId: Int, isRepeating: Boolean): EssentialAction = futureWithUser { user =>
+    implicit request =>
 
-        tableDefs.futureUserAnswerForFlashcard(user, flashcard).map { maybeOldAnswer =>
-          if (!isRepeating && maybeOldAnswer.isDefined) {
-            // TODO: Something went wrong, take next flashcard?
-            Redirect(routes.HomeController.startLearning(courseId, collId, isRepeating))
-          } else {
-            Ok(views.html.learn(user, flashcard, maybeOldAnswer, isRepeating))
+      tableDefs.futureFlashcardById(courseId, collId, cardId).flatMap {
+        case None            => Future.successful(onNoSuchFlashcard(collection = ???, cardId))
+        case Some(flashcard) =>
+
+          tableDefs.futureUserAnswerForFlashcard(user, flashcard).map { maybeOldAnswer =>
+            if (!isRepeating && maybeOldAnswer.isDefined) {
+              // TODO: Something went wrong, take next flashcard?
+              Redirect(routes.HomeController.startLearning(courseId, collId, isRepeating))
+            } else {
+              Ok(views.html.learn(user, flashcard, maybeOldAnswer, isRepeating))
+            }
           }
-        }
 
-    }
+      }
+  }
 
-  def checkSolution(courseId: Int, collId: Int, cardId: Int): EssentialAction = futureWithUserAndCompleteFlashcard(courseId, collId, cardId) { (user, _, flashcard) =>
+  def repeat: EssentialAction = withUser { user =>
+    implicit request => Ok(views.html.repeat(user))
+  }
+
+  def nextFlashcardToRepeat: EssentialAction = futureWithUser { user =>
+    implicit request =>
+      tableDefs.futureMaybeNextFlashcardToRepeat(user).map {
+        case None     => NotFound("There has been an error?")
+        case Some(fc) => Ok(JsonFormats.flashcardFormat.writes(fc))
+      }
+  }
+
+  def checkRepeatSolution: EssentialAction = ???
+
+  def checkSolution(): EssentialAction = futureWithUser { user =>
     implicit request =>
       request.body.asJson flatMap (json => JsonFormats.solutionFormat.reads(json).asOpt) match {
-        case None           => Future(BadRequest(JsString("Could not read solution...")))
+        case None           => Future.successful(BadRequest(JsString("Could not read solution...")))
         case Some(solution) =>
 
-          tableDefs.futureUserAnswerForFlashcard(user, flashcard).flatMap { maybePreviousAnswer: Option[UserAnsweredFlashcard] =>
+          tableDefs.futureFlashcardById(solution.courseId, solution.collId, solution.cardId).flatMap {
+            case None            => ???
+            case Some(flashcard) =>
 
-            val previousTries = maybePreviousAnswer.map(_.tries).getOrElse(0)
+              tableDefs.futureUserAnswerForFlashcard(user, flashcard).flatMap { maybePreviousAnswer: Option[UserAnsweredFlashcard] =>
 
-            if (previousTries >= 2) {
-              Future.successful(BadRequest(JsString("More than 2 tries already...")))
-            } else {
+                val previousTries = maybePreviousAnswer.map(_.tries).getOrElse(0)
 
-              Corrector.correct(flashcard, solution) match {
-                case CorrectionResult(correct, operations, answersSelection) =>
+                if (previousTries >= 2) {
+                  Future.successful(BadRequest(JsString("More than 2 tries already...")))
+                } else {
 
-                  val today = LocalDate.now()
+                  Corrector.correct(flashcard, solution) match {
+                    case CorrectionResult(correct, operations, answersSelection) =>
 
-                  val newAnswer: UserAnsweredFlashcard = maybePreviousAnswer match {
-                    case None            => UserAnsweredFlashcard(user.username, cardId, collId, courseId, bucket = 0, today, correct, tries = 0)
-                    case Some(oldAnswer) =>
+                      val today = LocalDate.now()
 
-                      val newBucket = if (correct) oldAnswer.bucket + 1 else oldAnswer.bucket
+                      val newAnswer: UserAnsweredFlashcard = maybePreviousAnswer match {
+                        case None            => UserAnsweredFlashcard(user.username, flashcard.cardId, flashcard.collId, flashcard.courseId, bucket = 0, today, correct, tries = 0)
+                        case Some(oldAnswer) =>
 
-                      val daysSinceLastAnswer: Long = ChronoUnit.DAYS.between(today, oldAnswer.dateAnswered)
+                          val newBucket = if (correct) oldAnswer.bucket + 1 else oldAnswer.bucket
 
-                      val newTries: Int = if (daysSinceLastAnswer > Math.pow(3, oldAnswer.bucket)) {
-                        0
-                      } else if (correct) {
-                        oldAnswer.tries
-                      } else {
-                        oldAnswer.tries + 1
+                          val daysSinceLastAnswer: Long = ChronoUnit.DAYS.between(today, oldAnswer.dateAnswered)
+
+                          val newTries: Int = if (daysSinceLastAnswer > Math.pow(3, oldAnswer.bucket)) {
+                            0
+                          } else if (correct) {
+                            oldAnswer.tries
+                          } else {
+                            oldAnswer.tries + 1
+                          }
+
+                          oldAnswer.copy(bucket = newBucket, dateAnswered = today, correct = correct, tries = newTries)
                       }
 
-                      oldAnswer.copy(bucket = newBucket, dateAnswered = today, correct = correct, tries = newTries)
+                      tableDefs.futureInsertOrUpdateUserAnswer(newAnswer) map {
+                        _ =>
+                          val completeCorrectionResult = CompleteCorrectionResult(correct, operations, answersSelection, newTriesCount = newAnswer.tries, maybeSampleSolution = None)
+
+                          Ok(JsonFormats.completeCorrectionResultFormat.writes(completeCorrectionResult))
+                      }
                   }
 
-                  tableDefs.futureInsertOrUpdateUserAnswer(newAnswer) map {
-                    _ =>
-                      val completeCorrectionResult = CompleteCorrectionResult(correct, operations, answersSelection, newTriesCount = newAnswer.tries, maybeSampleSolution = None)
-
-                      Ok(JsonFormats.completeCorrectionResultFormat.writes(completeCorrectionResult))
-                  }
+                }
               }
-
-            }
           }
       }
   }

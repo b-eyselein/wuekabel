@@ -69,9 +69,8 @@
                 <p id="correctionTextPar">&nbsp;</p>
 
                 <button class="btn btn-large waves-effect @primaryColor" onclick="checkSolution();" id="checkSolutionBtn"
-                data-href="@routes.HomeController.checkSolution(flashcard.courseId, flashcard.collId, flashcard.cardId)">
-                    Lösung testen
-                </button>
+                data-cardId="@flashcard.cardId" data-collid="@flashcard.collId" data-courseid="@flashcard.courseId"
+                data-href="@routes.HomeController.checkSolution">Lösung testen</button>
 
                 <a href="@routes.HomeController.startLearning(flashcard.courseId, flashcard.collId, isRepeating)"
                 id="nextFlashcardBtn" class="btn btn-large waves-effect @accentColor disabled">Weiter</a>

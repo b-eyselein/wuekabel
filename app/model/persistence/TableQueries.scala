@@ -31,6 +31,12 @@ trait TableQueries {
       .result.headOption.map(_.map(_.cardIdentifier))
   )
 
+  def futureMaybeNextFlashcardToRepeat(user: User): Future[Option[Flashcard]] =
+    db.run(flashcardsToRepeatTQ.filter(_.username === user.username).result.headOption).flatMap {
+      case None                              => Future.successful(None)
+      case Some(fcId: FlashcardToRepeatData) => futureFlashcardById(fcId.courseId, fcId.collId, fcId.cardId)
+    }
+
   def futureFlashcardsToRepeatCount(user: User, collection: Collection): Future[Int] = db.run(
     flashcardsToRepeatTQ.filter(flashcardToDoFilter(_, collection, user)).size.result
   )

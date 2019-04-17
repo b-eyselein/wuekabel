@@ -10,7 +10,7 @@ object JsonFormats {
 
   val solutionFormat: Format[Solution] = Json.format[Solution]
 
-  // Outgoing
+  // Result
 
   private implicit val charFormat: Format[Char] = Format({
     case JsString(str) => JsSuccess(str.charAt(0))
@@ -24,5 +24,13 @@ object JsonFormats {
   private implicit val answerSelectionResultFormat: Format[AnswerSelectionResult] = Json.format[AnswerSelectionResult]
 
   val completeCorrectionResultFormat: Format[CompleteCorrectionResult] = Json.format[CompleteCorrectionResult]
+
+  // Flashcard
+
+  private implicit val choiceAnswerFormat: Format[ChoiceAnswer] = Json.format[ChoiceAnswer]
+
+  private implicit val blanksAnswerFragmentFormat: Format[BlanksAnswerFragment] = Json.format[BlanksAnswerFragment]
+
+  val flashcardFormat: Format[Flashcard] = Json.format[Flashcard]
 
 }
