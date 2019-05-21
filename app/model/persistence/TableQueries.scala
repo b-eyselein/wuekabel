@@ -31,11 +31,21 @@ trait TableQueries {
       .result.headOption.map(_.map(_.cardIdentifier))
   )
 
+  def futureMaybeNextFlashcardToLearn(user: User, course: Course, collection: Collection): Future[Option[Flashcard]] =
+    db.run(flashcardsToLearnTQ.filter(flashcardToDoFilter(_, collection, user)).result.headOption).flatMap {
+      case None                             => Future.successful(None)
+      case Some(fcId: FlashcardToLearnData) => futureFlashcardById(fcId.courseId, fcId.collId, fcId.cardId)
+    }
+
   def futureMaybeNextFlashcardToRepeat(user: User): Future[Option[Flashcard]] =
     db.run(flashcardsToRepeatTQ.filter(_.username === user.username).result.headOption).flatMap {
       case None                              => Future.successful(None)
       case Some(fcId: FlashcardToRepeatData) => futureFlashcardById(fcId.courseId, fcId.collId, fcId.cardId)
     }
+
+  def futureFlashcardsToRepeatCount(user: User): Future[Int] = db.run(
+    flashcardsToRepeatTQ.filter(_.username === user.username).size.result
+  )
 
   def futureFlashcardsToRepeatCount(user: User, collection: Collection): Future[Int] = db.run(
     flashcardsToRepeatTQ.filter(flashcardToDoFilter(_, collection, user)).size.result

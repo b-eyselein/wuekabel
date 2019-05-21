@@ -1,0 +1,21 @@
+@import model.{User, Course, Collection}
+
+@(user: User, course: Course, collection: Collection, flashcardId: Int)
+
+@title = @{
+    "Falsche Karteikarten-ID"
+}
+
+@main(title, Some(user)) {
+    <p class="red-text">
+        Es gibt keine Karteikarte mit der ID
+        <i>@flashcardId</i>
+        für die Sammlung
+        <i>@collection.name</i>
+        im Kurs
+        <i>@course.name</i>
+        .
+    </p>
+
+            <p><a href="@routes.HomeController.collection(course.id, collection.id)">Zurück zur Sammlung</a></p>
+}

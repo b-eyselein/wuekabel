@@ -1,20 +1,18 @@
-/// <reference path="helpers.ts"/>
-/// <reference path="questionMaker.ts"/>
-
-let correctionTextPar: HTMLParagraphElement;
+/// <reference path="./learnRepeatBasics.ts"/>
+/// <reference path="./questionMaker.ts"/>
 
 let checkSolutionBtn: HTMLButtonElement;
 let nextFlashcardBtn: HTMLButtonElement;
 
-let initialLoadBtn: HTMLButtonElement;
-
-let checkSolutionUrl: string;
-
-let canSolve: boolean = true;
+let correctionTextPar: HTMLParagraphElement;
 
 let flashcard: Flashcard;
 
+let checkSolutionUrl: string;
+let canSolve: boolean = true;
+
 let repeatedFlashcards: number = 0;
+
 
 function readSolution(cardType: CardType): undefined | Solution {
     let solution: string = '';
@@ -64,7 +62,7 @@ function readSolution(cardType: CardType): undefined | Solution {
 }
 
 function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void {
-    console.info(JSON.stringify(result, null, 2));
+    // console.info(JSON.stringify(result, null, 2));
 
     let correctionText = `Ihre Lösung war ${result.correct ? '' : 'nicht '} korrekt.`;
 
@@ -100,6 +98,33 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
     }
 }
 
+function loadNextFlashcard(loadFlashcardUrl: string): void {
+    if (flashcard !== undefined && repeatedFlashcards++ > 10) {
+        console.warn(repeatedFlashcards);
+    }
+
+    fetch(loadFlashcardUrl).then(response => {
+        if (response.status === 200) {
+            response.json().then(loadedFlashcard => {
+                flashcard = loadedFlashcard;
+
+                canSolve = true;
+
+                // Update buttons
+                checkSolutionBtn.disabled = !canSolve;
+                nextFlashcardBtn.disabled = canSolve;
+
+                correctionTextPar.innerHTML = '&nbsp;';
+
+                updateView(flashcard);
+            })
+        } else if (response.status === 404) {
+            alert("Sie haben alle Karteikarten abgearbeitet.");
+            window.location.href = '/';
+        }
+    })
+}
+
 function checkSolution(): void {
     const solution: Solution = readSolution(flashcard.cardType);
 
@@ -130,60 +155,39 @@ function checkSolution(): void {
         });
 }
 
-function loadNextFlashcard(): void {
-    if (flashcard !== undefined && repeatedFlashcards++ > 10) {
-        console.warn(repeatedFlashcards);
-    }
 
-    const loadFlashcardUrl: string = initialLoadBtn.dataset['href'];
-    fetch(loadFlashcardUrl)
-        .then(response => {
-                if (response.status === 200) {
-                    return response.json().then(loadedFlashcard => {
-                        flashcard = loadedFlashcard;
+function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void): void {
+    const initialLoadBtn = document.querySelector<HTMLButtonElement>('#loadFlashcardButton');
 
-                        canSolve = true;
+    const loadFlashcardUrl = initialLoadBtn.dataset['href'];
 
-                        // Update buttons
-                        checkSolutionBtn.disabled = !canSolve;
-                        nextFlashcardBtn.disabled = canSolve;
-
-                        correctionTextPar.innerHTML = '&nbsp;';
-
-                        updateView(flashcard);
-                    });
-                } else if (response.status === 404) {
-                    // FIXME Keine weitere Karteikarte mehr...
-                    alert("Sie haben alle Karteikarten wiederholt...");
-                    window.location.href = '/';
-                }
-            }
-        )
-        .catch(reason => console.error(reason));
-}
-
-function performInitialFlashcardLoad(): void {
-    initialLoadBtn.remove();
-    loadNextFlashcard();
-}
-
-domReady(() => {
-    initialLoadBtn = document.querySelector<HTMLButtonElement>('#loadFlashcardButton');
+    initialLoadBtn.onclick = () => {
+        loadNextFlashcard(loadFlashcardUrl);
+        initialLoadBtn.remove();
+    };
     initialLoadBtn.click();
 
     correctionTextPar = document.querySelector<HTMLParagraphElement>('#correctionTextPar');
     nextFlashcardBtn = document.querySelector<HTMLButtonElement>('#nextFlashcardBtn');
+    nextFlashcardBtn.onclick = () => loadNextFlashcard(loadFlashcardUrl);
+
     checkSolutionBtn = document.querySelector<HTMLButtonElement>('#checkSolutionBtn');
+    checkSolutionBtn.onclick = checkSolution;
 
     checkSolutionUrl = checkSolutionBtn.dataset['href'];
 
     document.addEventListener('keypress', event => {
         if (event.key === 'Enter') {
             if (canSolve) {
-                checkSolution();
+                checkSolutionBtn.click();
             } else {
-                document.getElementById('nextFlashcardBtn').click();
+                console.info("Clicking nextFlashcardBtn");
+                nextFlashcardBtn.click();
             }
         }
     });
+}
+
+domReady(() => {
+    initAll(loadNextFlashcard, checkSolution);
 });

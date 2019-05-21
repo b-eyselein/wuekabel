@@ -2,21 +2,14 @@
 
 -- Users
 
-create table if not exists users
-(
+create table if not exists users (
     username varchar(50) primary key,
     is_admin boolean not null default false
 );
 
-insert into users (username, is_admin)
-values ('first_user', true),
-       ('second_user', true),
-       ('third_user', true);
-
 -- User passwords
 
-create table if not exists user_passwords
-(
+create table if not exists user_passwords (
     username      varchar(50) primary key,
     password_hash varchar(100) not null,
 
@@ -24,27 +17,17 @@ create table if not exists user_passwords
         on update cascade on delete cascade
 );
 
-insert into user_passwords (username, password_hash)
-values ('first_user', '$2a$10$6loikDKMzBkdP1HG33BeheyhF7e1.gNBx3mM1CiePRg2AaicJmj5.'),
-       ('second_user', '$2a$10$Mjaar2EAS0olPjsWRNozcuEsST/IMhgt.iPJX9qBCDoBLmyv/WaSq'),
-       ('third_user', '$2a$10$hQjCkndxdP7185BRjM8fJuFLr0UrySpyN4/dKhrjxr.9dAcMRqha.');
-
 -- Courses
 
-create table if not exists courses
-(
+create table if not exists courses (
     id         int primary key,
     short_name varchar(100) not null,
     title      varchar(100) not null
 );
 
-insert into courses(id, short_name, title)
-values (1, 'prop_french_1', 'Propädeutikum Französisch 1');
-
 -- Users <-> Courses
 
-create table if not exists users_in_courses
-(
+create table if not exists users_in_courses (
     username  varchar(50),
     course_id int,
 
@@ -57,8 +40,7 @@ create table if not exists users_in_courses
 
 -- Collections
 
-create table if not exists collections
-(
+create table if not exists collections (
     id        int,
     course_id int,
     name      varchar(100) not null,
@@ -68,15 +50,10 @@ create table if not exists collections
         on update cascade on delete cascade
 );
 
-insert into collections (id, course_id, name)
-values (1, 1, 'Erste Sammlung'),
-       (2, 1, 'Zweite Sammlung'),
-       (3, 1, 'Dritte Sammlung');
 
 -- FlashCards with answers
 
-create table if not exists flashcards
-(
+create table if not exists flashcards (
     id              int,
     coll_id         int,
     course_id       int,
@@ -91,15 +68,7 @@ create table if not exists flashcards
         on update cascade on delete cascade
 );
 
-insert into flashcards (id, coll_id, course_id, flash_card_type, question, meaning)
-values (1, 1, 1, 'Vocable', 'pater', 'Vater'),
-       (2, 1, 1, 'Vocable', 'mater', 'Mutter'),
-       (3, 1, 1, 'Text', 'magna domus', 'großes Haus'),
-       (4, 1, 1, 'Choice', 'Welches Geschlecht hat das Wort pater?', ''),
-       (5, 1, 1, 'Choice', 'Welche dieser Aussagen sind korrekt?', '');
-
-create table if not exists choice_answers
-(
+create table if not exists choice_answers (
     id          int,
     card_id     int,
     coll_id     int,
@@ -113,17 +82,7 @@ create table if not exists choice_answers
         on update cascade on delete cascade
 );
 
-insert into choice_answers (id, card_id, coll_id, course_id, answer, correctness)
-values (1, 4, 1, 1, 'Maskulinum', 'CORRECT'),
-       (2, 4, 1, 1, 'Femininum', 'WRONG'),
-       (3, 4, 1, 1, 'Neutrum', 'WRONG'),
-       (1, 5, 1, 1, 'Wörter auf -or sind meist männlich', 'CORRECT'),
-       (2, 5, 1, 1, 'Wörter auf -is sind meist weiblich', 'WRONG'),
-       (3, 5, 1, 1, 'Wörter auf -x sind meist weiblich', 'CORRECT'),
-       (4, 5, 1, 1, 'Wörter auf -en sind immer neutrum', 'CORRECT');
-
-create table if not exists blanks_answer_fragments
-(
+create table if not exists blanks_answer_fragments (
     id        int,
     card_id   int,
     coll_id   int,
@@ -138,12 +97,12 @@ create table if not exists blanks_answer_fragments
 
 -- User <-> Flashcard
 
-create table if not exists users_answered_flashcards
-(
+create table if not exists users_answered_flashcards (
     username      varchar(50),
     card_id       int,
     coll_id       int,
     course_id     int,
+    left_to_right bool    not null default true,
 
     bucket        int     not null,
     date_answered date    not null,
@@ -152,7 +111,7 @@ create table if not exists users_answered_flashcards
 
     constraint bucket_check check (bucket between 0 and 6),
 
-    primary key (username, card_id, coll_id, course_id),
+    primary key (username, card_id, coll_id, course_id, left_to_right),
     foreign key (username) references users (username)
         on update cascade on delete cascade,
     foreign key (card_id, coll_id, course_id) references flashcards (id, coll_id, course_id)
@@ -170,7 +129,12 @@ from flashcards fcs
 where card_id is null;
 
 create view flashcards_to_repeat as
-select f.id as card_id, f.coll_id as coll_id, f.course_id as course_id, username
+select f.id                           as card_id,
+       f.coll_id                      as coll_id,
+       f.course_id                    as course_id,
+       username,
+       left_to_right,
+       datediff(now(), date_answered) as time_since_answered
 from flashcards f
          left join users_answered_flashcards uaf on uaf.card_id = f.id and uaf.coll_id = f.coll_id
 where datediff(now(), date_answered) >= power(3, bucket)
@@ -183,8 +147,6 @@ drop view if exists flashcards_to_repeat;
 drop view if exists flashcards_to_learn;
 
 drop table if exists users_answered_flashcards;
-
-drop table if exists buckets;
 
 drop table if exists blanks_answer_fragments;
 

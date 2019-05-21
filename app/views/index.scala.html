@@ -1,6 +1,6 @@
 @import model.{User, Course}
 
-@(user: User, courses: Seq[Course], pwSet: Boolean)
+@(user: User, courses: Seq[Course], repeatCount: Int, pwSet: Boolean)
 
     @title = @{
         "Meine Kurse"
@@ -15,7 +15,7 @@
         12 / coursesPerRow
     }
 
-    @main(title, Some(user)) {
+    @main(title, Some(user), Some(repeatCount)) {
 
         <h2 class="center-align">@title</h2>
 

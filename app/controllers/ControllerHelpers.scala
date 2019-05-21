@@ -13,18 +13,20 @@ trait ControllerHelpers extends Secured {
 
   protected val tableDefs: TableDefs
 
-  protected def onNoSuchCourse(courseId: Int): Result = NotFound(s"Es gibt keinen Kurs mit der ID '$courseId'")
+  protected def onNoSuchCourse(user: User, courseId: Int): Result =
+    NotFound(views.html.errorViews.noSuchCourse(user, courseId))
 
-  protected def onNoSuchCollection(courseId: Int, collId: Int): Result = NotFound(s"Es gibt keine Sammlung mit der ID '$collId' für den Kurs '$courseId'")
+  protected def onNoSuchCollection(user: User, course: Course, collId: Int): Result =
+    NotFound(views.html.errorViews.noSuchCollection(user, course, collId))
 
-  protected def onNoSuchFlashcard(collection: Collection, cardId: Int): Result =
-    NotFound(s"Es gibt keine Karteikarte mit der ID '$cardId' für die Sammlung '${collection.name}'!")
+  protected def onNoSuchFlashcard(user: User, course: Course, collection: Collection, cardId: Int): Result =
+    NotFound(views.html.errorViews.noSuchFlashcard(user, course, collection, cardId))
 
   protected def withUserAndCourse(courseId: Int)(f: (User, Course) => Request[AnyContent] => Result): EssentialAction =
     futureWithUser { user =>
       implicit request =>
-        tableDefs.futureCourseById(courseId) map {
-          case None         => onNoSuchCourse(courseId)
+        tableDefs.futureCourseById(courseId).map {
+          case None         => onNoSuchCourse(user, courseId)
           case Some(course) => f(user, course)(request)
         }
     }
@@ -32,19 +34,38 @@ trait ControllerHelpers extends Secured {
   protected def futureWithUserAndCourse(courseId: Int)(f: (User, Course) => Request[AnyContent] => Future[Result]): EssentialAction =
     futureWithUser { user =>
       implicit request =>
-        tableDefs.futureCourseById(courseId) flatMap {
-          case None         => Future.successful(onNoSuchCourse(courseId))
+        tableDefs.futureCourseById(courseId).flatMap {
+          case None         => Future.successful(onNoSuchCourse(user, courseId))
           case Some(course) => f(user, course)(request)
         }
     }
 
 
-  protected def futureWithUserAndCollection(courseId: Int, collId: Int)(f: (User, Collection) => Request[AnyContent] => Future[Result]): EssentialAction =
+  protected def withUserAndCollection(courseId: Int, collId: Int)(f: (User, Course, Collection) => Request[AnyContent] => Result): EssentialAction =
     futureWithUser { user =>
       implicit request =>
-        tableDefs.futureCollectionById(courseId, collId) flatMap {
-          case None             => Future.successful(onNoSuchCollection(courseId, collId))
-          case Some(collection) => f(user, collection)(request)
+        tableDefs.futureCourseById(courseId).flatMap {
+          case None         => Future.successful(onNoSuchCourse(user, courseId))
+          case Some(course) =>
+
+            tableDefs.futureCollectionById(courseId, collId).map {
+              case None             => onNoSuchCollection(user, course, collId)
+              case Some(collection) => f(user, course, collection)(request)
+            }
+        }
+    }
+
+  protected def futureWithUserAndCollection(courseId: Int, collId: Int)(f: (User, Course, Collection) => Request[AnyContent] => Future[Result]): EssentialAction =
+    futureWithUser { user =>
+      implicit request =>
+        tableDefs.futureCourseById(courseId).flatMap {
+          case None         => Future.successful(onNoSuchCourse(user, courseId))
+          case Some(course) =>
+
+            tableDefs.futureCollectionById(courseId, collId).flatMap {
+              case None             => Future.successful(onNoSuchCollection(user, course, collId))
+              case Some(collection) => f(user, course, collection)(request)
+            }
         }
     }
 

@@ -59,11 +59,9 @@ GET         /courses/:courseId/unregister                                       
 
 GET         /courses/:courseId/collections/:collId                                  controllers.HomeController.collection(courseId: Int, collId: Int)
 
-GET         /courses/:courseId/collections/:collId/startLearning                    controllers.HomeController.startLearning(courseId: Int, collId: Int, isRepeating: Boolean = false)
-GET         /courses/:courseId/collections/:collId/startRepeating                   controllers.HomeController.startLearning(courseId: Int, collId: Int, isRepeating: Boolean = true)
-
-GET         /courses/:courseId/collections/:collId/cards/:cardId/learn              controllers.HomeController.learn(courseId: Int, collId: Int, cardId:Int, isRepeating: Boolean = false)
-GET         /courses/:courseId/collections/:collId/cards/:cardId/repeat             controllers.HomeController.learn(courseId: Int, collId: Int, cardId:Int, isRepeating: Boolean = true)
+# FIXME: remove cardId...
+GET         /courses/:courseId/collections/:collId/learn                            controllers.HomeController.learn(courseId: Int, collId: Int)
+GET         /courses/:courseId/collections/:collId/flashcardToLearn                 controllers.HomeController.nextFlashcardToLearn(courseId: Int, collId: Int)
 
 GET         /repeat                                                                 controllers.HomeController.repeat
 GET         /flashcardToRepeat                                                      controllers.HomeController.nextFlashcardToRepeat

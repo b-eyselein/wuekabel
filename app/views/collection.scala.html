@@ -22,27 +22,11 @@
                     <span class="green-text">Sie haben alle Karteikarten gelernt.</span>
                 </a>
             } else {
-                <a href="@routes.HomeController.startLearning(courseId, collection.id, isRepeating = false)"
+                <a href="@routes.HomeController.learn(courseId, collection.id)"
                 class="btn btn-large waves-effect waves-block red">
                     Es existieren noch @toLearnCount neue Karteikarten.
                 </a>
             }
             </div>
         </div>
-
-        <div class="row">
-            <div class="col s12">
-            @if(toRepeatCount == 0) {
-                <a class="btn btn-large waves-effect waves-block white">
-                    <span class="green-text">Sie haben alle Karteikarten wiederholt.</span>
-                </a>
-            } else {
-                <a href="@routes.HomeController.startLearning(courseId, collection.id, isRepeating = true)"
-                class="btn btn-large waves-effect waves-block red">
-                    Es existieren noch @toRepeatCount nicht wiederholte Karteikarten.
-                </a>
-            }
-            </div>
-        </div>
-
     }

@@ -55,7 +55,7 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
 
   // Collections
 
-  def collectionAdmin(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (admin, collection) =>
+  def collectionAdmin(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (admin, course, collection) =>
     implicit request =>
       tableDefs.futureFlashcardsForCollection(collection) map {
         flashcards => Ok(views.html.admin.collectionAdmin(admin, courseId, collection, flashcards))
@@ -91,7 +91,7 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
     implicit request => Ok(views.html.forms.uploadCardsForm(user, courseId, collId))
   }
 
-  def uploadCardsFile(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (admin, collection) =>
+  def uploadCardsFile(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (admin, _, collection) =>
     implicit request =>
 
       request.body.asMultipartFormData flatMap (_.file(Consts.excelFileName)) match {

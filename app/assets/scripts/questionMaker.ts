@@ -1,4 +1,4 @@
-/// <reference path="helpers.ts"/>
+/// <reference path="learnRepeatBasics.ts"/>
 
 const textAnswerInput: string = `
 <div class="row">

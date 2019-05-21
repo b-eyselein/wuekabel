@@ -26,9 +26,10 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
     implicit request =>
       val pwSet = request.flash.get("no_pw_set").isEmpty
 
-      tableDefs.futureCoursesForUser(user.username) map { courses =>
-        Ok(views.html.index(user, courses, pwSet))
-      }
+      for {
+        courses <- tableDefs.futureCoursesForUser(user.username)
+        repeatCount <- tableDefs.futureFlashcardsToRepeatCount(user)
+      } yield Ok(views.html.index(user, courses, repeatCount, pwSet))
   }
 
   def registerForCoursesForm: EssentialAction = futureWithUser { user =>
@@ -66,7 +67,7 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
       }
   }
 
-  def collection(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, collection) =>
+  def collection(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, course, collection) =>
     implicit request =>
       for {
         flashcardCount <- tableDefs.futureFlashcardCountForCollection(collection)
@@ -75,35 +76,15 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
       } yield Ok(views.html.collection(user, courseId, collection, flashcardCount, toLearnCount, toRepeatCount))
   }
 
-  def startLearning(courseId: Int, collId: Int, isRepeating: Boolean): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, collection) =>
-    implicit request =>
-      val futureFlashcard = if (isRepeating)
-        tableDefs.futureMaybeIdentifierNextFlashcardToRepeat(user, collection)
-      else
-        tableDefs.futureMaybeIdentifierNextFlashcardToLearn(user, collection)
-
-      futureFlashcard map {
-        case None             => Redirect(routes.HomeController.collection(courseId, collId))
-        case Some(identifier) => Redirect(routes.HomeController.learn(courseId, identifier.collId, identifier.cardId, isRepeating))
-      }
+  def learn(courseId: Int, collId: Int): EssentialAction = withUserAndCollection(courseId, collId) { (user, course, collection) =>
+    implicit request => Ok(views.html.learn(user, course, collection))
   }
 
-  def learn(courseId: Int, collId: Int, cardId: Int, isRepeating: Boolean): EssentialAction = futureWithUser { user =>
+  def nextFlashcardToLearn(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, course, collection) =>
     implicit request =>
-
-      tableDefs.futureFlashcardById(courseId, collId, cardId).flatMap {
-        case None            => Future.successful(onNoSuchFlashcard(collection = ???, cardId))
-        case Some(flashcard) =>
-
-          tableDefs.futureUserAnswerForFlashcard(user, flashcard).map { maybeOldAnswer =>
-            if (!isRepeating && maybeOldAnswer.isDefined) {
-              // TODO: Something went wrong, take next flashcard?
-              Redirect(routes.HomeController.startLearning(courseId, collId, isRepeating))
-            } else {
-              Ok(views.html.learn(user, flashcard, maybeOldAnswer, isRepeating))
-            }
-          }
-
+      tableDefs.futureMaybeNextFlashcardToLearn(user, course, collection).map {
+        case None     => NotFound("No Flashcard to learn found")
+        case Some(fc) => Ok(JsonFormats.flashcardFormat.writes(fc))
       }
   }
 
@@ -119,11 +100,9 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
       }
   }
 
-  def checkRepeatSolution: EssentialAction = ???
-
   def checkSolution(): EssentialAction = futureWithUser { user =>
     implicit request =>
-      request.body.asJson flatMap (json => JsonFormats.solutionFormat.reads(json).asOpt) match {
+      request.body.asJson.flatMap(json => JsonFormats.solutionFormat.reads(json).asOpt) match {
         case None           => Future.successful(BadRequest(JsString("Could not read solution...")))
         case Some(solution) =>
 
@@ -163,11 +142,10 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
                           oldAnswer.copy(bucket = newBucket, dateAnswered = today, correct = correct, tries = newTries)
                       }
 
-                      tableDefs.futureInsertOrUpdateUserAnswer(newAnswer) map {
-                        _ =>
-                          val completeCorrectionResult = CompleteCorrectionResult(correct, operations, answersSelection, newTriesCount = newAnswer.tries, maybeSampleSolution = None)
+                      tableDefs.futureInsertOrUpdateUserAnswer(newAnswer) map { _ =>
+                        val completeCorrectionResult = CompleteCorrectionResult(correct, operations, answersSelection, newTriesCount = newAnswer.tries, maybeSampleSolution = None)
 
-                          Ok(JsonFormats.completeCorrectionResultFormat.writes(completeCorrectionResult))
+                        Ok(JsonFormats.completeCorrectionResultFormat.writes(completeCorrectionResult))
                       }
                   }
 

@@ -1,73 +1,94 @@
 @import model.User
 
-@(title: String, maybeUser: Option[User], scripts: Html = Html(""))(content: Html)
+@(title: String, maybeUser: Option[User], repeatCount: Option[Int] = None, scripts: Html = Html(""))(content: Html)
 
-@leftNavigation = {
-    <li><a href="@routes.HomeController.index()">Meine Kurse</a></li>
-}
+    @leftNavigation = {
+        <li><a href="@routes.HomeController.index()">Meine Kurse</a></li>
 
-@rightNavigation = {
-@maybeUser match {
-    case Some(user) => {
-        @if(user.isAdmin) {
-            <li><a href="@routes.AdminController.index()">Administration</a></li>
+    @repeatCount match {
+        case None => {}
+        case Some(rc) => {
+            @if(rc == 0) {
+                <li>
+                    <a disabled="disabled">
+                        Wiederholen
+                        <span class="badge">@rc</span>
+                    </a>
+                </li>
+            } else {
+                <li>
+                    <a href="@routes.HomeController.repeat()">
+                        Wiederholen
+                        <span class="new badge @accentColor">@rc</span>
+                    </a>
+                </li>
+            }
         }
-        <li><a href="@routes.HomeController.userPage()">Nutzer: @user.username </a></li>
-        <li><a href="@routes.LoginController.logout()">Logout</a></li>
     }
-    case None => {
-        <li><a href="@routes.LoginController.loginForm()">Login</a></li>
-        <li><a href="@routes.LoginController.registerForm()">Registrieren</a></li>
     }
-}
-}
 
-<!DOCTYPE html>
-<html lang="de">
-    <head>
-        <meta charset="UTF-8">
-        <title>Wuekabel: @title</title>
+    @rightNavigation = {
+    @maybeUser match {
+        case Some(user) => {
+            @if(user.isAdmin) {
+                <li><a href="@routes.AdminController.index()">Administration</a></li>
+            }
+            <li><a href="@routes.HomeController.userPage()">Nutzer: @user.username </a></li>
+            <li><a href="@routes.LoginController.logout()">Logout</a></li>
+        }
+        case None => {
+            <li><a href="@routes.LoginController.loginForm()">Login</a></li>
+            <li><a href="@routes.LoginController.registerForm()">Registrieren</a></li>
+        }
+    }
+    }
 
-        <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
-        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-        <link rel="stylesheet" href="@routes.Assets.versioned("lib/materialize-css/dist/css/materialize.css")">
+    <!DOCTYPE html>
+    <html lang="de">
+        <head>
+            <meta charset="UTF-8">
+            <title>Wuekabel: @title</title>
 
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    </head>
-    <body>
+            <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
+            <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+            <link rel="stylesheet" href="@routes.Assets.versioned("lib/materialize-css/dist/css/materialize.css")">
 
-        <nav>
-            <div class="nav-wrapper @primaryColor">
-                <a href="@routes.HomeController.index" class="brand-logo center">WueKabel</a>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        </head>
+        <body>
 
-                <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+            <nav>
+                <div class="nav-wrapper @primaryColor">
+                    <a href="@routes.HomeController.index" class="brand-logo center">WueKabel</a>
 
-                <ul class="left hide-on-med-and-down">@leftNavigation</ul>
+                    <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
 
-                <ul id="nav-mobile" class="right hide-on-med-and-down">@rightNavigation</ul>
+                    <ul class="left hide-on-med-and-down">@leftNavigation</ul>
+
+                    <ul id="nav-mobile" class="right hide-on-med-and-down">@rightNavigation</ul>
+                </div>
+            </nav>
+
+            <ul class="sidenav" id="mobile-demo">
+                @leftNavigation
+                @rightNavigation
+            </ul>
+
+            <br>
+
+            <div class="container">
+            @content
             </div>
-        </nav>
 
-        <ul class="sidenav" id="mobile-demo">
-            @leftNavigation
-            @rightNavigation
-        </ul>
-
-        <br>
-
-        <div class="container">
-        @content
-        </div>
-
-        <script src="@routes.Assets.versioned("lib/jquery/dist/jquery.js")"></script>
-        <script src="@routes.Assets.versioned("lib/materialize-css/dist/js/materialize.js")"></script>
-        <script>
+            <script src="@routes.Assets.versioned("lib/jquery/dist/jquery.js")"></script>
+            <script src="@routes.Assets.versioned("lib/materialize-css/dist/js/materialize.js")"></script>
+            <script>
                 $(document).ready(function () {
                     $('.sidenav').sidenav();
                 });
         </script>
 
-        @scripts
+            @scripts
 
-    </body>
-</html>
+        </body>
+    </html>

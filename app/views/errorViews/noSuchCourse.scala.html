@@ -1,0 +1,17 @@
+@import model.User
+
+@(user: User, courseId: Int)
+
+@title = @{
+    "Falsche Kurs-ID"
+}
+
+@main(title, Some(user)) {
+    <p class="red-text">
+        Es gibt keinen Kurs mit der ID
+        <i>@courseId</i>
+        .
+    </p>
+
+            <p><a href="@routes.HomeController.index()">Zurück zur Kursübersicht</a></p>
+}

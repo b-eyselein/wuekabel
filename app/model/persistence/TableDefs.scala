@@ -1,6 +1,5 @@
 package model.persistence
 
-import java.sql.{Date => SqlDate}
 import java.time.LocalDate
 
 import javax.inject.Inject
@@ -28,11 +27,6 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
   protected val flashcardsToRepeatTQ: TableQuery[FlashcardsToRepeatView] = TableQuery[FlashcardsToRepeatView]
 
-  // Column types
-
-  private implicit val myDateColumnType: BaseColumnType[LocalDate] =
-    MappedColumnType.base[LocalDate, SqlDate](SqlDate.valueOf, _.toLocalDate)
-
   // Table definitions
 
   class UsersAnsweredFlashcardsTable(tag: Tag) extends Table[UserAnsweredFlashcard](tag, "users_answered_flashcards") {
@@ -44,6 +38,9 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
     def collId: Rep[Int] = column[Int]("coll_id")
 
     def courseId: Rep[Int] = column[Int]("course_id")
+
+    def leftToRight: Rep[Boolean] = column[Boolean]("left_to_right", O.Default(true))
+
 
     def bucket: Rep[Int] = column[Int]("bucket")
 

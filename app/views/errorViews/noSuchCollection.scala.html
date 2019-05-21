@@ -1,0 +1,19 @@
+@import model.{User, Course}
+
+@(user: User, course: Course, collectionId: Int)
+
+@title = @{
+    "Falsche Kurs-ID"
+}
+
+@main(title, Some(user)) {
+    <p class="red-text">
+        Es gibt keine Sammlung mit der ID
+        <i>@collectionId</i>
+        für den Kurs
+        <i>@course.name</i>
+        .
+    </p>
+
+    <p><a href="@routes.HomeController.course(course.id)">Zurück zum Kurs</a></p>
+}
