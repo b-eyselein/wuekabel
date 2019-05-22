@@ -7,15 +7,8 @@ final case class Solution(cardId: Int, collId: Int, courseId: Int, solution: Str
 final case class CorrectionResult(
   correct: Boolean,
   operations: Seq[EditOperation] = Seq.empty,
-  answersSelection: Option[AnswerSelectionResult] = None
-)
-
-
-final case class CompleteCorrectionResult(
-  correct: Boolean,
-  operations: Seq[EditOperation],
-  answersSelection: Option[AnswerSelectionResult],
-  newTriesCount: Int,
+  answersSelection: Option[AnswerSelectionResult] = None,
+  newTriesCount: Int = 0,
   maybeSampleSolution: Option[String] = None
 )
 

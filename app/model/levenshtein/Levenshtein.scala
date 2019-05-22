@@ -22,7 +22,6 @@ object Levenshtein {
 
   def distance(s1: String, s2: String): Int = {
     val dist = calculateTable(s1, s2)
-
     dist(s2.length)(s1.length)
   }
 

@@ -23,7 +23,7 @@ object JsonFormats {
 
   private implicit val answerSelectionResultFormat: Format[AnswerSelectionResult] = Json.format[AnswerSelectionResult]
 
-  val completeCorrectionResultFormat: Format[CompleteCorrectionResult] = Json.format[CompleteCorrectionResult]
+  val completeCorrectionResultFormat: Format[CorrectionResult] = Json.format[CorrectionResult]
 
   // Flashcard
 

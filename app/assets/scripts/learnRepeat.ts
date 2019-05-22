@@ -4,6 +4,8 @@
 let checkSolutionBtn: HTMLButtonElement;
 let nextFlashcardBtn: HTMLButtonElement;
 
+let progressDiv: HTMLDivElement;
+
 let correctionTextPar: HTMLParagraphElement;
 
 let flashcard: Flashcard;
@@ -11,8 +13,8 @@ let flashcard: Flashcard;
 let checkSolutionUrl: string;
 let canSolve: boolean = true;
 
-let repeatedFlashcards: number = 0;
-
+let maxNumOfCards: number = 10;
+let answeredFlashcards: number = 0;
 
 function readSolution(cardType: CardType): undefined | Solution {
     let solution: string = '';
@@ -62,7 +64,6 @@ function readSolution(cardType: CardType): undefined | Solution {
 }
 
 function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void {
-    // console.info(JSON.stringify(result, null, 2));
 
     let correctionText = `Ihre Lösung war ${result.correct ? '' : 'nicht '} korrekt.`;
 
@@ -79,6 +80,21 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
     // Update buttons
     checkSolutionBtn.disabled = !canSolve;
     nextFlashcardBtn.disabled = canSolve;
+
+    // TODO: implement
+    if (!canSolve) {
+        answeredFlashcards++;
+        progressDiv.style.width = `${answeredFlashcards / maxNumOfCards * 100}%`;
+
+        document.querySelector('#answeredFcCountSpan').innerHTML = answeredFlashcards.toString();
+
+        if (answeredFlashcards >= maxNumOfCards) {
+            nextFlashcardBtn.onclick = () => {
+                window.location.href = nextFlashcardBtn.dataset['endurl'];
+            };
+            nextFlashcardBtn.textContent = "Bearbeiten beenden";
+        }
+    }
 
     document.querySelector<HTMLSpanElement>('#triesSpan').innerText = result.newTriesCount.toString();
 
@@ -99,8 +115,11 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
 }
 
 function loadNextFlashcard(loadFlashcardUrl: string): void {
-    if (flashcard !== undefined && repeatedFlashcards++ > 10) {
-        console.warn(repeatedFlashcards);
+
+    if (flashcard !== undefined && answeredFlashcards > maxNumOfCards) {
+        console.warn(answeredFlashcards);
+    } else {
+        console.info(answeredFlashcards);
     }
 
     fetch(loadFlashcardUrl).then(response => {
@@ -168,6 +187,7 @@ function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void)
     initialLoadBtn.click();
 
     correctionTextPar = document.querySelector<HTMLParagraphElement>('#correctionTextPar');
+
     nextFlashcardBtn = document.querySelector<HTMLButtonElement>('#nextFlashcardBtn');
     nextFlashcardBtn.onclick = () => loadNextFlashcard(loadFlashcardUrl);
 
@@ -175,6 +195,12 @@ function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void)
     checkSolutionBtn.onclick = checkSolution;
 
     checkSolutionUrl = checkSolutionBtn.dataset['href'];
+
+    maxNumOfCards = parseInt(document.querySelector<HTMLSpanElement>('#maxCardCountSpan').innerText);
+
+    console.warn(maxNumOfCards);
+
+    progressDiv = document.querySelector<HTMLDivElement>('#progressDiv');
 
     document.addEventListener('keypress', event => {
         if (event.key === 'Enter') {

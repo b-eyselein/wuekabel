@@ -1,8 +1,5 @@
 package controllers
 
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
-
 import javax.inject.{Inject, Singleton}
 import model._
 import model.persistence.TableDefs
@@ -11,6 +8,7 @@ import play.api.libs.json.JsString
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs: TableDefs)(implicit protected val ec: ExecutionContext)
@@ -76,8 +74,11 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
       } yield Ok(views.html.collection(user, courseId, collection, flashcardCount, toLearnCount, toRepeatCount))
   }
 
-  def learn(courseId: Int, collId: Int): EssentialAction = withUserAndCollection(courseId, collId) { (user, course, collection) =>
-    implicit request => Ok(views.html.learn(user, course, collection))
+  def learn(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, course, collection) =>
+    implicit request =>
+      tableDefs.futureFlashcardsToLearnCount(user, collection).map {
+        cardsToLearnCount => Ok(views.html.learn(user, Math.min(cardsToLearnCount, 10), Some(course, collection)))
+      }
   }
 
   def nextFlashcardToLearn(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, course, collection) =>
@@ -88,8 +89,11 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
       }
   }
 
-  def repeat: EssentialAction = withUser { user =>
-    implicit request => Ok(views.html.repeat(user))
+  def repeat: EssentialAction = futureWithUser { user =>
+    implicit request =>
+      tableDefs.futureFlashcardsToRepeatCount(user).map {
+        cardsToRepeatCount => Ok(views.html.learn(user, Math.min(cardsToRepeatCount, 10), None))
+      }
   }
 
   def nextFlashcardToRepeat: EssentialAction = futureWithUser { user =>
@@ -112,47 +116,19 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
 
               tableDefs.futureUserAnswerForFlashcard(user, flashcard).flatMap { maybePreviousAnswer: Option[UserAnsweredFlashcard] =>
 
-                val previousTries = maybePreviousAnswer.map(_.tries).getOrElse(0)
+                Corrector.completeCorrect(user, solution, flashcard, maybePreviousAnswer) match {
+                  case Failure(exception)               => Future.successful(BadRequest(exception.getMessage))
+                  case Success((corrResult, newAnswer)) =>
 
-                if (previousTries >= 2) {
-                  Future.successful(BadRequest(JsString("More than 2 tries already...")))
-                } else {
-
-                  Corrector.correct(flashcard, solution) match {
-                    case CorrectionResult(correct, operations, answersSelection) =>
-
-                      val today = LocalDate.now()
-
-                      val newAnswer: UserAnsweredFlashcard = maybePreviousAnswer match {
-                        case None            => UserAnsweredFlashcard(user.username, flashcard.cardId, flashcard.collId, flashcard.courseId, bucket = 0, today, correct, tries = 0)
-                        case Some(oldAnswer) =>
-
-                          val newBucket = if (correct) oldAnswer.bucket + 1 else oldAnswer.bucket
-
-                          val daysSinceLastAnswer: Long = ChronoUnit.DAYS.between(today, oldAnswer.dateAnswered)
-
-                          val newTries: Int = if (daysSinceLastAnswer > Math.pow(3, oldAnswer.bucket)) {
-                            0
-                          } else if (correct) {
-                            oldAnswer.tries
-                          } else {
-                            oldAnswer.tries + 1
-                          }
-
-                          oldAnswer.copy(bucket = newBucket, dateAnswered = today, correct = correct, tries = newTries)
-                      }
-
-                      tableDefs.futureInsertOrUpdateUserAnswer(newAnswer) map { _ =>
-                        val completeCorrectionResult = CompleteCorrectionResult(correct, operations, answersSelection, newTriesCount = newAnswer.tries, maybeSampleSolution = None)
-
-                        Ok(JsonFormats.completeCorrectionResultFormat.writes(completeCorrectionResult))
-                      }
-                  }
-
+                    tableDefs.futureInsertOrUpdateUserAnswer(newAnswer).map { _ =>
+                      Ok(JsonFormats.completeCorrectionResultFormat.writes(corrResult))
+                    }
                 }
+
               }
           }
       }
   }
+
 
 }
