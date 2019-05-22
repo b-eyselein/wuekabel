@@ -21,16 +21,8 @@ final case class DBFlashcard(cardId: Int, collId: Int, courseId: Int, cardType: 
 
 final case class DBCompleteFlashcard(flashcard: DBFlashcard, choiceAnswers: Seq[ChoiceAnswer], blanksAnswers: Seq[BlanksAnswerFragment])
 
-
-trait FlashcardToDoData {
-  val cardId  : Int
-  val collId  : Int
-  val courseId: Int
-  val username: String
+final case class FlashcardToAnswerData(cardId: Int, collId: Int, courseId: Int, username: String, leftToRight: Boolean) {
 
   def cardIdentifier: FlashcardIdentifier = FlashcardIdentifier(cardId, collId, courseId)
+
 }
-
-final case class FlashcardToLearnData(cardId: Int, collId: Int, courseId: Int, username: String) extends FlashcardToDoData
-
-final case class FlashcardToRepeatData(cardId: Int, collId: Int, courseId: Int, username: String) extends FlashcardToDoData

@@ -11,7 +11,7 @@ trait TableQueries {
 
   // Helper methods
 
-  private def flashcardToDoFilter(fctd: FlashcardToDoView[_ <: FlashcardToDoData], collection: Collection, user: User): Rep[Boolean] =
+  private def flashcardToDoFilter(fctd: FlashcardToDoView[_ <: FlashcardToAnswerData], collection: Collection, user: User): Rep[Boolean] =
     fctd.collId === collection.id && fctd.courseId === collection.courseId && fctd.username === user.username
 
   // FlashcardToLearn View
@@ -34,13 +34,13 @@ trait TableQueries {
   def futureMaybeNextFlashcardToLearn(user: User, course: Course, collection: Collection): Future[Option[Flashcard]] =
     db.run(flashcardsToLearnTQ.filter(flashcardToDoFilter(_, collection, user)).result.headOption).flatMap {
       case None                             => Future.successful(None)
-      case Some(fcId: FlashcardToLearnData) => futureFlashcardById(fcId.courseId, fcId.collId, fcId.cardId)
+      case Some(fcId: FlashcardToAnswerData) => futureFlashcardById(fcId.courseId, fcId.collId, fcId.cardId)
     }
 
   def futureMaybeNextFlashcardToRepeat(user: User): Future[Option[Flashcard]] =
     db.run(flashcardsToRepeatTQ.filter(_.username === user.username).result.headOption).flatMap {
       case None                              => Future.successful(None)
-      case Some(fcId: FlashcardToRepeatData) => futureFlashcardById(fcId.courseId, fcId.collId, fcId.cardId)
+      case Some(fcId: FlashcardToAnswerData) => futureFlashcardById(fcId.courseId, fcId.collId, fcId.cardId)
     }
 
   def futureFlashcardsToRepeatCount(user: User): Future[Int] = db.run(

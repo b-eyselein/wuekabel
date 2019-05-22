@@ -64,7 +64,7 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
   // Views
 
-  abstract class FlashcardToDoView[T <: FlashcardToDoData](tag: Tag, tableName: String) extends Table[T](tag, tableName) {
+  abstract class FlashcardToDoView[T <: FlashcardToAnswerData](tag: Tag, tableName: String) extends Table[T](tag, tableName) {
 
     def cardId: Rep[Int] = column[Int]("card_id")
 
@@ -74,22 +74,19 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
     def username: Rep[String] = column[String](usernameName)
 
-  }
-
-  class FlashcardsToLearnView(tag: Tag) extends FlashcardToDoView[FlashcardToLearnData](tag, "flashcards_to_learn") {
-
-    override def * : ProvenShape[FlashcardToLearnData] = (cardId, collId, courseId, username) <> (FlashcardToLearnData.tupled, FlashcardToLearnData.unapply)
+    def leftToRight: Rep[Boolean] = column[Boolean]("left_to_right")
 
   }
 
-  class FlashcardsToRepeatView(tag: Tag) extends FlashcardToDoView[FlashcardToRepeatData](tag, "flashcards_to_repeat") {
+  class FlashcardsToLearnView(tag: Tag) extends FlashcardToDoView[FlashcardToAnswerData](tag, "flashcards_to_learn") {
 
-    //    def correct: Rep[Boolean] = column[Boolean](correctName)
+    override def * : ProvenShape[FlashcardToAnswerData] = (cardId, collId, courseId, username, leftToRight) <> (FlashcardToAnswerData.tupled, FlashcardToAnswerData.unapply)
 
-    //    def tries: Rep[Int] = column[Int](triesName)
+  }
 
+  class FlashcardsToRepeatView(tag: Tag) extends FlashcardToDoView[FlashcardToAnswerData](tag, "flashcards_to_repeat") {
 
-    override def * : ProvenShape[FlashcardToRepeatData] = (cardId, collId, courseId, username) <> (FlashcardToRepeatData.tupled, FlashcardToRepeatData.unapply)
+    override def * : ProvenShape[FlashcardToAnswerData] = (cardId, collId, courseId, username, leftToRight) <> (FlashcardToAnswerData.tupled, FlashcardToAnswerData.unapply)
 
   }
 
