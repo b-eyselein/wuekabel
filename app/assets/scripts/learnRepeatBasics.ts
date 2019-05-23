@@ -37,22 +37,23 @@ interface Flashcard {
 
     cardType: CardType;
 
-    question: string;
-    questionHint: string | undefined;
-    meaning: string;
-    meaningHint: string | undefined;
+    front: string;
+    frontHint: string | undefined;
+
+    frontToBack: boolean;
 
     blanksAnswers: BlanksAnswerFragment[];
     choiceAnswers: ChoiceAnswer[];
 }
 
 interface Solution {
-    cardId: number
-    collId: number
-    courseId: number
+    cardId: number;
+    collId: number;
+    courseId: number;
 
-    solution: string
-    selectedAnswers: number[]
+    solution: string;
+    selectedAnswers: number[];
+    frontToBack: boolean;
 }
 
 interface EditOperation {

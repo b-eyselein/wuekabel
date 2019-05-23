@@ -14,33 +14,43 @@ trait TableQueries {
   private def flashcardToDoFilter(fctd: FlashcardToDoView[_ <: FlashcardToAnswerData], collection: Collection, user: User): Rep[Boolean] =
     fctd.collId === collection.id && fctd.courseId === collection.courseId && fctd.username === user.username
 
+  def futureFlashcardToAnswerById(courseId: Int, collId: Int, cardId: Int, frontToBack: Boolean): Future[Option[FlashcardToAnswer]] = {
+    val dbFlashcardByIdQuery = flashcardsTQ.filter {
+      fc => fc.id === cardId && fc.collId === collId && fc.courseId === courseId
+    }.result.headOption
+
+    db.run(dbFlashcardByIdQuery) flatMap {
+      case None                                                                   => Future.successful(None)
+      case Some(DBFlashcard(_, _, _, cardType, front, frontHint, back, backHint)) =>
+        for {
+          choiceAnswersForDBFlashcard <- choiceAnswersForFlashcard(cardId, collId, courseId)
+          blanksAnswersForDbFlashcard <- blanksAnswersForFlashcard(cardId, collId, courseId)
+        } yield {
+          val frontToSend = if (frontToBack) front else back
+          val frontHintToSend = if (frontToBack) frontHint else backHint
+
+          Some(FlashcardToAnswer(cardId, collId, courseId, cardType, frontToSend, frontHintToSend, frontToBack, blanksAnswersForDbFlashcard, choiceAnswersForDBFlashcard))
+        }
+    }
+  }
+
   // FlashcardToLearn View
 
   def futureFlashcardsToLearnCount(user: User, collection: Collection): Future[Int] =
     db.run(flashcardsToLearnTQ.filter(flashcardToDoFilter(_, collection, user)).size.result)
 
-  def futureMaybeIdentifierNextFlashcardToLearn(user: User, collection: Collection): Future[Option[FlashcardIdentifier]] = db.run(
-    flashcardsToLearnTQ
-      .filter(flashcardToDoFilter(_, collection, user))
-      .result.headOption.map(_.map(_.cardIdentifier))
-  )
-
-  def futureMaybeIdentifierNextFlashcardToRepeat(user: User, collection: Collection): Future[Option[FlashcardIdentifier]] = db.run(
-    flashcardsToRepeatTQ
-      .filter(flashcardToDoFilter(_, collection, user))
-      .result.headOption.map(_.map(_.cardIdentifier))
-  )
-
-  def futureMaybeNextFlashcardToLearn(user: User, course: Course, collection: Collection): Future[Option[Flashcard]] =
+  def futureMaybeNextFlashcardToLearn(user: User, course: Course, collection: Collection): Future[Option[FlashcardToAnswer]] =
     db.run(flashcardsToLearnTQ.filter(flashcardToDoFilter(_, collection, user)).result.headOption).flatMap {
-      case None                             => Future.successful(None)
-      case Some(fcId: FlashcardToAnswerData) => futureFlashcardById(fcId.courseId, fcId.collId, fcId.cardId)
+      case None                                                                  => Future.successful(None)
+      case Some(FlashcardToAnswerData(cardId, collId, courseId, _, frontToBack)) =>
+        futureFlashcardToAnswerById(courseId, collId, cardId, frontToBack)
     }
 
-  def futureMaybeNextFlashcardToRepeat(user: User): Future[Option[Flashcard]] =
+  def futureMaybeNextFlashcardToRepeat(user: User): Future[Option[FlashcardToAnswer]] =
     db.run(flashcardsToRepeatTQ.filter(_.username === user.username).result.headOption).flatMap {
-      case None                              => Future.successful(None)
-      case Some(fcId: FlashcardToAnswerData) => futureFlashcardById(fcId.courseId, fcId.collId, fcId.cardId)
+      case None                                                                  => Future.successful(None)
+      case Some(FlashcardToAnswerData(cardId, collId, courseId, _, frontToBack)) =>
+        futureFlashcardToAnswerById(courseId, collId, cardId, frontToBack)
     }
 
   def futureFlashcardsToRepeatCount(user: User): Future[Int] = db.run(
@@ -56,9 +66,12 @@ trait TableQueries {
 
   // Queries - UserAnsweredFlashcard
 
-  def futureUserAnswerForFlashcard(user: User, flashcard: Flashcard): Future[Option[UserAnsweredFlashcard]] =
-    db.run(usersAnsweredFlashcardsTQ.filter {
-      uaf => uaf.username === user.username && uaf.cardId === flashcard.cardId && uaf.collId === flashcard.collId
-    }.result.headOption)
+  def futureUserAnswerForFlashcard(user: User, flashcard: Flashcard, frontToBack: Boolean): Future[Option[UserAnsweredFlashcard]] =
+    db.run(
+      usersAnsweredFlashcardsTQ
+        .filter {
+          uaf => uaf.username === user.username && uaf.cardId === flashcard.cardId && uaf.collId === flashcard.collId && uaf.frontToBack === frontToBack
+        }
+        .result.headOption)
 
 }

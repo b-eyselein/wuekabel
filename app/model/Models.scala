@@ -17,12 +17,13 @@ final case class UserPassword(username: String, pwHash: String)
 
 final case class Course(id: Int, shortName: String, name: String)
 
-final case class Collection(id: Int, courseId: Int, name: String)
+final case class Language(id: Int, name: String)
+
+final case class Collection(id: Int, courseId: Int, startLanguage: Language, targetLanguage: Language, name: String)
 
 // User <-> Course
 
 final case class UserInCourse(username: String, courseId: Int)
-
 
 // Flashcards
 
@@ -45,10 +46,10 @@ case object CardType extends PlayEnum[CardType] {
 final case class Flashcard(
   cardId: Int, collId: Int, courseId: Int,
   cardType: CardType,
-  question: String,
-  questionHint: Option[String] = None,
-  meaning: String = "",
-  meaningHint: Option[String] = None,
+  front: String,
+  frontHint: Option[String] = None,
+  back: String = "",
+  backHint: Option[String] = None,
   blanksAnswers: Seq[BlanksAnswerFragment] = Seq.empty,
   choiceAnswers: Seq[ChoiceAnswer] = Seq.empty
 ) {
@@ -94,7 +95,7 @@ final case class FlashcardIdentifier(cardId: Int, collId: Int, courseId: Int) {
 
 // User answered flashcard
 
-final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, courseId: Int, bucket: Int, dateAnswered: LocalDate, correct: Boolean, tries: Int) {
+final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, courseId: Int, bucket: Int, dateAnswered: LocalDate, correct: Boolean, tries: Int, frontToBack: Boolean) {
 
   //  def cardIdentifier: FlashcardIdentifier = FlashcardIdentifier(cardId, collId, courseId)
 

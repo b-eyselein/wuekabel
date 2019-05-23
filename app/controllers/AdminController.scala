@@ -65,18 +65,25 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
 
   def newCollectionForm(courseId: Int): EssentialAction = futureWithUser { admin =>
     implicit request =>
-      tableDefs.futureNextCollectionIdInCourse(courseId).map { nextCollectionId =>
-        Ok(views.html.forms.newCollectionForm(admin, courseId, FormMappings.newCollectionForm.fill(Collection(nextCollectionId, courseId, ""))))
+      for {
+        allLanguages <- tableDefs.futureAllLanguages
+        nextCollectionId <- tableDefs.futureNextCollectionIdInCourse(courseId)
+      } yield {
+        val filledForm = FormMappings.newCollectionForm.fill(
+          CollectionBasics(nextCollectionId, courseId, allLanguages.head.id, allLanguages.head.id, "")
+        )
+
+        Ok(views.html.forms.newCollectionForm(admin, courseId, filledForm))
       }
   }
 
   def newCollection(courseId: Int): EssentialAction = futureWithUser { admin =>
     implicit request =>
-      def onError: Form[Collection] => Future[Result] = { formWithErrors =>
+      def onError: Form[CollectionBasics] => Future[Result] = { formWithErrors =>
         Future.successful(BadRequest(views.html.forms.newCollectionForm(admin, courseId, formWithErrors)))
       }
 
-      def onRead: Collection => Future[Result] = { newCollection =>
+      def onRead: CollectionBasics => Future[Result] = { newCollection =>
         tableDefs.futureInsertCollection(newCollection) map {
           _ => Redirect(routes.AdminController.courseAdmin(courseId))
         }

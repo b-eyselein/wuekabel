@@ -2,7 +2,14 @@ package model
 
 import model.levenshtein.EditOperation
 
-final case class Solution(cardId: Int, collId: Int, courseId: Int, solution: String, selectedAnswers: Seq[Int])
+final case class Solution(
+  cardId: Int,
+  collId: Int,
+  courseId: Int,
+  solution: String,
+  selectedAnswers: Seq[Int],
+  frontToBack: Boolean
+)
 
 final case class CorrectionResult(
   correct: Boolean,

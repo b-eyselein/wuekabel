@@ -39,7 +39,7 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
     def courseId: Rep[Int] = column[Int]("course_id")
 
-    def leftToRight: Rep[Boolean] = column[Boolean]("left_to_right", O.Default(true))
+    def frontToBack: Rep[Boolean] = column[Boolean]("front_to_back", O.Default(true))
 
 
     def bucket: Rep[Int] = column[Int]("bucket")
@@ -58,7 +58,7 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
     def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("uaf_card_fk", (cardId, collId), flashcardsTQ)(fc => (fc.id, fc.collId))
 
 
-    override def * : ProvenShape[UserAnsweredFlashcard] = (username, cardId, collId, courseId, bucket, dateAnswered, correct, tries) <> (UserAnsweredFlashcard.tupled, UserAnsweredFlashcard.unapply)
+    override def * : ProvenShape[UserAnsweredFlashcard] = (username, cardId, collId, courseId, bucket, dateAnswered, correct, tries, frontToBack) <> (UserAnsweredFlashcard.tupled, UserAnsweredFlashcard.unapply)
 
   }
 
@@ -74,19 +74,19 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
     def username: Rep[String] = column[String](usernameName)
 
-    def leftToRight: Rep[Boolean] = column[Boolean]("left_to_right")
+    def frontToBack: Rep[Boolean] = column[Boolean]("front_to_back")
 
   }
 
   class FlashcardsToLearnView(tag: Tag) extends FlashcardToDoView[FlashcardToAnswerData](tag, "flashcards_to_learn") {
 
-    override def * : ProvenShape[FlashcardToAnswerData] = (cardId, collId, courseId, username, leftToRight) <> (FlashcardToAnswerData.tupled, FlashcardToAnswerData.unapply)
+    override def * : ProvenShape[FlashcardToAnswerData] = (cardId, collId, courseId, username, frontToBack) <> (FlashcardToAnswerData.tupled, FlashcardToAnswerData.unapply)
 
   }
 
   class FlashcardsToRepeatView(tag: Tag) extends FlashcardToDoView[FlashcardToAnswerData](tag, "flashcards_to_repeat") {
 
-    override def * : ProvenShape[FlashcardToAnswerData] = (cardId, collId, courseId, username, leftToRight) <> (FlashcardToAnswerData.tupled, FlashcardToAnswerData.unapply)
+    override def * : ProvenShape[FlashcardToAnswerData] = (cardId, collId, courseId, username, frontToBack) <> (FlashcardToAnswerData.tupled, FlashcardToAnswerData.unapply)
 
   }
 

@@ -59,7 +59,8 @@ function readSolution(cardType: CardType): undefined | Solution {
         collId: flashcard.collId,
         courseId: flashcard.courseId,
         solution,
-        selectedAnswers
+        selectedAnswers,
+        frontToBack: flashcard.frontToBack
     };
 }
 
@@ -125,6 +126,9 @@ function loadNextFlashcard(loadFlashcardUrl: string): void {
     fetch(loadFlashcardUrl).then(response => {
         if (response.status === 200) {
             response.json().then(loadedFlashcard => {
+
+                console.warn(JSON.stringify(loadedFlashcard, null, 2));
+
                 flashcard = loadedFlashcard;
 
                 canSolve = true;
@@ -187,6 +191,20 @@ function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void)
     initialLoadBtn.click();
 
     correctionTextPar = document.querySelector<HTMLParagraphElement>('#correctionTextPar');
+
+    // FIXME: activate...?
+    // const readQuestionButton = document.querySelector<HTMLButtonElement>('#readQuestionButton');
+    // readQuestionButton.onclick = () => {
+    //     const utterThis = new SpeechSynthesisUtterance('l\'univers');
+    //
+    //     const voices = window.speechSynthesis.getVoices();
+    //
+    //     console.info(voices.length);
+    //
+    //     window.speechSynthesis.speak(utterThis);
+    //
+    //     console.info("TODO!");
+    // };
 
     nextFlashcardBtn = document.querySelector<HTMLButtonElement>('#nextFlashcardBtn');
     nextFlashcardBtn.onclick = () => loadNextFlashcard(loadFlashcardUrl);

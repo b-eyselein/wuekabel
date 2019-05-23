@@ -1,16 +1,21 @@
 package model
 
+import model.Consts._
 import play.api.data.Form
 import play.api.data.Forms._
-import Consts._
 
 final case class LoginFormValues(username: String, password: String)
 
 final case class RegisterFormValues(username: String, pw: String, pwRepeat: String)
 
-final case class LtiToolProxyRegistrationRequestFormValues(ltiMessageType: String, ltiVersion: String, regkey: String,
-                                                           regPassword: String, tcProfileUrl: String, launchPresentationReturnUrl: String
-                                                          )
+final case class LtiToolProxyRegistrationRequestFormValues(
+  ltiMessageType: String,
+  ltiVersion: String,
+  regkey: String,
+  regPassword: String,
+  tcProfileUrl: String,
+  launchPresentationReturnUrl: String
+)
 
 final case class LtiFormValues(username: String, courseIdentifier: String, courseName: String)
 
@@ -51,12 +56,14 @@ object FormMappings {
     )(Course.apply)(Course.unapply)
   )
 
-  val newCollectionForm: Form[Collection] = Form(
+  val newCollectionForm: Form[CollectionBasics] = Form(
     mapping(
       idName -> number,
       courseIdName -> number,
+      "frontLanguageId" -> number,
+      "backLanguageId" -> number,
       nameName -> nonEmptyText
-    )(Collection.apply)(Collection.unapply)
+    )(CollectionBasics.apply)(CollectionBasics.unapply)
   )
 
   val ltiToolProxyRegistrationRequestForm: Form[LtiToolProxyRegistrationRequestFormValues] = Form(

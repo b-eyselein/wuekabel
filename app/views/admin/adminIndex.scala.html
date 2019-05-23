@@ -21,11 +21,11 @@
 
         @if(courses.nonEmpty) {
 
-            @for(languageGroup <- courses.grouped(coursesPerRow)) {
+            @for(courseGroup <- courses.grouped(coursesPerRow)) {
                 <div class="row">
-                @for(language <- languageGroup) {
+                @for(course <- courseGroup) {
                     <div class="col m@colWidth s12">
-                        <a class="btn btn-large waves-effect waves-block @primaryColor" href="@routes.AdminController.courseAdmin(language.id)">@language.name</a>
+                        <a class="btn btn-large waves-effect waves-block @primaryColor" href="@routes.AdminController.courseAdmin(course.id)">@course.name</a>
                     </div>
                 }
                 </div>

@@ -31,12 +31,12 @@
                             <p>
                                 @{
                                     s"${completeCard.collId}.${completeCard.cardId}"
-                                }: @completeCard.question (<i>@completeCard.questionHint</i>)
+                                }: @completeCard.front (<i>@completeCard.frontHint</i>)
                             </p>
 
                             @completeCard.cardType match {
                                 case CardType.Vocable | CardType.Text => {
-                                    <p>Lösung: @completeCard.meaning (<i>@completeCard.meaningHint</i>)</p>
+                                    <p>Lösung: @completeCard.back (<i>@completeCard.backHint</i>)</p>
                                 }
                                 case CardType.Blank => {
                                     <hr>

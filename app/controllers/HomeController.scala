@@ -74,7 +74,7 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
       } yield Ok(views.html.collection(user, courseId, collection, flashcardCount, toLearnCount, toRepeatCount))
   }
 
-  def learn(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, course, collection) =>
+  def learn(courseId: Int, collId: Int, frontToBack: Boolean = true): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, course, collection) =>
     implicit request =>
       tableDefs.futureFlashcardsToLearnCount(user, collection).map {
         cardsToLearnCount => Ok(views.html.learn(user, Math.min(cardsToLearnCount, 10), Some(course, collection)))
@@ -85,7 +85,7 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
     implicit request =>
       tableDefs.futureMaybeNextFlashcardToLearn(user, course, collection).map {
         case None     => NotFound("No Flashcard to learn found")
-        case Some(fc) => Ok(JsonFormats.flashcardFormat.writes(fc))
+        case Some(fc) => Ok(JsonFormats.flashcardToAnswerFormat.writes(fc))
       }
   }
 
@@ -100,11 +100,11 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
     implicit request =>
       tableDefs.futureMaybeNextFlashcardToRepeat(user).map {
         case None     => NotFound("There has been an error?")
-        case Some(fc) => Ok(JsonFormats.flashcardFormat.writes(fc))
+        case Some(fc) => Ok(JsonFormats.flashcardToAnswerFormat.writes(fc))
       }
   }
 
-  def checkSolution(): EssentialAction = futureWithUser { user =>
+  def checkSolution: EssentialAction = futureWithUser { user =>
     implicit request =>
       request.body.asJson.flatMap(json => JsonFormats.solutionFormat.reads(json).asOpt) match {
         case None           => Future.successful(BadRequest(JsString("Could not read solution...")))
@@ -114,16 +114,17 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
             case None            => ???
             case Some(flashcard) =>
 
-              tableDefs.futureUserAnswerForFlashcard(user, flashcard).flatMap { maybePreviousAnswer: Option[UserAnsweredFlashcard] =>
+              tableDefs.futureUserAnswerForFlashcard(user, flashcard, solution.frontToBack).flatMap {
+                maybePreviousAnswer: Option[UserAnsweredFlashcard] =>
 
-                Corrector.completeCorrect(user, solution, flashcard, maybePreviousAnswer) match {
-                  case Failure(exception)               => Future.successful(BadRequest(exception.getMessage))
-                  case Success((corrResult, newAnswer)) =>
+                  Corrector.completeCorrect(user, solution, flashcard, maybePreviousAnswer) match {
+                    case Failure(exception)               => Future.successful(BadRequest(exception.getMessage))
+                    case Success((corrResult, newAnswer)) =>
 
-                    tableDefs.futureInsertOrUpdateUserAnswer(newAnswer).map { _ =>
-                      Ok(JsonFormats.completeCorrectionResultFormat.writes(corrResult))
-                    }
-                }
+                      tableDefs.futureInsertOrUpdateUserAnswer(newAnswer).map { _ =>
+                        Ok(JsonFormats.completeCorrectionResultFormat.writes(corrResult))
+                      }
+                  }
 
               }
           }

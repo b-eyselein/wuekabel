@@ -1,6 +1,6 @@
-@import model.{User, Collection, Consts}
+@import model.{User, CollectionBasics, Consts}
 
-@(user: User, courseId: Int, newCollectionForm: Form[Collection])(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
+@(user: User, courseId: Int, newCollectionForm: Form[CollectionBasics])(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
 
     @title = @{
         "Neue Sammlung erstellen"

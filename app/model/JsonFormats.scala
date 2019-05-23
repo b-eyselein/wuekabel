@@ -31,6 +31,6 @@ object JsonFormats {
 
   private implicit val blanksAnswerFragmentFormat: Format[BlanksAnswerFragment] = Json.format[BlanksAnswerFragment]
 
-  val flashcardFormat: Format[Flashcard] = Json.format[Flashcard]
+  val flashcardToAnswerFormat: Format[FlashcardToAnswer] = Json.format[FlashcardToAnswer]
 
 }

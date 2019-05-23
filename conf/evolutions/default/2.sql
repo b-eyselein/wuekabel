@@ -13,15 +13,19 @@ values ('first_user', '$2a$10$6loikDKMzBkdP1HG33BeheyhF7e1.gNBx3mM1CiePRg2AaicJm
 insert into courses(id, short_name, title)
 values (1, 'prop_french_1', 'Propädeutikum Französisch 1');
 
+insert into languages (id, name)
+values (1, 'Französisch'),
+       (2, 'Deutsch');
+
 insert into users_in_courses(username, course_id)
 values ('first_user', 1);
 
-insert into collections (id, course_id, name)
-values (1, 1, 'La nature et la géographie'),
-       (2, 1, 'Les plantes'),
-       (3, 1, 'Les animaux'),
-       (4, 1, 'L''être humain'),
-       (5, 1, 'La famille');
+insert into collections (id, course_id, front_language_id, back_language_id, name)
+values (1, 1, 1, 2, 'La nature et la géographie'),
+       (2, 1, 1, 2, 'Les plantes'),
+       (3, 1, 1, 2, 'Les animaux'),
+       (4, 1, 1, 2, 'L''être humain'),
+       (5, 1, 1, 2, 'La famille');
 
 # --- !Downs
 

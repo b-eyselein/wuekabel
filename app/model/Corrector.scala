@@ -27,22 +27,22 @@ object Corrector {
     matchAnswerIds(selectedAnswerIds, correctAnswerIds)
   }
 
-  private def correctFlashcard(completeFlashcard: Flashcard, solution: Solution): CorrectionResult = completeFlashcard.cardType match {
+  private def correctFlashcard(flashcard: Flashcard, solution: Solution): CorrectionResult = flashcard.cardType match {
     case CardType.Vocable | CardType.Text =>
-      val editOperations = Levenshtein.calculateBacktrace(solution.solution, completeFlashcard.meaning)
+      val sampleSolution = if(solution.frontToBack) flashcard.back else flashcard.front
+      val editOperations = Levenshtein.calculateBacktrace(solution.solution, sampleSolution)
       CorrectionResult(editOperations.isEmpty, operations = editOperations)
 
     case CardType.Blank =>
-      val correct = correctBlanksFlashcard(completeFlashcard, solution)
+      val correct = correctBlanksFlashcard(flashcard, solution)
       CorrectionResult(correct)
 
     case CardType.Choice =>
-      val answerSelectionResult = correctChoiceFlashcard(completeFlashcard, solution)
+      val answerSelectionResult = correctChoiceFlashcard(flashcard, solution)
       CorrectionResult(answerSelectionResult.isCorrect, answersSelection = Some(answerSelectionResult))
   }
 
   def completeCorrect(user: User, solution: Solution, flashcard: Flashcard, maybePreviousDbAnswer: Option[UserAnsweredFlashcard]): Try[(CorrectionResult, UserAnsweredFlashcard)] = {
-
 
     val correctionResult = correctFlashcard(flashcard, solution)
 
@@ -55,7 +55,7 @@ object Corrector {
         val newTries = 0
         Success((
           correctionResult.copy(newTriesCount = newTries),
-          UserAnsweredFlashcard(user.username, flashcard.cardId, flashcard.collId, flashcard.courseId, bucket = 0, today, isCorrect, tries = newTries)
+          UserAnsweredFlashcard(user.username, flashcard.cardId, flashcard.collId, flashcard.courseId, bucket = 0, today, isCorrect, tries = newTries, solution.frontToBack)
         ))
 
       case Some(oldAnswer) =>
@@ -64,7 +64,7 @@ object Corrector {
 
         val isTryInNewBucket = daysSinceLastAnswer >= Math.pow(3, oldAnswer.bucket)
 
-        if (!isTryInNewBucket && oldAnswer.tries >= 2) {
+        if (!isTryInNewBucket && (oldAnswer.correct || oldAnswer.tries >= 2)) {
           Failure(new Exception("More than 2 tries already..."))
         } else {
           val newBucket = Math.min(if (isCorrect) oldAnswer.bucket + 1 else oldAnswer.bucket, maxBucketId)

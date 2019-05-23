@@ -31,9 +31,9 @@ function buildChoiceAnswers(choiceAnswers: ChoiceAnswer[]): string {
 }
 
 function updateQuestionText(flashcard: Flashcard): void {
-    let questionText = flashcard.question;
-    if (flashcard.questionHint !== undefined) {
-        questionText += ` <i>${flashcard.questionHint}</i>`;
+    let questionText = flashcard.front;
+    if (flashcard.frontHint !== undefined) {
+        questionText += ` <i>${flashcard.frontHint}</i>`;
     }
 
     document.querySelector<HTMLHeadingElement>('#questionDiv').innerHTML = questionText;
