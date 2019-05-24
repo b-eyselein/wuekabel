@@ -33,7 +33,7 @@ case object CardType extends PlayEnum[CardType] {
 
   val values: immutable.IndexedSeq[CardType] = findValues
 
-  case object Vocable extends CardType
+  case object Word extends CardType
 
   case object Text extends CardType
 
@@ -95,7 +95,8 @@ final case class FlashcardIdentifier(cardId: Int, collId: Int, courseId: Int) {
 
 // User answered flashcard
 
-final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, courseId: Int, bucket: Int, dateAnswered: LocalDate, correct: Boolean, wrongTries: Int, frontToBack: Boolean) {
+final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, courseId: Int, cardType: CardType,
+                                       bucket: Int, dateAnswered: LocalDate, correct: Boolean, wrongTries: Int, frontToBack: Boolean) {
 
   lazy val isActive: Boolean = dateAnswered.until(LocalDate.now(), ChronoUnit.DAYS) < Math.pow(3, bucket - 1)
 

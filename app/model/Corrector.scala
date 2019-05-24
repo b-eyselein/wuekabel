@@ -25,7 +25,7 @@ object Corrector {
   }
 
   private def correctFlashcard(flashcard: Flashcard, solution: Solution): CorrectionResult = flashcard.cardType match {
-    case CardType.Vocable | CardType.Text =>
+    case CardType.Word | CardType.Text =>
       val sampleSolution = if (solution.frontToBack) flashcard.back else flashcard.front
       val editOperations = Levenshtein.calculateBacktrace(solution.solution, sampleSolution)
       CorrectionResult(editOperations.isEmpty, operations = editOperations)
@@ -52,7 +52,8 @@ object Corrector {
         val newTries = if (isCorrect) 0 else 1
         (
           correctionResult.copy(newTriesCount = newTries),
-          UserAnsweredFlashcard(user.username, flashcard.cardId, flashcard.collId, flashcard.courseId, bucket = 0, today, isCorrect, wrongTries = newTries, solution.frontToBack)
+          UserAnsweredFlashcard(user.username, flashcard.cardId, flashcard.collId, flashcard.courseId, flashcard.cardType,
+            bucket = 0, today, isCorrect, wrongTries = newTries, solution.frontToBack)
         )
 
       case Some(oldAnswer) =>

@@ -223,6 +223,17 @@ function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void)
             } else {
                 nextFlashcardBtn.click();
             }
+        } else if (flashcard.cardType === 'Choice' && canSolve) {
+            const pressedKey: number = parseInt(event.key);
+
+            const choiceParagraph: null | Element = document.querySelector<HTMLDivElement>('#answerDiv')
+                .querySelectorAll('p.choiceParagraph')
+                .item(pressedKey - 1);
+
+            if (choiceParagraph !== null) {
+                choiceParagraph.querySelector<HTMLInputElement>('input').click();
+            }
+
         }
     });
 }

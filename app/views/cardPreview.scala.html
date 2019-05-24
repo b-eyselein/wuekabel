@@ -2,77 +2,87 @@
 
 @(user: User, courseId: Int, collection: Collection, cards: Seq[Flashcard], readErrors: Seq[String])
 
-    @title = @{
-        "Vorschau importierte Karteikarten"
-    }
+@title = @{
+    "Vorschau importierte Karteikarten"
+}
 
-    @cardsPerRow = @{
-        3
-    }
+@cardsPerRow = @{
+    3
+}
 
-    @main(title, Some(user)) {
-        @if(cards.nonEmpty) {
+@colWidth = @{
+    12 / cardsPerRow
+}
 
-            <div class="row">
-                <div class="col s12">
-                    <a href="@routes.AdminController.collectionAdmin(courseId, collection.id)" class="btn btn-large waves-effect waves-block @accentColor">
-                        Zurück zur Sammlung
-                    </a>
-                </div>
+@main(title, Some(user)) {
+    @if(cards.nonEmpty) {
+
+        <div class="row">
+            <div class="col s12">
+                <a href="@routes.AdminController.collectionAdmin(courseId, collection.id)" class="btn btn-large waves-effect waves-block @accentColor">
+                    Zurück zur Sammlung
+                </a>
             </div>
+        </div>
 
-            @for(completeCardGroup <- cards.grouped(cardsPerRow)) {
-                <div class="row">
-                @for(completeCard <- completeCardGroup) {
-                    <div class="col m@{
-                        12 / cardsPerRow
-                    } s12">
-                        <div class="card-panel">
-                            <p>
-                                @{
-                                    s"${completeCard.collId}.${completeCard.cardId}"
-                                }: @completeCard.front (<i>@completeCard.frontHint</i>)
-                            </p>
+        @for(completeCardGroup <- cards.grouped(cardsPerRow)) {
+            <div class="row">
+            @for(completeCard <- completeCardGroup) {
+                <div class="col m@colWidth s12">
+                    <div class="card-panel">
+                        <p><b>ID</b>:
+                            @completeCard.cardId</p>
 
-                            @completeCard.cardType match {
-                                case CardType.Vocable | CardType.Text => {
-                                    <p>Lösung: @completeCard.back (<i>@completeCard.backHint</i>)</p>
-                                }
-                                case CardType.Blank => {
-                                    <hr>
+                        <p><b>Vorderseite</b>: @completeCard.front</p>
+                        <p><b>Hinwies Vorderseite:</b>
+                            @completeCard.frontHint.map(fh => Html(s"<i>$fh</i>")).getOrElse("--")</p>
 
-                                    @for(answer <- completeCard.blanksAnswers) {
-                                        <p>@answer.answer</p>
-                                    }
-                                }
-                                case CardType.Choice => {
-                                    <hr>
 
-                                    @for(answerGroup <- completeCard.choiceAnswers.grouped(2)) {
-                                        <div class="row">
-                                        @for(answer <- answerGroup) {
-                                            <div class="col m6 s12">
-                                                <b>@if(answer.correctness != model.Correctness.Wrong) {
-                                                    +
-                                                } else {
-                                                    -
-                                                }</b>
-                                                @answer.answer
-                                            </div>
+                        @completeCard.cardType match {
+                            case CardType.Vocable | CardType.Text => {
+                                <p>
+                                    <b>Rückseite</b>: @completeCard.back
+                                </p>
+                                <p>
+                                    <b>Hinwies Rückseite:</b>
+                                    @completeCard.backHint.map(fh => Html(s"<i>$fh</i>")).getOrElse("--")
+                                </p>
+                            }
+                            case CardType.Blank => {
+                                <hr>
 
-                                        }
-                                        </div>
-                                    }
+                                @for(answer <- completeCard.blanksAnswers) {
+                                    <p>@answer.answer</p>
                                 }
                             }
+                            case CardType.Choice => {
+                                <hr>
 
-                        </div>
+                                @for(answerGroup <- completeCard.choiceAnswers.grouped(2)) {
+                                    <div class="row">
+                                    @for(answer <- answerGroup) {
+                                        <div class="col m6 s12">
+                                            <b>@if(answer.correctness != model.Correctness.Wrong) {
+                                                +
+                                            } else {
+                                                -
+                                            }</b>
+                                            @answer.answer
+                                        </div>
+
+                                    }
+                                    </div>
+                                }
+                            }
+                        }
+
                     </div>
-                }
                 </div>
             }
-
-        } else {
-            <p class="red-text">Konnte keine Karteikarten importieren!</p>
+            </div>
         }
+
+    } else {
+        <p class="red-text">Konnte keine Karteikarten importieren!</p>
     }
+}

@@ -64,14 +64,14 @@ create table if not exists collections (
 -- FlashCards with answers
 
 create table if not exists flashcards (
-    id              int,
-    coll_id         int,
-    course_id       int,
-    flash_card_type enum ('Vocable', 'Text', 'Blank', 'Choice') not null default 'Vocable',
-    front           text                                        not null,
-    front_hint      text,
-    back            text                                        not null,
-    back_hint       text,
+    id         int,
+    coll_id    int,
+    course_id  int,
+    card_type  enum ('Vocable', 'Text', 'Blank', 'Choice') not null default 'Vocable',
+    front      text                                        not null,
+    front_hint text,
+    back       text                                        not null,
+    back_hint  text,
 
     primary key (id, coll_id, course_id),
     foreign key (coll_id, course_id) references collections (id, course_id)
@@ -112,12 +112,13 @@ create table if not exists users_answered_flashcards (
     card_id       int,
     coll_id       int,
     course_id     int,
-    front_to_back bool    not null default true,
+    card_type     enum ('Word', 'Text', 'Blank', 'Choice') not null default 'Word',
+    front_to_back bool                                     not null default true,
 
-    bucket        int     not null,
-    date_answered date    not null,
-    correct       boolean not null default false,
-    wrong_tries   int     not null default 0,
+    bucket        int                                      not null,
+    date_answered date                                     not null,
+    correct       boolean                                  not null default false,
+    wrong_tries   int                                      not null default 0,
 
     constraint bucket_check check (bucket between 0 and 6),
 
@@ -131,20 +132,25 @@ create table if not exists users_answered_flashcards (
 -- Views
 
 create view fronts_to_learn as
-select id as card_id, fcs.coll_id, fcs.course_id, us.username, true as front_to_back
+select id as card_id, fcs.coll_id, fcs.course_id, us.username, true as front_to_back, fcs.card_type
 from flashcards fcs
          join users us
-         left join (select *from users_answered_flashcards where front_to_back = true) as uaf
+         left join (select *
+                    from users_answered_flashcards
+                    where front_to_back = true) as uaf
                    on us.username = uaf.username and uaf.card_id = fcs.id and uaf.coll_id = fcs.coll_id
 where card_id is null;
 
 create view backs_to_learn as
-select id as card_id, fcs.coll_id, fcs.course_id, us.username, false as front_to_back
+select id as card_id, fcs.coll_id, fcs.course_id, us.username, false as front_to_back, fcs.card_type
 from flashcards fcs
          join users us
-         left join (select * from users_answered_flashcards where front_to_back = false) as uaf
+         left join (select *
+                    from users_answered_flashcards
+                    where front_to_back = false) as uaf
                    on us.username = uaf.username and uaf.card_id = fcs.id and uaf.coll_id = fcs.coll_id
-where card_id is null;
+where card_id is null
+  and (fcs.card_type = 'Text' or fcs.card_type = 'Word');
 
 create view flashcards_to_learn as
         (select * from fronts_to_learn)

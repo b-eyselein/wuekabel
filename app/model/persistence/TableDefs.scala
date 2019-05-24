@@ -39,6 +39,8 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
     def courseId: Rep[Int] = column[Int]("course_id")
 
+    def cardType: Rep[CardType] = column[CardType]("card_type")
+
     def frontToBack: Rep[Boolean] = column[Boolean]("front_to_back", O.Default(true))
 
 
@@ -58,7 +60,8 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
     def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("uaf_card_fk", (cardId, collId), flashcardsTQ)(fc => (fc.id, fc.collId))
 
 
-    override def * : ProvenShape[UserAnsweredFlashcard] = (username, cardId, collId, courseId, bucket, dateAnswered, correct, wrongTries, frontToBack) <> (UserAnsweredFlashcard.tupled, UserAnsweredFlashcard.unapply)
+    override def * : ProvenShape[UserAnsweredFlashcard] = (username, cardId, collId, courseId, cardType,
+      bucket, dateAnswered, correct, wrongTries, frontToBack) <> (UserAnsweredFlashcard.tupled, UserAnsweredFlashcard.unapply)
 
   }
 

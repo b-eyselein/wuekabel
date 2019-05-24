@@ -22,7 +22,7 @@ function buildChoiceAnswers(choiceAnswers: ChoiceAnswer[]): string {
     const choiceInputType: string = choiceAnswers.filter(ca => ca.correct).length > 0 ? 'radio' : 'checkbox';
 
     return shuffleArray(choiceAnswers).map(choiceAnswer => `
-<p>
+<p class="choiceParagraph">
     <label for="choice_${choiceAnswer.answerId}">
         <input id="choice_${choiceAnswer.answerId}" name="choice_answers" type="${choiceInputType}" data-choiceid="${choiceAnswer.answerId}">
         <span>${choiceAnswer.answer}</span>

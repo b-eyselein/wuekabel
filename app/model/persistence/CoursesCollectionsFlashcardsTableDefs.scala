@@ -101,7 +101,7 @@ trait CoursesCollectionsFlashcardsTableDefs
 
     def courseId: Rep[Int] = column[Int]("course_id")
 
-    def flashcardType: Rep[CardType] = column[CardType]("flash_card_type")
+    def flashcardType: Rep[CardType] = column[CardType]("card_type")
 
     def question: Rep[String] = column[String](frontName)
 
