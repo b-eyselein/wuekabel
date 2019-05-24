@@ -3,7 +3,7 @@
 const textAnswerInput: string = `
 <div class="row">
     <div class="input-field col s12">
-        <input type="text" id="translation_input" autofocus autocomplete="off">
+        <input type="text" id="translation_input" autofocus autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         <label for="translation_input">Übersetzung</label>
     </div>
 </div>`.trim();
@@ -56,7 +56,7 @@ function updateView(flashcard: Flashcard): void {
     const answerDiv = document.querySelector<HTMLDivElement>('#answerDiv');
     switch (flashcard.cardType) {
         case 'Text':
-        case 'Vocable' :
+        case 'Word' :
             answerDiv.innerHTML = textAnswerInput;
             document.querySelector<HTMLInputElement>('#translation_input').focus();
             break;

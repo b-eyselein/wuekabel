@@ -79,9 +79,9 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
       }
   }
 
-  def nextFlashcardToLearn(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, course, collection) =>
+  def nextFlashcardToLearn(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, _, collection) =>
     implicit request =>
-      tableDefs.futureMaybeNextFlashcardToLearn(user, course, collection).map {
+      tableDefs.futureMaybeNextFlashcardToLearn(user, collection).map {
         case None     => NotFound("No Flashcard to learn found")
         case Some(fc) => Ok(JsonFormats.flashcardToAnswerFormat.writes(fc))
       }

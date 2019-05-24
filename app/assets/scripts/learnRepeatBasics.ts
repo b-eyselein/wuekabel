@@ -1,4 +1,4 @@
-type CardType = 'Vocable' | 'Text' | 'Blank' | 'Choice';
+type CardType = 'Word' | 'Text' | 'Blank' | 'Choice';
 
 type CorrectnessType = 'Correct' | 'Optional' | 'Wrong';
 

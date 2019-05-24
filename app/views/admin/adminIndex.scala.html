@@ -2,46 +2,53 @@
 
 @(user: User, courses: Seq[Course])
 
-    @title = @{
-        "Administrator"
-    }
+@title = @{
+    "Administrator"
+}
 
-    @coursesPerRow = @{
-        2
-    }
+@coursesPerRow = @{
+    2
+}
 
-    @colWidth = @{
-        12 / coursesPerRow
-    }
+@colWidth = @{
+    12 / coursesPerRow
+}
 
-    @main(title, Some(user)) {
-        <h2 class="center-align">Kurse</h2>
+@main(title, Some(user)) {
+    <h3 class="center-align">Administration Kurse</h3>
 
-        <hr>
+    <hr>
 
-        @if(courses.nonEmpty) {
+    @if(courses.nonEmpty) {
 
-            @for(courseGroup <- courses.grouped(coursesPerRow)) {
-                <div class="row">
-                @for(course <- courseGroup) {
-                    <div class="col m@colWidth s12">
-                        <a class="btn btn-large waves-effect waves-block @primaryColor" href="@routes.AdminController.courseAdmin(course.id)">@course.name</a>
+        @for(courseGroup <- courses.grouped(coursesPerRow)) {
+            <div class="row">
+            @for(course <- courseGroup) {
+                <div class="col m@colWidth s12">
+                    <div class="card @primaryColor">
+                        <div class="card-content white-text">
+                            <span class="card-title">@course.name</span>
+                        </div>
+                        <div class="card-action">
+                            <a href="@routes.AdminController.courseAdmin(course.id)">Administration Kurs</a>
+                        </div>
                     </div>
-                }
                 </div>
             }
-
-        } else {
-            <h4 class="red-text center-align">Es existieren noch keine Kurse.</h4>
+            </div>
         }
 
-        <hr>
-
-        <div class="row">
-            <div class="col s12">
-                <a href="@routes.AdminController.newCourseForm" class="btn btn-large waves-effect waves-block @accentColor">
-                    Neuen Kurs erstellen</a>
-            </div>
-        </div>
-
+    } else {
+        <h4 class="red-text center-align">Es existieren noch keine Kurse.</h4>
     }
+
+    <hr>
+
+    <div class="row">
+        <div class="col s12">
+            <a href="@routes.AdminController.newCourseForm" class="btn btn-large waves-effect waves-block @accentColor">
+                Neuen Kurs erstellen</a>
+        </div>
+    </div>
+
+}

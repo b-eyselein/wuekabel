@@ -55,7 +55,7 @@ trait TableQueries {
   def futureFlashcardsToLearnCount(user: User, collection: Collection): Future[Int] =
     db.run(flashcardsToLearnTQ.filter(flashcardToDoFilter(_, collection, user)).size.result)
 
-  def futureMaybeNextFlashcardToLearn(user: User, course: Course, collection: Collection): Future[Option[FlashcardToAnswer]] =
+  def futureMaybeNextFlashcardToLearn(user: User, collection: Collection): Future[Option[FlashcardToAnswer]] =
     db.run(flashcardsToLearnTQ.filter(flashcardToDoFilter(_, collection, user)).result.headOption).flatMap {
       case None                                                                  => Future.successful(None)
       case Some(FlashcardToAnswerData(cardId, collId, courseId, _, frontToBack)) =>

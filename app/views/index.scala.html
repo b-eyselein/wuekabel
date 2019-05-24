@@ -2,57 +2,64 @@
 
 @(user: User, courses: Seq[Course], repeatCount: Int, pwSet: Boolean)
 
-    @title = @{
-        "Meine Kurse"
-    }
+@title = @{
+    "Meine Kurse"
+}
 
 
-    @coursesPerRow = @{
-        2
-    }
+@coursesPerRow = @{
+    2
+}
 
-    @colWidth = @{
-        12 / coursesPerRow
-    }
+@colWidth = @{
+    12 / coursesPerRow
+}
 
-    @main(title, Some(user), Some(repeatCount)) {
+@main(title, Some(user), Some(repeatCount)) {
 
-        <h2 class="center-align">@title</h2>
+    <h3 class="center-align">@title</h3>
 
-        <hr>
+    <hr>
 
-        @if(courses.nonEmpty) {
-            @for(courseGroup <- courses.grouped(coursesPerRow)) {
-                <div class="row">
-                @for(course <- courseGroup) {
-                    <div class="col m@colWidth s12">
-                        <a href="@routes.HomeController.course(course.id)" class="btn btn-large waves-effect waves-block @primaryColor">@course.name</a>
+    @if(courses.nonEmpty) {
+        @for(courseGroup <- courses.grouped(coursesPerRow)) {
+            <div class="row">
+            @for(course <- courseGroup) {
+                <div class="col m@colWidth s12">
+                    <div class="card @primaryColor">
+                        <div class="card-content white-text">
+                            <span class="card-title">@course.name</span>
+                        </div>
+                        <div class="card-action">
+                            <a href="@routes.HomeController.course(course.id)">Zum Kurs</a>
+                        </div>
                     </div>
-                }
                 </div>
             }
-
-        } else {
-            <h4 class="red-text center-align">Sie sind noch nicht in einem Kurs registriert.</h4>
-        }
-
-        @if(!pwSet) {
-            <hr>
-
-            <div class="card-panel red white-text">
-                Sie haben noch kein Passwort für diese Anwendung eingerichtet. Sie können Sie weiterhin nutzen, sich aber nur über WueCampus einloggen.
-                Sie können <a href="@routes.LoginController.changePwForm">hier</a> ein Passwort vergeben.
             </div>
         }
 
+    } else {
+        <h4 class="red-text center-align">Sie sind noch nicht in einem Kurs registriert.</h4>
+    }
+
+    @if(!pwSet) {
         <hr>
 
-        <div class="row">
-            <div class="col s12">
-                <a class="btn btn-large waves-effect waves-block @accentColor" href="@routes.HomeController.registerForCoursesForm">
-                    In Kurse einschreiben</a>
-            </div>
+        <div class="card-panel red white-text">
+            Sie haben noch kein Passwort für diese Anwendung eingerichtet. Sie können Sie weiterhin nutzen, sich aber nur über WueCampus einloggen.
+            Sie können <a href="@routes.LoginController.changePwForm">hier</a> ein Passwort vergeben.
         </div>
-
     }
+
+    <hr>
+
+    <div class="row">
+        <div class="col s12">
+            <a class="btn btn-large waves-effect waves-block @accentColor" href="@routes.HomeController.registerForCoursesForm">
+                In Kurse einschreiben</a>
+        </div>
+    </div>
+
+}
 

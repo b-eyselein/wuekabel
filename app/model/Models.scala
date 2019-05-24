@@ -52,11 +52,7 @@ final case class Flashcard(
   backHint: Option[String] = None,
   blanksAnswers: Seq[BlanksAnswerFragment] = Seq.empty,
   choiceAnswers: Seq[ChoiceAnswer] = Seq.empty
-) {
-
-  def identifier: FlashcardIdentifier = FlashcardIdentifier(cardId, collId, courseId)
-
-}
+)
 
 sealed trait FlashcardComponent {
   val answerId: Int

@@ -21,7 +21,7 @@ function readSolution(cardType: CardType): undefined | Solution {
     let selectedAnswers: number[] = [];
 
     switch (cardType) {
-        case 'Vocable':
+        case 'Word':
         case 'Text':
             solution = document.querySelector<HTMLInputElement>('#translation_input').value;
 
@@ -89,7 +89,7 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
         document.querySelector('#answeredFcCountSpan').innerHTML = answeredFlashcards.toString();
 
         // FIXME: disable solution inputs?
-        if (flashcard.cardType === 'Text' || flashcard.cardType === 'Vocable') {
+        if (flashcard.cardType === 'Text' || flashcard.cardType === 'Word') {
             document.querySelector<HTMLInputElement>('#translation_input').disabled = true;
         }
 
@@ -104,7 +104,7 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
     document.querySelector<HTMLSpanElement>('#triesSpan').innerText = result.newTriesCount.toString();
 
     switch (cardType) {
-        case 'Vocable':
+        case 'Word':
         case 'Text':
         case 'Blank':
             const textInput = document.querySelector<HTMLInputElement>('#translation_input');

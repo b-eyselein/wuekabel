@@ -2,45 +2,51 @@
 
 @(user: User, course: Course, collections: Seq[Collection])
 
-    @title = @{
-        s"Kurs '${course.name}'"
-    }
+@title = @{
+    s"Administration Kurs '${course.name}'"
+}
 
-    @collsPerRow = @{
-        2
-    }
+@collsPerRow = @{
+    2
+}
 
-    @colWidth = @{
-        12 / collsPerRow
-    }
+@colWidth = @{
+    12 / collsPerRow
+}
 
-    @main(title, Some(user)) {
-        <h2 class="center-align">@title</h2>
+@main(title, Some(user)) {
+    <h3 class="center-align">@title</h3>
 
-        <hr>
+    <hr>
 
-        @if(collections.nonEmpty) {
+    @if(collections.nonEmpty) {
 
-            @for(collectionGroup <- collections.grouped(collsPerRow)) {
-                <div class="row">
-                @for(collection <- collectionGroup) {
-                    <div class="col m@colWidth s12">
-                        <a href="@routes.AdminController.collectionAdmin(course.id, collection.id)"
-                        class="btn btn-large waves-effect waves-block @primaryColor">@collection.name</a>
+        @for(collectionGroup <- collections.grouped(collsPerRow)) {
+            <div class="row">
+            @for(collection <- collectionGroup) {
+                <div class="col m@colWidth s12">
+                    <div class="card @primaryColor">
+                        <div class="card-content white-text">
+                            <span class="card-title">@collection.name</span>
+                        </div>
+                        <div class="card-action">
+                            <a href="@routes.AdminController.collectionAdmin(course.id, collection.id)">Administration Sammlung</a>
+                        </div>
                     </div>
-                }
                 </div>
             }
-        } else {
-            <h4 class="red-text center-align">Dieser Kurs besitzt noch keine Sammlungen.</h4>
-        }
-
-        <hr>
-
-        <div class="row">
-            <div class="col s12">
-                <a href="@routes.AdminController.newCollectionForm(course.id)"
-                class="btn btn-large waves-effect waves-block @accentColor">Sammlung erstellen</a>
             </div>
-        </div>
+        }
+    } else {
+        <h4 class="red-text center-align">Dieser Kurs besitzt noch keine Sammlungen.</h4>
     }
+
+    <hr>
+
+    <div class="row">
+        <div class="col s12">
+            <a href="@routes.AdminController.newCollectionForm(course.id)"
+            class="btn btn-large waves-effect waves-block @accentColor">Sammlung erstellen</a>
+        </div>
+    </div>
+}

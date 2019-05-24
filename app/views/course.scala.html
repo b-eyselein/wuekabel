@@ -2,31 +2,45 @@
 
 @(user: User, course: Course, collections: Seq[Collection])
 
-    @title = @{
-        s"Kurs '${course.name}'"
-    }
+@title = @{
+    s"Kurs '${course.name}'"
+}
 
-    @main(title, Some(user)) {
-        <h2 class="center-align">@title</h2>
+@collsPerRow = @{
+    2
+}
 
-        <hr>
+@colWidth = @{
+    12 / collsPerRow
+}
 
-        @if(collections.nonEmpty) {
+@main(title, Some(user)) {
+    <h3 class="center-align">@title</h3>
 
-            @for(collectionGroup <- collections.grouped(2)) {
-                <div class="row">
-                @for(collection <- collectionGroup) {
-                    <div class="col s6">
-                        <a href="@routes.HomeController.collection(course.id, collection.id)"
-                        class="btn btn-large waves-effect waves-block @primaryColor">@collection.name</a>
+    <hr>
+
+    @if(collections.nonEmpty) {
+
+        @for(collectionGroup <- collections.grouped(collsPerRow)) {
+            <div class="row">
+            @for(collection <- collectionGroup) {
+                <div class="col m@colWidth s12">
+                    <div class="card @primaryColor">
+                        <div class="card-content white-text">
+                            <span class="card-title">@collection.name</span>
+                        </div>
+                        <div class="card-action">
+                            <a href="@routes.HomeController.collection(course.id, collection.id)">Zur Sammlung</a>
+                        </div>
                     </div>
-                }
                 </div>
             }
-
-        } else {
-            <h4 class="center-align red-text">Für diesen Kurs existieren noch keine Sammlungen.<br>
-                Wenden Sie Sich bitte an den oder die Kursverantwortliche(n).</h4>
+            </div>
         }
 
+    } else {
+        <h4 class="center-align red-text">Für diesen Kurs existieren noch keine Sammlungen.<br>
+            Wenden Sie Sich bitte an den oder die Kursverantwortliche(n).</h4>
     }
+
+}

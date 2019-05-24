@@ -67,7 +67,7 @@ create table if not exists flashcards (
     id         int,
     coll_id    int,
     course_id  int,
-    card_type  enum ('Vocable', 'Text', 'Blank', 'Choice') not null default 'Vocable',
+    card_type  enum ('Word', 'Text', 'Blank', 'Choice') not null default 'Word',
     front      text                                        not null,
     front_hint text,
     back       text                                        not null,
