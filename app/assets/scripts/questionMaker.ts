@@ -19,7 +19,8 @@ function buildAnswerFragments(answerFragments: BlanksAnswerFragment[]): string {
 }
 
 function buildChoiceAnswers(choiceAnswers: ChoiceAnswer[]): string {
-    const choiceInputType: string = choiceAnswers.filter(ca => ca.correct).length > 0 ? 'radio' : 'checkbox';
+    const numOfCorrectAnswers = choiceAnswers.filter(ca => ca.correctness !== 'Wrong').length;
+    const choiceInputType: string = numOfCorrectAnswers == 1 ? 'radio' : 'checkbox';
 
     return shuffleArray(choiceAnswers).map(choiceAnswer => `
 <p class="choiceParagraph">

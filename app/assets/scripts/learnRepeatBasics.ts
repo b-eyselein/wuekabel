@@ -1,5 +1,7 @@
 type CardType = 'Vocable' | 'Text' | 'Blank' | 'Choice';
 
+type CorrectnessType = 'Correct' | 'Optional' | 'Wrong';
+
 function shuffleArray<T>(array: T[]): T[] {
     let newArray: T[] = array.slice(0);
 
@@ -27,7 +29,7 @@ interface BlanksAnswerFragment {
 interface ChoiceAnswer {
     answerId: number;
     answer: string;
-    correct: boolean;
+    correctness: CorrectnessType;
 }
 
 interface Flashcard {
