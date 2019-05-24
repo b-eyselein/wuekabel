@@ -73,14 +73,16 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
           CollectionBasics(nextCollectionId, courseId, allLanguages.head.id, allLanguages.head.id, "")
         )
 
-        Ok(views.html.forms.newCollectionForm(admin, courseId, filledForm))
+        Ok(views.html.forms.newCollectionForm(admin, courseId, filledForm, allLanguages))
       }
   }
 
   def newCollection(courseId: Int): EssentialAction = futureWithUser { admin =>
     implicit request =>
       def onError: Form[CollectionBasics] => Future[Result] = { formWithErrors =>
-        Future.successful(BadRequest(views.html.forms.newCollectionForm(admin, courseId, formWithErrors)))
+        tableDefs.futureAllLanguages.map {
+          allLanguages => BadRequest(views.html.forms.newCollectionForm(admin, courseId, formWithErrors, allLanguages))
+        }
       }
 
       def onRead: CollectionBasics => Future[Result] = { newCollection =>

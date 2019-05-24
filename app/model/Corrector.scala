@@ -1,11 +1,8 @@
 package model
 
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 
 import model.levenshtein.Levenshtein
-
-import scala.util.{Failure, Success, Try}
 
 object Corrector {
 
@@ -29,7 +26,7 @@ object Corrector {
 
   private def correctFlashcard(flashcard: Flashcard, solution: Solution): CorrectionResult = flashcard.cardType match {
     case CardType.Vocable | CardType.Text =>
-      val sampleSolution = if(solution.frontToBack) flashcard.back else flashcard.front
+      val sampleSolution = if (solution.frontToBack) flashcard.back else flashcard.front
       val editOperations = Levenshtein.calculateBacktrace(solution.solution, sampleSolution)
       CorrectionResult(editOperations.isEmpty, operations = editOperations)
 
@@ -42,7 +39,7 @@ object Corrector {
       CorrectionResult(answerSelectionResult.isCorrect, answersSelection = Some(answerSelectionResult))
   }
 
-  def completeCorrect(user: User, solution: Solution, flashcard: Flashcard, maybePreviousDbAnswer: Option[UserAnsweredFlashcard]): Try[(CorrectionResult, UserAnsweredFlashcard)] = {
+  def completeCorrect(user: User, solution: Solution, flashcard: Flashcard, maybePreviousDbAnswer: Option[UserAnsweredFlashcard]): (CorrectionResult, UserAnsweredFlashcard) = {
 
     val correctionResult = correctFlashcard(flashcard, solution)
 
@@ -52,36 +49,25 @@ object Corrector {
 
     maybePreviousDbAnswer match {
       case None =>
-        val newTries = 0
-        Success((
+        val newTries = if (isCorrect) 0 else 1
+        (
           correctionResult.copy(newTriesCount = newTries),
-          UserAnsweredFlashcard(user.username, flashcard.cardId, flashcard.collId, flashcard.courseId, bucket = 0, today, isCorrect, tries = newTries, solution.frontToBack)
-        ))
+          UserAnsweredFlashcard(user.username, flashcard.cardId, flashcard.collId, flashcard.courseId, bucket = 0, today, isCorrect, wrongTries = newTries, solution.frontToBack)
+        )
 
       case Some(oldAnswer) =>
 
-        val daysSinceLastAnswer: Long = Math.abs(ChronoUnit.DAYS.between(today, oldAnswer.dateAnswered))
+        val newBucket = Math.min(if (isCorrect) oldAnswer.bucket + 1 else oldAnswer.bucket, maxBucketId)
 
-        val isTryInNewBucket = daysSinceLastAnswer >= Math.pow(3, oldAnswer.bucket)
+        val triesToAdd = if (isCorrect) 0 else 1
+        val oldTries = if (oldAnswer.isActive) oldAnswer.wrongTries else 0
 
-        if (!isTryInNewBucket && (oldAnswer.correct || oldAnswer.tries >= 2)) {
-          Failure(new Exception("More than 2 tries already..."))
-        } else {
-          val newBucket = Math.min(if (isCorrect) oldAnswer.bucket + 1 else oldAnswer.bucket, maxBucketId)
+        val newTries = oldTries + triesToAdd
 
-          val newTries: Int = if (isTryInNewBucket) {
-            0
-          } else if (isCorrect) {
-            oldAnswer.tries
-          } else {
-            oldAnswer.tries + 1
-          }
-
-          Success((
-            correctionResult.copy(newTriesCount = newTries, maybeSampleSolution = None),
-            oldAnswer.copy(bucket = newBucket, dateAnswered = today, correct = isCorrect, tries = newTries)
-          ))
-        }
+        (
+          correctionResult.copy(newTriesCount = newTries, maybeSampleSolution = None),
+          oldAnswer.copy(bucket = newBucket, dateAnswered = today, correct = isCorrect, wrongTries = newTries)
+        )
     }
   }
 

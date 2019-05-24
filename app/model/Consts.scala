@@ -5,7 +5,8 @@ object Consts {
   val answerName         : String = "answer"
   val answerSelectionName: String = "answerSelection"
 
-  val backName: String = "back"
+  val backLanguageIdName: String = "backLanguageId"
+  val backName          : String = "back"
 
   val cardTypeName   : String = "cardType"
   val charName       : String = "char"
@@ -15,7 +16,8 @@ object Consts {
 
   val excelFileName: String = "excelFile"
 
-  val frontName: String = "front"
+  val frontLanguageIdName: String = "frontLanguageId"
+  val frontName          : String = "front"
 
   val idName   : String = "id"
   val indexName: String = "index"
@@ -45,7 +47,6 @@ object Consts {
   val shortNameName      : String = "shortName"
 
   val titleName: String = "title"
-  val triesName: String = "tries"
 
   val usernameName: String = "username"
 

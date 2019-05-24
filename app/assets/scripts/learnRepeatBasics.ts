@@ -44,6 +44,9 @@ interface Flashcard {
 
     blanksAnswers: BlanksAnswerFragment[];
     choiceAnswers: ChoiceAnswer[];
+
+    currentTries: number;
+    currentBucket: undefined | number;
 }
 
 interface Solution {

@@ -60,8 +60,8 @@ object FormMappings {
     mapping(
       idName -> number,
       courseIdName -> number,
-      "frontLanguageId" -> number,
-      "backLanguageId" -> number,
+      frontLanguageIdName -> number,
+      backLanguageIdName -> number,
       nameName -> nonEmptyText
     )(CollectionBasics.apply)(CollectionBasics.unapply)
   )

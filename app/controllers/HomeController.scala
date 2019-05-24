@@ -3,18 +3,16 @@ package controllers
 import javax.inject.{Inject, Singleton}
 import model._
 import model.persistence.TableDefs
-import play.api.Logger
 import play.api.libs.json.JsString
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs: TableDefs)(implicit protected val ec: ExecutionContext)
   extends AbstractController(cc) with ControllerHelpers with play.api.i18n.I18nSupport {
 
-  private val logger = Logger(classOf[HomeController])
+  //  private val logger = Logger(classOf[HomeController])
 
   override protected val adminRightsRequired: Boolean = false
 
@@ -114,16 +112,13 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
             case None            => ???
             case Some(flashcard) =>
 
-              tableDefs.futureUserAnswerForFlashcard(user, flashcard, solution.frontToBack).flatMap {
+              tableDefs.futureUserAnswerForFlashcard(user, flashcard.cardId, flashcard.collId, flashcard.courseId, solution.frontToBack).flatMap {
                 maybePreviousAnswer: Option[UserAnsweredFlashcard] =>
 
-                  Corrector.completeCorrect(user, solution, flashcard, maybePreviousAnswer) match {
-                    case Failure(exception)               => Future.successful(BadRequest(exception.getMessage))
-                    case Success((corrResult, newAnswer)) =>
+                  val (corrResult, newAnswer) = Corrector.completeCorrect(user, solution, flashcard, maybePreviousAnswer)
 
-                      tableDefs.futureInsertOrUpdateUserAnswer(newAnswer).map { _ =>
-                        Ok(JsonFormats.completeCorrectionResultFormat.writes(corrResult))
-                      }
+                  tableDefs.futureInsertOrUpdateUserAnswer(newAnswer).map { _ =>
+                    Ok(JsonFormats.completeCorrectionResultFormat.writes(corrResult))
                   }
 
               }

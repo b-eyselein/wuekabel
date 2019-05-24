@@ -48,7 +48,7 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
     def correct: Rep[Boolean] = column[Boolean](correctName)
 
-    def tries: Rep[Int] = column[Int](triesName)
+    def wrongTries: Rep[Int] = column[Int]("wrong_tries")
 
 
     def pk: PrimaryKey = primaryKey("uaf_pk", (username, cardId, collId))
@@ -58,7 +58,7 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
     def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("uaf_card_fk", (cardId, collId), flashcardsTQ)(fc => (fc.id, fc.collId))
 
 
-    override def * : ProvenShape[UserAnsweredFlashcard] = (username, cardId, collId, courseId, bucket, dateAnswered, correct, tries, frontToBack) <> (UserAnsweredFlashcard.tupled, UserAnsweredFlashcard.unapply)
+    override def * : ProvenShape[UserAnsweredFlashcard] = (username, cardId, collId, courseId, bucket, dateAnswered, correct, wrongTries, frontToBack) <> (UserAnsweredFlashcard.tupled, UserAnsweredFlashcard.unapply)
 
   }
 

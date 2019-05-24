@@ -43,6 +43,14 @@ function updateView(flashcard: Flashcard): void {
 
     updateQuestionText(flashcard);
 
+    document.querySelector<HTMLSpanElement>('#triesSpan').innerText = flashcard.currentTries.toFixed(0);
+
+    if (flashcard.currentBucket !== undefined) {
+        document.querySelector<HTMLSpanElement>('#bucketSpan').innerText = flashcard.currentBucket.toFixed(0);
+    } else {
+        document.querySelector<HTMLSpanElement>('#bucketSpan').innerText = '--';
+    }
+
     // Set answering inputs
     const answerDiv = document.querySelector<HTMLDivElement>('#answerDiv');
     switch (flashcard.cardType) {

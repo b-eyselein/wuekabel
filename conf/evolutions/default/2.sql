@@ -21,11 +21,13 @@ insert into users_in_courses(username, course_id)
 values ('first_user', 1);
 
 insert into collections (id, course_id, front_language_id, back_language_id, name)
-values (1, 1, 1, 2, 'La nature et la géographie'),
-       (2, 1, 1, 2, 'Les plantes'),
-       (3, 1, 1, 2, 'Les animaux'),
-       (4, 1, 1, 2, 'L''être humain'),
-       (5, 1, 1, 2, 'La famille');
+values (1, 1, 1, 2, 'La nature et la géographie')
+# ,
+#        (2, 1, 1, 2, 'Les plantes'),
+#        (3, 1, 1, 2, 'Les animaux'),
+#        (4, 1, 1, 2, 'L''être humain'),
+#        (5, 1, 1, 2, 'La famille')
+;
 
 # --- !Downs
 
@@ -34,6 +36,9 @@ from collections;
 
 delete ignore
 from users_in_courses;
+
+delete ignore
+from languages;
 
 delete ignore
 from courses;

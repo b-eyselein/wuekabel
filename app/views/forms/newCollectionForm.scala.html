@@ -1,30 +1,36 @@
-@import model.{User, CollectionBasics, Consts}
+@import model.{User, CollectionBasics, Consts, Language}
 
-@(user: User, courseId: Int, newCollectionForm: Form[CollectionBasics])(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
+@(user: User, courseId: Int, newCollectionForm: Form[CollectionBasics], allLanguages: Seq[Language])(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
 
-    @title = @{
-        "Neue Sammlung erstellen"
-    }
+@title = @{
+    "Neue Sammlung erstellen"
+}
 
-    @main(title, Some(user)) {
-        <h2 class="center-align">@title</h2>
+@main(title, Some(user)) {
+    <h2 class="center-align">@title</h2>
 
-        <div class="row">
-            <div class="col s12">
-            @helper.form(routes.AdminController.newCollection(courseId)) {
+    <div class="row">
+        <div class="col s12">
+        @helper.form(routes.AdminController.newCollection(courseId)) {
 
-                @helper.CSRF.formField
+            @helper.CSRF.formField
 
-                @myhelpers.input(newCollectionForm(Consts.idName), labelContent = "Id", isRequired = true, isReadOnly = true)
+            @myhelpers.input(newCollectionForm(Consts.idName), labelContent = "Id", isRequired = true, isReadOnly = true)
 
-                @myhelpers.input(newCollectionForm(Consts.courseIdName), labelContent = "Kurs", isRequired = true, isReadOnly = true)
+            @myhelpers.input(newCollectionForm(Consts.courseIdName), labelContent = "Kurs", isRequired = true, isReadOnly = true)
 
-                @myhelpers.input(newCollectionForm(Consts.nameName), labelContent = "Name", isRequired = true)
+            @myhelpers.input(newCollectionForm(Consts.nameName), labelContent = "Name", isRequired = true)
 
-                <button class="btn btn-large waves-effect waves-block @accentColor">Sammlung erstellen</button>
+            @myhelpers.select(newCollectionForm(Consts.frontLanguageIdName), labelContent = "Sprache Vorderseiten",
+                options = allLanguages.map(l => (l.id.toString, l.name)))
 
-            }
-            </div>
+            @myhelpers.select(newCollectionForm(Consts.backLanguageIdName), labelContent = "Sprache Rückseiten",
+                options = allLanguages.map(l => (l.id.toString, l.name)))
+
+            <button class="btn btn-large waves-effect waves-block @accentColor">Sammlung erstellen</button>
+
+        }
         </div>
+    </div>
 
-    }
+}

@@ -82,12 +82,16 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
     checkSolutionBtn.disabled = !canSolve;
     nextFlashcardBtn.disabled = canSolve;
 
-    // TODO: implement
     if (!canSolve) {
         answeredFlashcards++;
         progressDiv.style.width = `${answeredFlashcards / maxNumOfCards * 100}%`;
 
         document.querySelector('#answeredFcCountSpan').innerHTML = answeredFlashcards.toString();
+
+        // FIXME: disable solution inputs?
+        if (flashcard.cardType === 'Text' || flashcard.cardType === 'Vocable') {
+            document.querySelector<HTMLInputElement>('#translation_input').disabled = true;
+        }
 
         if (answeredFlashcards >= maxNumOfCards) {
             nextFlashcardBtn.onclick = () => {
@@ -116,12 +120,6 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
 }
 
 function loadNextFlashcard(loadFlashcardUrl: string): void {
-
-    if (flashcard !== undefined && answeredFlashcards > maxNumOfCards) {
-        console.warn(answeredFlashcards);
-    } else {
-        console.info(answeredFlashcards);
-    }
 
     fetch(loadFlashcardUrl).then(response => {
         if (response.status === 200) {
@@ -165,14 +163,14 @@ function checkSolution(): void {
     fetch(checkSolutionUrl, {method: 'PUT', body: JSON.stringify(solution), headers})
         .then((response: Response) => {
                 if (response.status === 200) {
-                    return response.json();
+                    return response.json()
+                        .then(obj => onCorrectionSuccess(obj, flashcard.cardType));
                 } else {
                     response.text().then(text => console.error(text));
                     return Promise.reject("Error code was " + response.status);
                 }
             }
         )
-        .then(obj => onCorrectionSuccess(obj, flashcard.cardType))
         .catch(reason => {
             console.error(reason)
         });
@@ -216,8 +214,6 @@ function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void)
 
     maxNumOfCards = parseInt(document.querySelector<HTMLSpanElement>('#maxCardCountSpan').innerText);
 
-    console.warn(maxNumOfCards);
-
     progressDiv = document.querySelector<HTMLDivElement>('#progressDiv');
 
     document.addEventListener('keypress', event => {
@@ -225,7 +221,6 @@ function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void)
             if (canSolve) {
                 checkSolutionBtn.click();
             } else {
-                console.info("Clicking nextFlashcardBtn");
                 nextFlashcardBtn.click();
             }
         }

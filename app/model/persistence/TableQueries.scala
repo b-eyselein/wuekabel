@@ -14,22 +14,38 @@ trait TableQueries {
   private def flashcardToDoFilter(fctd: FlashcardToDoView[_ <: FlashcardToAnswerData], collection: Collection, user: User): Rep[Boolean] =
     fctd.collId === collection.id && fctd.courseId === collection.courseId && fctd.username === user.username
 
-  def futureFlashcardToAnswerById(courseId: Int, collId: Int, cardId: Int, frontToBack: Boolean): Future[Option[FlashcardToAnswer]] = {
+  def futureFlashcardToAnswerById(user: User, courseId: Int, collId: Int, cardId: Int, frontToBack: Boolean): Future[Option[FlashcardToAnswer]] = {
     val dbFlashcardByIdQuery = flashcardsTQ.filter {
       fc => fc.id === cardId && fc.collId === collId && fc.courseId === courseId
     }.result.headOption
 
-    db.run(dbFlashcardByIdQuery) flatMap {
+    db.run(dbFlashcardByIdQuery).flatMap {
       case None                                                                   => Future.successful(None)
       case Some(DBFlashcard(_, _, _, cardType, front, frontHint, back, backHint)) =>
+
         for {
           choiceAnswersForDBFlashcard <- choiceAnswersForFlashcard(cardId, collId, courseId)
           blanksAnswersForDbFlashcard <- blanksAnswersForFlashcard(cardId, collId, courseId)
+          maybeOldAnswer <- futureUserAnswerForFlashcard(user, cardId, collId, courseId, frontToBack)
         } yield {
           val frontToSend = if (frontToBack) front else back
           val frontHintToSend = if (frontToBack) frontHint else backHint
 
-          Some(FlashcardToAnswer(cardId, collId, courseId, cardType, frontToSend, frontHintToSend, frontToBack, blanksAnswersForDbFlashcard, choiceAnswersForDBFlashcard))
+          val currentTries = maybeOldAnswer.map {
+            oldAnswer => if (oldAnswer.isActive) oldAnswer.wrongTries else 0
+          }.getOrElse(0)
+          val currentBucket = maybeOldAnswer.map(_.bucket)
+
+          Some(
+            FlashcardToAnswer(
+              cardId, collId, courseId, cardType,
+              frontToSend, frontHintToSend, frontToBack,
+              blanksAnswersForDbFlashcard,
+              choiceAnswersForDBFlashcard,
+              currentTries,
+              currentBucket
+            )
+          )
         }
     }
   }
@@ -43,14 +59,14 @@ trait TableQueries {
     db.run(flashcardsToLearnTQ.filter(flashcardToDoFilter(_, collection, user)).result.headOption).flatMap {
       case None                                                                  => Future.successful(None)
       case Some(FlashcardToAnswerData(cardId, collId, courseId, _, frontToBack)) =>
-        futureFlashcardToAnswerById(courseId, collId, cardId, frontToBack)
+        futureFlashcardToAnswerById(user, courseId, collId, cardId, frontToBack)
     }
 
   def futureMaybeNextFlashcardToRepeat(user: User): Future[Option[FlashcardToAnswer]] =
     db.run(flashcardsToRepeatTQ.filter(_.username === user.username).result.headOption).flatMap {
       case None                                                                  => Future.successful(None)
       case Some(FlashcardToAnswerData(cardId, collId, courseId, _, frontToBack)) =>
-        futureFlashcardToAnswerById(courseId, collId, cardId, frontToBack)
+        futureFlashcardToAnswerById(user, courseId, collId, cardId, frontToBack)
     }
 
   def futureFlashcardsToRepeatCount(user: User): Future[Int] = db.run(
@@ -66,11 +82,11 @@ trait TableQueries {
 
   // Queries - UserAnsweredFlashcard
 
-  def futureUserAnswerForFlashcard(user: User, flashcard: Flashcard, frontToBack: Boolean): Future[Option[UserAnsweredFlashcard]] =
+  def futureUserAnswerForFlashcard(user: User, cardId: Int, collId: Int, courseId: Int, frontToBack: Boolean): Future[Option[UserAnsweredFlashcard]] =
     db.run(
       usersAnsweredFlashcardsTQ
         .filter {
-          uaf => uaf.username === user.username && uaf.cardId === flashcard.cardId && uaf.collId === flashcard.collId && uaf.frontToBack === frontToBack
+          uaf => uaf.username === user.username && uaf.cardId === cardId && uaf.collId === collId && uaf.courseId === courseId && uaf.frontToBack === frontToBack
         }
         .result.headOption)
 

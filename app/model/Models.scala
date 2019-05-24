@@ -95,10 +95,8 @@ final case class FlashcardIdentifier(cardId: Int, collId: Int, courseId: Int) {
 
 // User answered flashcard
 
-final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, courseId: Int, bucket: Int, dateAnswered: LocalDate, correct: Boolean, tries: Int, frontToBack: Boolean) {
+final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, courseId: Int, bucket: Int, dateAnswered: LocalDate, correct: Boolean, wrongTries: Int, frontToBack: Boolean) {
 
-  //  def cardIdentifier: FlashcardIdentifier = FlashcardIdentifier(cardId, collId, courseId)
-
-  def isActive: Boolean = dateAnswered.until(LocalDate.now(), ChronoUnit.DAYS) < Math.pow(3, bucket - 1)
+  lazy val isActive: Boolean = dateAnswered.until(LocalDate.now(), ChronoUnit.DAYS) < Math.pow(3, bucket - 1)
 
 }

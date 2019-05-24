@@ -1,4 +1,4 @@
-@(field: Field, labelContent: String, fieldType: String = "text", inputWidth: Int = 12, placeHolder: Option[String] = None,
+@(field: Field, labelContent: String, fieldType: String = "text", placeHolder: Option[String] = None,
     isRequired: Boolean = false, isReadOnly: Boolean = false
 )
 
@@ -7,7 +7,7 @@
     }
 
     <div class="row">
-        <div class="input-field col s@inputWidth">
+        <div class="input-field col s12">
             <input type="@fieldType" id="@field.id" name="@field.name" class="validate" placeholder="@labelContent" @attributes>
             <label for="@field.id">@labelContent</label>
         </div>

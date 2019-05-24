@@ -13,5 +13,8 @@ final case class FlashcardToAnswer(
   frontHint: Option[String],
   frontToBack: Boolean,
   blanksAnswerFragments: Seq[BlanksAnswerFragment] = Seq.empty,
-  choiceAnswers: Seq[ChoiceAnswer] = Seq.empty
+  choiceAnswers: Seq[ChoiceAnswer] = Seq.empty,
+
+  currentTries: Int = 0,
+  currentBucket: Option[Int]
 )

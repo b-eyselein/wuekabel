@@ -117,7 +117,7 @@ create table if not exists users_answered_flashcards (
     bucket        int     not null,
     date_answered date    not null,
     correct       boolean not null default false,
-    tries         int     not null default 1,
+    wrong_tries   int     not null default 0,
 
     constraint bucket_check check (bucket between 0 and 6),
 
@@ -161,7 +161,7 @@ select f.id                           as card_id,
 from flashcards f
          left join users_answered_flashcards uaf on uaf.card_id = f.id and uaf.coll_id = f.coll_id
 where datediff(now(), date_answered) >= power(3, bucket)
-   or (uaf.correct = false and uaf.tries < 2)
+   or (uaf.correct = false and uaf.wrong_tries < 2)
 order by time_since_answered, front_to_back;
 
 # --- !Downs
