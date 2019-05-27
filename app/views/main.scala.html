@@ -2,73 +2,79 @@
 
 @(title: String, maybeUser: Option[User], scripts: Html = Html(""))(content: Html)
 
-    @leftNavigation = {
-        <li><a href="@routes.HomeController.index()">Startseite</a></li>
-    }
+@leftNavigation = {
+    <li><a href="@routes.HomeController.index()">Startseite</a></li>
+}
 
-    @rightNavigation = {
-    @maybeUser match {
-        case Some(user) => {
-            @if(user.isAdmin) {
-                <li><a href="@routes.AdminController.index()">Administration</a></li>
-            }
-            <li><a href="@routes.HomeController.userPage()">Nutzer: @user.username </a></li>
-            <li><a href="@routes.LoginController.logout()">Logout</a></li>
+@rightNavigation = {
+@maybeUser match {
+    case Some(user) => {
+        @if(user.isAdmin) {
+            <li><a href="@routes.AdminController.index()">Administration</a></li>
         }
-        case None => {
-            <li><a href="@routes.LoginController.loginForm()">Login</a></li>
-            <li><a href="@routes.LoginController.registerForm()">Registrieren</a></li>
-        }
+        <li><a href="@routes.HomeController.userPage()">Nutzer: @user.username </a></li>
+        <li><a href="@routes.LoginController.logout()">Logout</a></li>
     }
+    case None => {
+        <li><a href="@routes.LoginController.loginForm()">Login</a></li>
+        <li><a href="@routes.LoginController.registerForm()">Registrieren</a></li>
     }
+}
+}
 
-    <!DOCTYPE html>
-    <html lang="de">
-        <head>
-            <meta charset="UTF-8">
-            <title>Wuekabel: @title</title>
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <title>Wuekabel: @title</title>
 
-            <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
-            <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-            <link rel="stylesheet" href="@routes.Assets.versioned("lib/materialize-css/dist/css/materialize.css")">
+        <link rel="apple-touch-icon" sizes="180x180" href="@routes.Assets.versioned("images/apple-touch-icon.png")">
+        <link rel="icon" type="image/png" sizes="32x32" href="@routes.Assets.versioned("images/favicon-32x32.png")">
+        <link rel="icon" type="image/png" sizes="16x16" href="@routes.Assets.versioned("images/favicon-16x16.png")">
+        @* <link rel="manifest" href="@routes.Assets.versioned("images/site.webmanifest")">*@
+        <meta name="msapplication-TileColor" content="#da532c">
+        <meta name="theme-color" content="#ffffff">
 
-            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        </head>
-        <body>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="@routes.Assets.versioned("lib/materialize-css/dist/css/materialize.css")">
 
-            <nav>
-                <div class="nav-wrapper @primaryColor">
-                    <a href="@routes.HomeController.index" class="brand-logo center">WueKabel</a>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    </head>
+    <body>
 
-                    <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+        <nav>
+            <div class="nav-wrapper @primaryColor">
+                <a href="@routes.HomeController.index" class="brand-logo center">WueKabel</a>
 
-                    <ul class="left hide-on-med-and-down">@leftNavigation</ul>
+                <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
 
-                    <ul id="nav-mobile" class="right hide-on-med-and-down">@rightNavigation</ul>
-                </div>
-            </nav>
+                <ul class="left hide-on-med-and-down">@leftNavigation</ul>
 
-            <ul class="sidenav" id="mobile-demo">
-                @leftNavigation
-                @rightNavigation
-            </ul>
-
-            <br>
-
-            <div class="container">
-            @content
+                <ul id="nav-mobile" class="right hide-on-med-and-down">@rightNavigation</ul>
             </div>
+        </nav>
 
-            <script src="@routes.Assets.versioned("lib/jquery/dist/jquery.js")"></script>
-            <script src="@routes.Assets.versioned("lib/materialize-css/dist/js/materialize.js")"></script>
-            <script>
+        <ul class="sidenav" id="mobile-demo">
+            @leftNavigation
+            @rightNavigation
+        </ul>
+
+        <br>
+
+        <div class="container">
+        @content
+        </div>
+
+        <script src="@routes.Assets.versioned("lib/jquery/dist/jquery.js")"></script>
+        <script src="@routes.Assets.versioned("lib/materialize-css/dist/js/materialize.js")"></script>
+        <script>
                 $(document).ready(function () {
                     $('.sidenav').sidenav();
                     $('select').formSelect();
                 });
         </script>
 
-            @scripts
+        @scripts
 
-        </body>
-    </html>
+    </body>
+</html>
