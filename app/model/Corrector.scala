@@ -73,8 +73,6 @@ object Corrector {
           Some(flashcard.front)
         }
 
-        println(maybeSampleSolution)
-
         (
           correctionResult.copy(newTriesCount = newWrongTriesCount, maybeSampleSolution = maybeSampleSolution),
           oldAnswer.copy(bucket = newBucket, dateAnswered = today, correct = isCorrect, wrongTries = newWrongTriesCount)
