@@ -117,6 +117,8 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
         default:
             console.error(cardType);
     }
+
+    nextFlashcardBtn.focus();
 }
 
 function loadNextFlashcard(loadFlashcardUrl: string): void {
@@ -233,7 +235,6 @@ function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void)
             if (choiceParagraph !== null) {
                 choiceParagraph.querySelector<HTMLInputElement>('input').click();
             }
-
         }
     });
 }

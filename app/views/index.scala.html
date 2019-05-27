@@ -46,6 +46,19 @@
 
     <hr>
 
+    @if(!pwSet) {
+        <divs class="row">
+            <div class="col s12">
+                <div class="card-panel red white-text">
+                    Sie haben noch kein Passwort für diese Anwendung eingerichtet. Sie können Sie weiterhin nutzen, sich aber nur über WueCampus einloggen.
+                    Sie können <a href="@routes.LoginController.changePwForm">hier</a> ein Passwort vergeben.
+                </div>
+            </div>
+        </divs>
+
+        <hr>
+    }
+
     <section>
         <h4>Meine Kurse</h4>
 
@@ -69,15 +82,6 @@
 
         } else {
             <h4 class="red-text center-align">Sie sind noch nicht in einem Kurs registriert.</h4>
-        }
-
-        @if(!pwSet) {
-            <hr>
-
-            <div class="card-panel red white-text">
-                Sie haben noch kein Passwort für diese Anwendung eingerichtet. Sie können Sie weiterhin nutzen, sich aber nur über WueCampus einloggen.
-                Sie können <a href="@routes.LoginController.changePwForm">hier</a> ein Passwort vergeben.
-            </div>
         }
 
         <hr>

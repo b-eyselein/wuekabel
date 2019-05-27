@@ -2,8 +2,8 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 import model.Consts.idName
-import model.{Course, FormMappings, LtiFormValues, LtiToolProxyRegistrationRequestFormValues, User}
 import model.persistence.TableDefs
+import model.{FormMappings, LtiFormValues, LtiToolProxyRegistrationRequestFormValues, User}
 import play.api.data.Form
 import play.api.mvc._
 
@@ -27,26 +27,6 @@ class LtiController @Inject()(cc: ControllerComponents, protected val tableDefs:
       }
   }
 
-  private def selectOrInsertCourse(id: String, name: String): Future[Course] =
-  //    tableDefs.futureCourseById(id) flatMap {
-  //    case Some(course) => Future.successful(course)
-  //    case None         =>
-  //      val newCourse = Course(id, name)
-  //      tableDefs.futureInsertCourse(newCourse) map {
-  //        case true  => newCourse
-  //        case false => ???
-  //      }
-    ???
-
-  //  }
-
-  private def selectOrInsertUserInCourse(user: User, course: Course): Future[Boolean] =
-    tableDefs.futureUserIsRegisteredForCourse(user.username, course.id).flatMap {
-      case true  => Future.successful(true)
-      case false => tableDefs.futureRegisterUserForCourse(user.username, course.id)
-    }
-
-
   def lti: Action[AnyContent] = Action.async { implicit request =>
     def onError: Form[LtiFormValues] => Future[Result] = { formWithErrors =>
       formWithErrors.errors.foreach(println)
@@ -57,9 +37,7 @@ class LtiController @Inject()(cc: ControllerComponents, protected val tableDefs:
 
       for {
         user <- selectOrInsertUser(ltiFormValues.username)
-        course <- selectOrInsertCourse(ltiFormValues.courseIdentifier, ltiFormValues.courseName)
         maybePw <- tableDefs.futurePwHashForUser(user)
-        _ <- selectOrInsertUserInCourse(user, course)
       } yield {
         val baseRedirect = Redirect(routes.HomeController.index()).withSession(idName -> user.username)
 
@@ -70,7 +48,6 @@ class LtiController @Inject()(cc: ControllerComponents, protected val tableDefs:
     }
 
     FormMappings.ltiValuesForm.bindFromRequest().fold(onError, onRead)
-
   }
 
   def registerAsLtiProvider: Action[AnyContent] = Action { implicit request =>
