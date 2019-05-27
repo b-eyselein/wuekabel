@@ -78,5 +78,5 @@ interface CorrectionResult {
     operations: EditOperation[]
     answersSelection: AnswerSelectionResult
     newTriesCount: number
-    maybeSampleSol: string | null
+    maybeSampleSolution: string | null
 }

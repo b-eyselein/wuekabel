@@ -68,8 +68,8 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
 
     let correctionText = `Ihre Lösung war ${result.correct ? '' : 'nicht '} korrekt.`;
 
-    if ((result.newTriesCount >= 2) && (result.maybeSampleSol != null)) {
-        correctionText += ` Die korrekte Lösung lautet '<code>${result.maybeSampleSol}</code>'.`;
+    if ((result.newTriesCount >= 2) && (result.maybeSampleSolution != null)) {
+        correctionText += ` Die korrekte Lösung lautet '<code>${result.maybeSampleSolution}</code>'.`;
     }
 
     canSolve = !(result.correct || result.newTriesCount >= 2);
@@ -176,6 +176,24 @@ function checkSolution(): void {
         });
 }
 
+function updateReadQuestionButton(readQuestionButton) {
+    const numOfFoundVoices: number = window.speechSynthesis.getVoices().length;
+    if (numOfFoundVoices > 0) {
+        console.info("Found " + numOfFoundVoices + " voices!");
+        readQuestionButton.classList.remove('hide');
+        readQuestionButton.disabled = false;
+
+        readQuestionButton.onclick = () => {
+            const utterThis = new SpeechSynthesisUtterance(flashcard.front);
+            utterThis.lang = 'fr';
+
+            window.speechSynthesis.speak(utterThis);
+        };
+    } else {
+        console.warn("Could not find any voices for Speech synthesis!");
+    }
+}
+
 function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void): void {
     const initialLoadBtn = document.querySelector<HTMLButtonElement>('#loadFlashcardButton');
 
@@ -192,18 +210,12 @@ function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void)
     // FIXME: activate...?
     const readQuestionButton = document.querySelector<HTMLButtonElement>('#readQuestionButton');
 
-    if (window.speechSynthesis.getVoices().length > 0) {
-        readQuestionButton.hidden = false;
-        readQuestionButton.disabled = false;
+    updateReadQuestionButton(readQuestionButton);
 
-        readQuestionButton.onclick = () => {
-            const utterThis = new SpeechSynthesisUtterance(flashcard.front);
-            utterThis.lang = 'fr';
-
-            window.speechSynthesis.speak(utterThis);
-
-        };
-    }
+    window.speechSynthesis.onvoiceschanged = () => {
+        updateReadQuestionButton(readQuestionButton);
+    };
+    window.speechSynthesis.getVoices();
 
     nextFlashcardBtn = document.querySelector<HTMLButtonElement>('#nextFlashcardBtn');
     nextFlashcardBtn.onclick = () => loadNextFlashcard(loadFlashcardUrl);
@@ -219,7 +231,10 @@ function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void)
 
     document.addEventListener('keypress', event => {
         if (event.key === 'Enter') {
-            if (canSolve) {
+            if (event.ctrlKey) {
+                readQuestionButton.click();
+                console.info("Pressed strg + enter!");
+            } else if (canSolve) {
                 checkSolutionBtn.click();
             } else {
                 nextFlashcardBtn.click();

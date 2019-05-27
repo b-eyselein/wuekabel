@@ -63,11 +63,21 @@ object Corrector {
         val triesToAdd = if (isCorrect) 0 else 1
         val oldTries = if (oldAnswer.isActive) oldAnswer.wrongTries else 0
 
-        val newTries = oldTries + triesToAdd
+        val newWrongTriesCount = oldTries + triesToAdd
+
+        val maybeSampleSolution = if (newWrongTriesCount < 2) {
+          None
+        } else if (solution.frontToBack) {
+          Some(flashcard.back)
+        } else {
+          Some(flashcard.front)
+        }
+
+        println(maybeSampleSolution)
 
         (
-          correctionResult.copy(newTriesCount = newTries, maybeSampleSolution = None),
-          oldAnswer.copy(bucket = newBucket, dateAnswered = today, correct = isCorrect, wrongTries = newTries)
+          correctionResult.copy(newTriesCount = newWrongTriesCount, maybeSampleSolution = maybeSampleSolution),
+          oldAnswer.copy(bucket = newBucket, dateAnswered = today, correct = isCorrect, wrongTries = newWrongTriesCount)
         )
     }
   }
