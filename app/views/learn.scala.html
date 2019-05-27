@@ -75,9 +75,9 @@
             </div>
 
             @* TODO: show... *@
-            @* <button class="btn btn-large waves-effect @primaryColor" title="Vorlesen" id="readQuestionButton" disabled="disabled">*@
-            @* <i class="material-icons left">record_voice_over</i> Frage vorlesen*@
-            @* </button>*@
+            <button class="btn btn-large waves-effect @primaryColor" title="Vorlesen" id="readQuestionButton" hidden>
+                <i class="material-icons left">record_voice_over</i> Frage vorlesen
+            </button>
 
             <button class="btn btn-large waves-effect @primaryColor" id="checkSolutionBtn" data-href="@routes.HomeController.checkSolution()">
                 Lösung testen

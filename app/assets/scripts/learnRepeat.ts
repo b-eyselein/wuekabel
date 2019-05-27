@@ -127,8 +127,6 @@ function loadNextFlashcard(loadFlashcardUrl: string): void {
         if (response.status === 200) {
             response.json().then(loadedFlashcard => {
 
-                console.warn(JSON.stringify(loadedFlashcard, null, 2));
-
                 flashcard = loadedFlashcard;
 
                 canSolve = true;
@@ -178,7 +176,6 @@ function checkSolution(): void {
         });
 }
 
-
 function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void): void {
     const initialLoadBtn = document.querySelector<HTMLButtonElement>('#loadFlashcardButton');
 
@@ -193,18 +190,20 @@ function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void)
     correctionTextPar = document.querySelector<HTMLParagraphElement>('#correctionTextPar');
 
     // FIXME: activate...?
-    // const readQuestionButton = document.querySelector<HTMLButtonElement>('#readQuestionButton');
-    // readQuestionButton.onclick = () => {
-    //     const utterThis = new SpeechSynthesisUtterance('l\'univers');
-    //
-    //     const voices = window.speechSynthesis.getVoices();
-    //
-    //     console.info(voices.length);
-    //
-    //     window.speechSynthesis.speak(utterThis);
-    //
-    //     console.info("TODO!");
-    // };
+    const readQuestionButton = document.querySelector<HTMLButtonElement>('#readQuestionButton');
+
+    if (window.speechSynthesis.getVoices().length > 0) {
+        readQuestionButton.hidden = false;
+        readQuestionButton.disabled = false;
+
+        readQuestionButton.onclick = () => {
+            const utterThis = new SpeechSynthesisUtterance(flashcard.front);
+            utterThis.lang = 'fr';
+
+            window.speechSynthesis.speak(utterThis);
+
+        };
+    }
 
     nextFlashcardBtn = document.querySelector<HTMLButtonElement>('#nextFlashcardBtn');
     nextFlashcardBtn.onclick = () => loadNextFlashcard(loadFlashcardUrl);
