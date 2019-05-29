@@ -1,0 +1,4 @@
+username,firstname,lastname,email,password
+s1234,Test1,Nutzer1,test1.nutzer1@localhost.com,Abcdefgh1#
+s2345,Test2,Nutzer2,test2.nutzer2@localhost.com,Abcdefgh1#
+s3456,Test3,Nutzer3,test3.nutzer3@localhost.com,Abcdefgh1#
