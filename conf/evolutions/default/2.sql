@@ -1,9 +1,9 @@
 # --- !Ups
 
-insert into users (username, is_admin)
-values ('first_user', true),
-       ('second_user', true),
-       ('third_user', true);
+insert into users (username, accepted_dps, is_admin)
+values ('first_user', false, true),
+       ('second_user', false, true),
+       ('third_user', false, true);
 
 insert into user_passwords (username, password_hash)
 values ('first_user', '$2a$10$6loikDKMzBkdP1HG33BeheyhF7e1.gNBx3mM1CiePRg2AaicJmj5.'),

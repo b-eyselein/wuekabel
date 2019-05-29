@@ -9,7 +9,7 @@ import scala.collection.immutable
 
 // User and password
 
-final case class User(username: String, isAdmin: Boolean = false)
+final case class User(username: String, hasAcceptedDataPrivacyStatement: Boolean = false, isAdmin: Boolean = false)
 
 final case class UserPassword(username: String, pwHash: String)
 

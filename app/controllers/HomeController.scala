@@ -28,6 +28,13 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
       } yield Ok(views.html.index(user, courses, repeatCount, pwSet))
   }
 
+  def acceptDPS: EssentialAction = futureWithUser { user =>
+    implicit request =>
+      tableDefs.futureUserAcceptedDps(user).map {
+        _ => Redirect(routes.HomeController.index())
+      }
+  }
+
   def registerForCoursesForm: EssentialAction = futureWithUser { user =>
     implicit request =>
       tableDefs.futureAllCoursesWithRegisterState(user.username).map {

@@ -18,6 +18,8 @@ GET         /logout                                                             
 
 GET         /user                                                                   controllers.HomeController.userPage
 
+GET         /acceptDPS                                                              controllers.HomeController.acceptDPS
+
 GET         /changePwForm                                                           controllers.LoginController.changePwForm
 POST        /changePw                                                               controllers.LoginController.changePw
 

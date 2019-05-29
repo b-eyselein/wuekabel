@@ -3,8 +3,9 @@
 -- Users
 
 create table if not exists users (
-    username varchar(50) primary key,
-    is_admin boolean not null default false
+    username     varchar(50) primary key,
+    accepted_dps boolean not null default false,
+    is_admin     boolean not null default false
 );
 
 -- User passwords
@@ -68,9 +69,9 @@ create table if not exists flashcards (
     coll_id    int,
     course_id  int,
     card_type  enum ('Word', 'Text', 'Blank', 'Choice') not null default 'Word',
-    front      text                                        not null,
+    front      text                                     not null,
     front_hint text,
-    back       text                                        not null,
+    back       text                                     not null,
     back_hint  text,
 
     primary key (id, coll_id, course_id),

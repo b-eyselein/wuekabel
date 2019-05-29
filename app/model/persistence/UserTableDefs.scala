@@ -29,6 +29,11 @@ trait UserTableDefs extends HasDatabaseConfigProvider[JdbcProfile] {
   def futureInsertUser(user: User): Future[Boolean] = db.run(usersTQ += user).transform(_ == 1, identity)
 
 
+  def futureUserAcceptedDps(user: User): Future[Boolean] = db.run(
+    usersTQ.filter(_.username === user.username).map(_.hasAcceptedDataPrivacyStatement).update(true)
+  ).transform(_ == 1, identity)
+
+
   def futurePwHashForUser(user: User): Future[Option[UserPassword]] = db.run(userPasswordsTQ.filter(_.username === user.username).result.headOption)
 
   def futureSavePwHash(userPassword: UserPassword): Future[Boolean] = db.run(userPasswordsTQ += userPassword).transform(_ == 1, identity)
@@ -42,9 +47,12 @@ trait UserTableDefs extends HasDatabaseConfigProvider[JdbcProfile] {
 
     def username: Rep[String] = column[String](usernameName, O.PrimaryKey)
 
+    def hasAcceptedDataPrivacyStatement: Rep[Boolean] = column[Boolean]("accepted_dps")
+
     def isAdmin: Rep[Boolean] = column[Boolean]("is_admin")
 
-    override def * : ProvenShape[User] = (username, isAdmin) <> (User.tupled, User.unapply)
+
+    override def * : ProvenShape[User] = (username, hasAcceptedDataPrivacyStatement, isAdmin) <> (User.tupled, User.unapply)
 
   }
 
