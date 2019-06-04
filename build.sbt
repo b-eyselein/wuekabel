@@ -15,14 +15,14 @@ updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true
 resolveFromWebjarsNodeModulesDir := true
 
 val webJarDependencies = Seq(
+  // FIXME: remove jquery?!?
   "org.webjars.npm" % "jquery" % "3.4.1",
   "org.webjars.npm" % "types__jquery" % "3.3.29",
 
   "org.webjars.npm" % "materialize-css" % "1.0.0",
-  
+
   // javascript db
   //  "org.webjars.npm" % "dexie" % "2.0.4"
-
 )
 
 dependencyOverrides ++= Seq(
