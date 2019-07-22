@@ -11,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ApiController @Inject()(cc: ControllerComponents, protected val tableDefs: TableDefs)(implicit protected val ec: ExecutionContext)
-  extends AbstractController(cc) with ControllerHelpers {
+  extends AbstractController(cc) with NewControllerHelpers {
 
   private val logger = Logger(classOf[ApiController])
 

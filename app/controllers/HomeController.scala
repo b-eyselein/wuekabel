@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs: TableDefs)(implicit protected val ec: ExecutionContext)
-  extends AbstractController(cc) with ControllerHelpers with play.api.i18n.I18nSupport {
+  extends AbstractController(cc) with NewControllerHelpers with play.api.i18n.I18nSupport {
 
   //  private val logger = Logger(classOf[HomeController])
 

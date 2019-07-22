@@ -12,25 +12,43 @@ object JsonFormats {
 
   // Result
 
-  private implicit val charFormat: Format[Char] = Format({
+  private val charFormat: Format[Char] = Format({
     case JsString(str) => JsSuccess(str.charAt(0))
     case _             => JsError("")
   }, x => JsString(x.toString))
 
-  private implicit val operationTypeFormat: Format[OperationType] = OperationType.jsonFormat
+  private val operationTypeFormat: Format[OperationType] = OperationType.jsonFormat
 
-  private implicit val editOperationFormat: Format[EditOperation] = Json.format[EditOperation]
+  private val editOperationFormat: Format[EditOperation] = {
+    implicit val cf: Format[Char] = charFormat
 
-  private implicit val answerSelectionResultFormat: Format[AnswerSelectionResult] = Json.format[AnswerSelectionResult]
+    implicit val otf: Format[OperationType] = operationTypeFormat
 
-  val completeCorrectionResultFormat: Format[CorrectionResult] = Json.format[CorrectionResult]
+    Json.format[EditOperation]
+  }
+
+  private val answerSelectionResultFormat: Format[AnswerSelectionResult] = Json.format[AnswerSelectionResult]
+
+  val completeCorrectionResultFormat: Format[CorrectionResult] = {
+    implicit val eof: Format[EditOperation] = editOperationFormat
+
+    implicit val asrf: Format[AnswerSelectionResult] = answerSelectionResultFormat
+
+    Json.format[CorrectionResult]
+  }
 
   // Flashcard
 
-  private implicit val choiceAnswerFormat: Format[ChoiceAnswer] = Json.format[ChoiceAnswer]
+  private val choiceAnswerFormat: Format[ChoiceAnswer] = Json.format[ChoiceAnswer]
 
-  private implicit val blanksAnswerFragmentFormat: Format[BlanksAnswerFragment] = Json.format[BlanksAnswerFragment]
+  private val blanksAnswerFragmentFormat: Format[BlanksAnswerFragment] = Json.format[BlanksAnswerFragment]
 
-  val flashcardToAnswerFormat: Format[FlashcardToAnswer] = Json.format[FlashcardToAnswer]
+  val flashcardToAnswerFormat: Format[FlashcardToAnswer] = {
+    implicit val caf: Format[ChoiceAnswer] = choiceAnswerFormat
+
+    implicit val baff: Format[BlanksAnswerFragment] = blanksAnswerFragmentFormat
+
+    Json.format[FlashcardToAnswer]
+  }
 
 }

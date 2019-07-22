@@ -6,7 +6,7 @@ import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait ControllerHelpers extends Secured {
+trait NewControllerHelpers extends Secured {
   self: AbstractController =>
 
   protected implicit val ec: ExecutionContext

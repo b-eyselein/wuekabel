@@ -31,19 +31,16 @@ trait TableQueries {
           val frontToSend = if (frontToBack) front else back
           val frontHintToSend = if (frontToBack) frontHint else backHint
 
-          val currentTries = maybeOldAnswer.map {
-            oldAnswer => if (oldAnswer.isActive) oldAnswer.wrongTries else 0
-          }.getOrElse(0)
-          val currentBucket = maybeOldAnswer.map(_.bucket)
-
           Some(
             FlashcardToAnswer(
               cardId, collId, courseId, cardType,
-              frontToSend, frontHintToSend, frontToBack,
+              frontToSend,
+              frontHintToSend,
+              frontToBack,
               blanksAnswersForDbFlashcard,
               choiceAnswersForDBFlashcard,
-              currentTries,
-              currentBucket
+              currentTries = maybeOldAnswer.map { oa => if (oa.isActive) oa.wrongTries else 0 }.getOrElse(0),
+              currentBucket = maybeOldAnswer.map(_.bucket)
             )
           )
         }
