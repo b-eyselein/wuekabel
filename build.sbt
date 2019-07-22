@@ -36,19 +36,19 @@ libraryDependencies ++= webJarDependencies
 libraryDependencies ++= Seq(
   guice,
 
-  "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.2" % Test,
+  "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.3" % Test,
 
-  "mysql" % "mysql-connector-java" % "8.0.16",
+  "mysql" % "mysql-connector-java" % "8.0.17",
 
   // Better enums for scala
   "com.beachape" %% "enumeratum-play" % "1.5.16",
   "com.beachape" %% "enumeratum-play-json" % "1.5.16",
 
 
-  "com.typesafe.play" %% "play-slick" % "4.0.1",
-  "com.typesafe.play" %% "play-slick-evolutions" % "4.0.1",
+  "com.typesafe.play" %% "play-slick" % "4.0.2",
+  "com.typesafe.play" %% "play-slick-evolutions" % "4.0.2",
 
-  "com.github.t3hnar" %% "scala-bcrypt" % "4.0",
+  "com.github.t3hnar" %% "scala-bcrypt" % "4.1",
 
   // Betterfiles
   "com.github.pathikrit" %% "better-files" % "3.8.0",
