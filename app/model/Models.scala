@@ -80,16 +80,20 @@ case object Correctness extends PlayEnum[Correctness] {
 
 }
 
-final case class FlashcardIdentifier(cardId: Int, collId: Int, courseId: Int) {
-
-  def asString = s"$courseId.$collId.$cardId"
-
-}
-
 // User answered flashcard
 
-final case class UserAnsweredFlashcard(username: String, cardId: Int, collId: Int, courseId: Int, cardType: CardType,
-                                       bucket: Int, dateAnswered: LocalDate, correct: Boolean, wrongTries: Int, frontToBack: Boolean) {
+final case class UserAnsweredFlashcard(
+  username: String,
+  cardId: Int,
+  collId: Int,
+  courseId: Int,
+  cardType: CardType,
+  bucket: Int,
+  dateAnswered: LocalDate,
+  correct: Boolean,
+  wrongTries: Int,
+  frontToBack: Boolean
+) {
 
   lazy val isActive: Boolean = dateAnswered.until(LocalDate.now(), ChronoUnit.DAYS) < Math.pow(3, bucket - 1)
 

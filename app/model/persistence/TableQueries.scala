@@ -42,13 +42,12 @@ trait TableQueries {
         for {
           maybeOldAnswer <- futureUserAnswerForFlashcard(user, cardId, collId, courseId, frontToBack)
         } yield {
-          val frontToSend = if (frontToBack) front else back
-          val frontHintToSend = if (frontToBack) frontHint else backHint
-
           FlashcardToAnswer(
             cardId, collId, courseId, cardType,
-            frontToSend,
-            frontHintToSend,
+            front,
+            frontHint,
+            back,
+            backHint,
             frontToBack,
             blanksAnswerFragments,
             choiceAnswers,

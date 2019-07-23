@@ -29,9 +29,6 @@ trait CoursesCollectionsFlashcardsTableQueries {
 
   def futureCourseById(id: Int): Future[Option[Course]] = db.run(coursesTQ.filter(_.id === id).result.headOption)
 
-  //  def futureCourseByShortName(shortName: String): Future[Option[Course]] =
-  //    db.run(coursesTQ.filter(_.shortName === shortName).result.headOption)
-
   def futureInsertCourse(course: Course): Future[Boolean] = db.run(coursesTQ += course).transform(_ == 1, identity)
 
 

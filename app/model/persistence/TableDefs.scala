@@ -86,7 +86,6 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
   class FlashcardsToLearnView(tag: Tag) extends FlashcardToDoView(tag, "flashcards_to_learn")
 
-
   class FlashcardsToRepeatView(tag: Tag) extends FlashcardToDoView(tag, "flashcards_to_repeat")
 
 }

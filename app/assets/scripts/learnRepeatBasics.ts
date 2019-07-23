@@ -41,6 +41,8 @@ interface Flashcard {
 
     front: string;
     frontHint: string | undefined;
+    back: string;
+    backHint: string | undefined;
 
     frontToBack: boolean;
 

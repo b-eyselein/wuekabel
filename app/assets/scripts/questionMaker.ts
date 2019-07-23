@@ -31,21 +31,26 @@ function buildChoiceAnswers(choiceAnswers: ChoiceAnswer[]): string {
 </p>`.trim()).join('\n');
 }
 
-function updateQuestionText(flashcard: Flashcard): void {
-    let questionText = flashcard.front;
-    if (flashcard.frontHint !== undefined) {
-        questionText += ` <i>${flashcard.frontHint}</i>`;
-    }
-
-    document.querySelector<HTMLHeadingElement>('#questionDiv').innerHTML = questionText;
-}
-
 function updateView(flashcard: Flashcard): void {
 
-    updateQuestionText(flashcard);
+    console.info(JSON.stringify(flashcard, null, 2));
 
+    // Update question text
+    let questionText: string;
+    if (flashcard.frontToBack) {
+        questionText = flashcard.front + (flashcard.frontHint !== undefined ? ` <i>${flashcard.frontHint}</i>` : '');
+    } else {
+        questionText = flashcard.back + (flashcard.backHint !== undefined ? ` <i>${flashcard.backHint}</i>` : '');
+    }
+
+    console.warn(questionText);
+
+    document.querySelector<HTMLHeadingElement>('#questionDiv').innerHTML = questionText;
+
+    // Update tries counter
     document.querySelector<HTMLSpanElement>('#triesSpan').innerText = flashcard.currentTries.toFixed(0);
 
+    // Update bucket counter
     if (flashcard.currentBucket !== undefined) {
         document.querySelector<HTMLSpanElement>('#bucketSpan').innerText = flashcard.currentBucket.toFixed(0);
     } else {
