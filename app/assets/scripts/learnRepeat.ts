@@ -244,7 +244,6 @@ domReady(() => {
         if (event.key === 'Enter') {
             if (event.ctrlKey) {
                 readQuestionButton.click();
-                console.info("Pressed strg + enter!");
             } else if (canSolve) {
                 checkSolutionBtn.click();
             } else {

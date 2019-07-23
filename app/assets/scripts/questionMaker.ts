@@ -33,8 +33,6 @@ function buildChoiceAnswers(choiceAnswers: ChoiceAnswer[]): string {
 
 function updateView(flashcard: Flashcard): void {
 
-    console.info(JSON.stringify(flashcard, null, 2));
-
     // Update question text
     let questionText: string;
     if (flashcard.frontToBack) {
@@ -42,9 +40,6 @@ function updateView(flashcard: Flashcard): void {
     } else {
         questionText = flashcard.back + (flashcard.backHint !== undefined ? ` <i>${flashcard.backHint}</i>` : '');
     }
-
-    console.warn(questionText);
-
     document.querySelector<HTMLHeadingElement>('#questionDiv').innerHTML = questionText;
 
     // Update tries counter
