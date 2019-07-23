@@ -7,8 +7,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 
 object Importer {
 
-  private val stdFile: File = file"conf/vokabeln.xlsx"
-
   private val cardTypeCellIndex : Int = 0
   private val frontCellIndex    : Int = 1
   private val frontHintCellIndex: Int = frontCellIndex + 1
@@ -31,7 +29,7 @@ object Importer {
       }
     }
 
-  def importFlashcards(courseId: Int, collId: Int, file: File = stdFile): (Seq[String], Seq[Flashcard]) = {
+  def importFlashcards(courseId: Int, collId: Int, file: File): (Seq[String], Seq[Flashcard]) = {
     val workbook = new XSSFWorkbook(file.path.toAbsolutePath.toFile)
 
     val sheet = workbook.getSheetAt(workbook.getActiveSheetIndex)
