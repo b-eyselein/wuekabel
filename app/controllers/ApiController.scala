@@ -1,10 +1,10 @@
 package controllers
 
 import javax.inject.{Inject, Singleton}
-import model.jsonFormats.CourseJsonProtocol
 import model.persistence.TableDefs
+import model.{Corrector, FlashcardToAnswer, JsonFormats, UserAnsweredFlashcard}
 import play.api.Logger
-import play.api.libs.json.{JsArray, JsError, JsSuccess}
+import play.api.libs.json.{Format, JsString, Json}
 import play.api.mvc.{AbstractController, ControllerComponents, EssentialAction}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -19,32 +19,43 @@ class ApiController @Inject()(cc: ControllerComponents, protected val tableDefs:
 
   // Routes
 
-  def courses: EssentialAction = futureWithUser { _ =>
+  def nextFlashcardsToRepeat(count: Int): EssentialAction = futureWithUser { user =>
     implicit request =>
-      tableDefs.futureAllCourses.map {
-        allCourses =>
-          val jsonCoursesArray = JsArray(allCourses.map(CourseJsonProtocol.courseJsonFormat.writes))
-          Ok(jsonCoursesArray)
-      }
+
+      implicit val fctaf: Format[FlashcardToAnswer] = JsonFormats.flashcardToAnswerFormat
+
+      tableDefs.futureMaybeNextFlashcardToRepeat(user, count).map { fc => Ok(Json.toJson(fc)) }
   }
 
-  def course(courseId: Int): EssentialAction = withUserAndCourse(courseId) { (_, course) =>
-    implicit request => Ok(CourseJsonProtocol.courseJsonFormat.writes(course))
+  def nextFlashcardsToLearn(courseId: Int, collId: Int, count: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, _, collection) =>
+    implicit request =>
+
+      implicit val fctaf: Format[FlashcardToAnswer] = JsonFormats.flashcardToAnswerFormat
+
+      tableDefs.futureMaybeNextFlashcardToLearn(user, collection, count).map { fc => Ok(Json.toJson(fc)) }
   }
 
-  def newCourse: EssentialAction = futureWithUser { _ =>
+  def checkSolution: EssentialAction = futureWithUser { user =>
     implicit request =>
-      request.body.asJson match {
-        case None          => Future.successful(???)
-        case Some(jsValue) =>
+      request.body.asJson.flatMap(json => JsonFormats.solutionFormat.reads(json).asOpt) match {
+        case None           => Future.successful(BadRequest(JsString("Could not read solution...")))
+        case Some(solution) =>
 
-          CourseJsonProtocol.courseJsonFormat.reads(jsValue) match {
-            case JsSuccess(newCourse, _) => tableDefs.futureInsertCourse(newCourse) map { _ => Created }
-            case JsError(errors)         =>
-              errors.foreach(jsE => logger.error(jsE.toString))
-              Future.successful(???)
+          tableDefs.futureFlashcardById(solution.courseId, solution.collId, solution.cardId).flatMap {
+            case None            => ???
+            case Some(flashcard) =>
+
+              tableDefs.futureUserAnswerForFlashcard(user, flashcard.cardId, flashcard.collId, flashcard.courseId, solution.frontToBack).flatMap {
+                maybePreviousAnswer: Option[UserAnsweredFlashcard] =>
+
+                  val (corrResult, newAnswer) = Corrector.completeCorrect(user, solution, flashcard, maybePreviousAnswer)
+
+                  tableDefs.futureInsertOrUpdateUserAnswer(newAnswer).map { _ =>
+                    Ok(JsonFormats.completeCorrectionResultFormat.writes(corrResult))
+                  }
+
+              }
           }
-
       }
   }
 

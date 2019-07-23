@@ -65,44 +65,20 @@ create table if not exists collections (
 -- FlashCards with answers
 
 create table if not exists flashcards (
-    id         int,
-    coll_id    int,
-    course_id  int,
-    card_type  enum ('Word', 'Text', 'Blank', 'Choice') not null default 'Word',
-    front      text                                     not null,
-    front_hint text,
-    back       text                                     not null,
-    back_hint  text,
+    id                           int,
+    coll_id                      int,
+    course_id                    int,
+    card_type                    enum ('Word', 'Text', 'Blank', 'Choice') not null default 'Word',
+    front                        text                                     not null,
+    front_hint                   text,
+    back                         text                                     not null,
+    back_hint                    text,
+    choice_answers_json          json                                     not null default '[]',
+    blanks_answer_fragments_json json                                     not null default '[]',
+
 
     primary key (id, coll_id, course_id),
     foreign key (coll_id, course_id) references collections (id, course_id)
-        on update cascade on delete cascade
-);
-
-create table if not exists choice_answers (
-    id          int,
-    card_id     int,
-    coll_id     int,
-    course_id   int,
-
-    answer      text                                  not null,
-    correctness enum ('CORRECT', 'OPTIONAL', 'WRONG') not null default 'WRONG',
-
-    primary key (id, card_id, coll_id, course_id),
-    foreign key (card_id, coll_id, course_id) references flashcards (id, coll_id, course_id)
-        on update cascade on delete cascade
-);
-
-create table if not exists blanks_answer_fragments (
-    id        int,
-    card_id   int,
-    coll_id   int,
-    course_id int,
-    answer    text    not null,
-    is_answer boolean not null default false,
-
-    primary key (id, card_id, coll_id, course_id),
-    foreign key (card_id, coll_id, course_id) references flashcards (id, coll_id, course_id)
         on update cascade on delete cascade
 );
 

@@ -8,7 +8,8 @@ let progressDiv: HTMLDivElement;
 
 let correctionTextPar: HTMLParagraphElement;
 
-let flashcard: Flashcard;
+let currentFlashcard: null | Flashcard = null;
+let flashcards: Flashcard[] = [];
 
 let checkSolutionUrl: string;
 let canSolve: boolean = true;
@@ -55,12 +56,12 @@ function readSolution(cardType: CardType): undefined | Solution {
     }
 
     return {
-        cardId: flashcard.cardId,
-        collId: flashcard.collId,
-        courseId: flashcard.courseId,
+        cardId: currentFlashcard.cardId,
+        collId: currentFlashcard.collId,
+        courseId: currentFlashcard.courseId,
         solution,
         selectedAnswers,
-        frontToBack: flashcard.frontToBack
+        frontToBack: currentFlashcard.frontToBack
     };
 }
 
@@ -89,7 +90,7 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
         document.querySelector('#answeredFcCountSpan').innerHTML = answeredFlashcards.toString();
 
         // FIXME: disable solution inputs?
-        if (flashcard.cardType === 'Text' || flashcard.cardType === 'Word') {
+        if (currentFlashcard.cardType === 'Text' || currentFlashcard.cardType === 'Word') {
             document.querySelector<HTMLInputElement>('#translation_input').disabled = true;
         }
 
@@ -121,23 +122,14 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
     nextFlashcardBtn.focus();
 }
 
-function loadNextFlashcard(loadFlashcardUrl: string): void {
-
+function initialLoadNextFlashcards(loadFlashcardUrl: string): void {
     fetch(loadFlashcardUrl).then(response => {
         if (response.status === 200) {
-            response.json().then(loadedFlashcard => {
+            response.json().then((loadedFlashcard: Flashcard[]) => {
 
-                flashcard = loadedFlashcard;
+                flashcards = loadedFlashcard;
 
-                canSolve = true;
-
-                // Update buttons
-                checkSolutionBtn.disabled = !canSolve;
-                nextFlashcardBtn.disabled = canSolve;
-
-                correctionTextPar.innerHTML = '&nbsp;';
-
-                updateView(flashcard);
+                loadNextFlashcard();
             })
         } else if (response.status === 404) {
             alert("Sie haben alle Karteikarten abgearbeitet.");
@@ -146,8 +138,26 @@ function loadNextFlashcard(loadFlashcardUrl: string): void {
     })
 }
 
+function loadNextFlashcard(): void {
+    if (flashcards.length > 0) {
+        [currentFlashcard, ...flashcards] = flashcards;
+
+        canSolve = true;
+
+        // Update buttons
+        checkSolutionBtn.disabled = !canSolve;
+        nextFlashcardBtn.disabled = canSolve;
+
+        correctionTextPar.innerHTML = '&nbsp;';
+
+        updateView(currentFlashcard);
+    } else {
+        throw Error('No flashcards loaded...');
+    }
+}
+
 function checkSolution(): void {
-    const solution: Solution = readSolution(flashcard.cardType);
+    const solution: Solution = readSolution(currentFlashcard.cardType);
 
     if (solution === null) {
         alert("Sie können keine leere Lösung abgeben!");
@@ -164,7 +174,7 @@ function checkSolution(): void {
         .then((response: Response) => {
                 if (response.status === 200) {
                     return response.json()
-                        .then(obj => onCorrectionSuccess(obj, flashcard.cardType));
+                        .then(obj => onCorrectionSuccess(obj, currentFlashcard.cardType));
                 } else {
                     response.text().then(text => console.error(text));
                     return Promise.reject("Error code was " + response.status);
@@ -176,15 +186,16 @@ function checkSolution(): void {
         });
 }
 
-function updateReadQuestionButton(readQuestionButton) {
+function updateReadQuestionButton(readQuestionButton: HTMLButtonElement): void {
     const numOfFoundVoices: number = window.speechSynthesis.getVoices().length;
+
     if (numOfFoundVoices > 0) {
         console.info("Found " + numOfFoundVoices + " voices!");
         readQuestionButton.classList.remove('hide');
         readQuestionButton.disabled = false;
 
         readQuestionButton.onclick = () => {
-            const utterThis = new SpeechSynthesisUtterance(flashcard.front);
+            const utterThis = new SpeechSynthesisUtterance(currentFlashcard.front);
             utterThis.lang = 'fr';
 
             window.speechSynthesis.speak(utterThis);
@@ -194,13 +205,13 @@ function updateReadQuestionButton(readQuestionButton) {
     }
 }
 
-function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void): void {
+domReady(() => {
     const initialLoadBtn = document.querySelector<HTMLButtonElement>('#loadFlashcardButton');
 
     const loadFlashcardUrl = initialLoadBtn.dataset['href'];
 
     initialLoadBtn.onclick = () => {
-        loadNextFlashcard(loadFlashcardUrl);
+        initialLoadNextFlashcards(loadFlashcardUrl);
         initialLoadBtn.remove();
     };
     initialLoadBtn.click();
@@ -218,7 +229,7 @@ function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void)
     window.speechSynthesis.getVoices();
 
     nextFlashcardBtn = document.querySelector<HTMLButtonElement>('#nextFlashcardBtn');
-    nextFlashcardBtn.onclick = () => loadNextFlashcard(loadFlashcardUrl);
+    nextFlashcardBtn.onclick = () => loadNextFlashcard();
 
     checkSolutionBtn = document.querySelector<HTMLButtonElement>('#checkSolutionBtn');
     checkSolutionBtn.onclick = checkSolution;
@@ -239,7 +250,7 @@ function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void)
             } else {
                 nextFlashcardBtn.click();
             }
-        } else if (flashcard.cardType === 'Choice' && canSolve) {
+        } else if (currentFlashcard.cardType === 'Choice' && canSolve) {
             const pressedKey: number = parseInt(event.key);
 
             const choiceParagraph: null | Element = document.querySelector<HTMLDivElement>('#answerDiv')
@@ -251,8 +262,5 @@ function initAll(loadNextFlashcard: (string) => void, checkSolution: () => void)
             }
         }
     });
-}
-
-domReady(() => {
-    initAll(loadNextFlashcard, checkSolution);
 });
+

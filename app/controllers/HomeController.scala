@@ -75,22 +75,13 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
       for {
         flashcardCount <- tableDefs.futureFlashcardCountForCollection(collection)
         toLearnCount <- tableDefs.futureFlashcardsToLearnCount(user, collection)
-        toRepeatCount <- tableDefs.futureFlashcardsToRepeatCount(user, collection)
-      } yield Ok(views.html.collection(user, courseId, collection, flashcardCount, toLearnCount, toRepeatCount))
+      } yield Ok(views.html.collection(user, courseId, collection, flashcardCount, toLearnCount))
   }
 
   def learn(courseId: Int, collId: Int, frontToBack: Boolean = true): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, course, collection) =>
     implicit request =>
       tableDefs.futureFlashcardsToLearnCount(user, collection).map {
         cardsToLearnCount => Ok(views.html.learn(user, Math.min(cardsToLearnCount, 10), Some(course, collection)))
-      }
-  }
-
-  def nextFlashcardToLearn(courseId: Int, collId: Int): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, _, collection) =>
-    implicit request =>
-      tableDefs.futureMaybeNextFlashcardToLearn(user, collection).map {
-        case None     => NotFound("No Flashcard to learn found")
-        case Some(fc) => Ok(JsonFormats.flashcardToAnswerFormat.writes(fc))
       }
   }
 
@@ -101,37 +92,6 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
       }
   }
 
-  def nextFlashcardToRepeat: EssentialAction = futureWithUser { user =>
-    implicit request =>
-      tableDefs.futureMaybeNextFlashcardToRepeat(user).map {
-        case None     => NotFound("There has been an error?")
-        case Some(fc) => Ok(JsonFormats.flashcardToAnswerFormat.writes(fc))
-      }
-  }
-
-  def checkSolution: EssentialAction = futureWithUser { user =>
-    implicit request =>
-      request.body.asJson.flatMap(json => JsonFormats.solutionFormat.reads(json).asOpt) match {
-        case None           => Future.successful(BadRequest(JsString("Could not read solution...")))
-        case Some(solution) =>
-
-          tableDefs.futureFlashcardById(solution.courseId, solution.collId, solution.cardId).flatMap {
-            case None            => ???
-            case Some(flashcard) =>
-
-              tableDefs.futureUserAnswerForFlashcard(user, flashcard.cardId, flashcard.collId, flashcard.courseId, solution.frontToBack).flatMap {
-                maybePreviousAnswer: Option[UserAnsweredFlashcard] =>
-
-                  val (corrResult, newAnswer) = Corrector.completeCorrect(user, solution, flashcard, maybePreviousAnswer)
-
-                  tableDefs.futureInsertOrUpdateUserAnswer(newAnswer).map { _ =>
-                    Ok(JsonFormats.completeCorrectionResultFormat.writes(corrResult))
-                  }
-
-              }
-          }
-      }
-  }
 
 
 }

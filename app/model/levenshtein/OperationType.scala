@@ -2,14 +2,12 @@ package model.levenshtein
 
 import enumeratum.{EnumEntry, PlayEnum}
 
-import scala.collection.immutable
-
 
 sealed trait OperationType extends EnumEntry
 
 object OperationType extends PlayEnum[OperationType] {
 
-  val values: immutable.IndexedSeq[OperationType] = findValues
+  val values: IndexedSeq[OperationType] = findValues
 
   case object Delete extends OperationType
 

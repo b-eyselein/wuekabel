@@ -39,9 +39,9 @@ object JsonFormats {
 
   // Flashcard
 
-  private val choiceAnswerFormat: Format[ChoiceAnswer] = Json.format[ChoiceAnswer]
+  val choiceAnswerFormat: Format[ChoiceAnswer] = Json.format[ChoiceAnswer]
 
-  private val blanksAnswerFragmentFormat: Format[BlanksAnswerFragment] = Json.format[BlanksAnswerFragment]
+  val blanksAnswerFragmentFormat: Format[BlanksAnswerFragment] = Json.format[BlanksAnswerFragment]
 
   val flashcardToAnswerFormat: Format[FlashcardToAnswer] = {
     implicit val caf: Format[ChoiceAnswer] = choiceAnswerFormat

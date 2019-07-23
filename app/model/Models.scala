@@ -56,18 +56,15 @@ final case class Flashcard(
 
 sealed trait FlashcardComponent {
   val answerId: Int
-  val cardId  : Int
-  val collId  : Int
-  val courseId: Int
 }
 
 // Blanks
 
-final case class BlanksAnswerFragment(answerId: Int, cardId: Int, collId: Int, courseId: Int, answer: String, isAnswer: Boolean) extends FlashcardComponent
+final case class BlanksAnswerFragment(answerId: Int, answer: String, isAnswer: Boolean) extends FlashcardComponent
 
 // Single and Multiple choice
 
-final case class ChoiceAnswer(answerId: Int, cardId: Int, collId: Int, courseId: Int, answer: String, correctness: Correctness) extends FlashcardComponent
+final case class ChoiceAnswer(answerId: Int, answer: String, correctness: Correctness) extends FlashcardComponent
 
 sealed trait Correctness extends EnumEntry
 

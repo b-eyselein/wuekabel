@@ -68,7 +68,7 @@ object Importer {
 
         val correctness = if (correct) Correctness.Correct else Correctness.Wrong
 
-        ChoiceAnswer(id, cardId, collId, courseId, answer, correctness)
+        ChoiceAnswer(id, answer, correctness)
       }
     })
 
@@ -89,7 +89,7 @@ object Importer {
       readStringCell(row, cellIndex) map {
         answer =>
           val isAnswer: Boolean = (cellIndex - backCellIndex) % 2 == 0
-          BlanksAnswerFragment(cellIndex - backCellIndex, cardId, collId, courseId, answer, isAnswer)
+          BlanksAnswerFragment(cellIndex - backCellIndex, answer, isAnswer)
       }
     })
 

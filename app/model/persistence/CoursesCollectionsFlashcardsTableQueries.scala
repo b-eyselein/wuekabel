@@ -1,6 +1,6 @@
 package model.persistence
 
-import model.{BlanksAnswerFragment, ChoiceAnswer, Collection, CollectionBasics, Course, Flashcard, Language}
+import model._
 
 import scala.concurrent.Future
 
@@ -52,90 +52,41 @@ trait CoursesCollectionsFlashcardsTableQueries {
   def futureCollectionById(courseId: Int, collId: Int): Future[Option[Collection]] = db.run(
     completeCollectionTQ
       .filter { case (coll, _, _) => coll.id === collId && coll.courseId === courseId }
-      .result.headOption
+      .result
+      .headOption
   ).map(_.map(PersistenceModels.collFromDbColl))
 
   def futureInsertCollection(collection: CollectionBasics): Future[Boolean] =
     db.run(collectionsTQ += collection).transform(_ == 1, identity)
 
-  protected def blanksAnswersForFlashcard(cardId: Int, collId: Int, courseId: Int): Future[Seq[BlanksAnswerFragment]] = db.run(
-    blanksAnswersTQ
-      .filter { ba => ba.cardId === cardId && ba.collId === collId && ba.courseId === courseId }
-      .result
-  )
-
-  protected def choiceAnswersForFlashcard(cardId: Int, collId: Int, courseId: Int): Future[Seq[ChoiceAnswer]] = db.run(
-    choiceAnswersTQ
-      .filter { ca => ca.cardId === cardId && ca.collId === collId && ca.courseId === courseId }
-      .result
-  )
-
-  def futureFlashcardsForCollection(collection: Collection): Future[Seq[Flashcard]] = {
-    val dbFlashcardsForFollQuery = flashcardsTQ
+  def futureFlashcardsForCollection(collection: Collection): Future[Seq[Flashcard]] = db.run(
+    flashcardsTQ
       .filter { fc => fc.collId === collection.id && fc.courseId === collection.courseId }
       .result
-
-    db.run(dbFlashcardsForFollQuery) flatMap { dbFlashcards: Seq[DBFlashcard] =>
-      Future.sequence(dbFlashcards.map {
-        case DBFlashcard(cardId, collId, courseId, cardType, front, frontHint, back, backHint) =>
-
-          for {
-            choiceAnswers <- choiceAnswersForFlashcard(cardId, collId, courseId)
-            blanksAnswers <- blanksAnswersForFlashcard(cardId, collId, courseId)
-          } yield Flashcard(cardId, collId, courseId, cardType, front, frontHint, back, backHint, blanksAnswers, choiceAnswers)
-
-      })
-    }
-  }
+  ).map(_.map(PersistenceModels.dbFlashcardToFlashcard))
 
   def futureFlashcardById(courseId: Int, collId: Int, cardId: Int): Future[Option[Flashcard]] = {
-    val dbFlashcardByIdQuery = flashcardsTQ.filter {
-      fc => fc.id === cardId && fc.collId === collId && fc.courseId === courseId
-    }.result.headOption
+    val dbFlashcardByIdQuery = flashcardsTQ
+      .filter { fc => fc.id === cardId && fc.collId === collId && fc.courseId === courseId }
+      .result
+      .headOption
 
-    db.run(dbFlashcardByIdQuery).flatMap {
-      case None                                                                   => Future.successful(None)
-      case Some(DBFlashcard(_, _, _, cardType, front, frontHint, back, backHint)) =>
-
-        for {
-          choiceAnswersForDBFlashcard <- choiceAnswersForFlashcard(cardId, collId, courseId)
-          blanksAnswersForDbFlashcard <- blanksAnswersForFlashcard(cardId, collId, courseId)
-        } yield Some(Flashcard(cardId, collId, courseId, cardType, front, frontHint, back, backHint, blanksAnswersForDbFlashcard, choiceAnswersForDBFlashcard))
+    db.run(dbFlashcardByIdQuery).map {
+      case None              => None
+      case Some(dbFlashcard) => Some(PersistenceModels.dbFlashcardToFlashcard(dbFlashcard))
     }
   }
 
-  def futureChoiceAnswersForFlashcard(flashcard: Flashcard): Future[Seq[ChoiceAnswer]] =
-    db.run(choiceAnswersTQ.filter(ca => ca.cardId === flashcard.cardId && ca.collId === flashcard.collId).result)
 
   def futureFlashcardCountForCollection(collection: Collection): Future[Int] =
     db.run(flashcardsTQ.filter(fc => fc.collId === collection.id).size.result)
 
   // Saving
 
-  def futureInsertCompleteFlashcard(completeFlashcard: Flashcard): Future[Boolean] =
-    PersistenceModels.flashcardToDbFlashcard(completeFlashcard) match {
-      case DBCompleteFlashcard(flashcard, choiceAnswers, blanksAnswers) =>
+  def futureInsertCompleteFlashcard(completeFlashcard: Flashcard): Future[Boolean] = {
+    val flashcard = PersistenceModels.flashcardToDbFlashcard(completeFlashcard)
 
-        futureInsertFlashcard(flashcard) flatMap {
-          case false => Future.successful(false)
-          case true  =>
-
-            for {
-              futureSavedChoiceAnswers <- Future.sequence(choiceAnswers.map(futureInsertChoiceAnswer))
-              futureSavedBlanksAnswers <- Future.sequence(blanksAnswers.map(futureInsertBlanksAnswer))
-            } yield futureSavedChoiceAnswers.forall(identity) && futureSavedBlanksAnswers.forall(identity)
-        }
-
-    }
-
-
-  def futureInsertFlashcard(flashcard: DBFlashcard): Future[Boolean] =
     db.run(flashcardsTQ insertOrUpdate flashcard).transform(_ == 1, identity)
-
-  private def futureInsertChoiceAnswer(choiceAnswer: ChoiceAnswer): Future[Boolean] =
-    db.run(choiceAnswersTQ insertOrUpdate choiceAnswer).transform(_ == 1, identity)
-
-  private def futureInsertBlanksAnswer(blanksAnswer: BlanksAnswerFragment): Future[Boolean] =
-    db.run(blanksAnswersTQ insertOrUpdate blanksAnswer).transform(_ == 1, identity)
+  }
 
 }

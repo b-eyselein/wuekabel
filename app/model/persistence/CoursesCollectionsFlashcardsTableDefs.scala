@@ -3,6 +3,7 @@ package model.persistence
 import model.Consts._
 import model._
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
+import play.api.libs.json.{JsValue, Json}
 import slick.jdbc.JdbcProfile
 import slick.lifted.{ForeignKeyQuery, PrimaryKey, ProvenShape}
 
@@ -28,10 +29,6 @@ trait CoursesCollectionsFlashcardsTableDefs
 
   protected val flashcardsTQ: TableQuery[FlashcardsTable] = TableQuery[FlashcardsTable]
 
-  protected val choiceAnswersTQ: TableQuery[ChoiceAnswersTable] = TableQuery[ChoiceAnswersTable]
-
-  protected val blanksAnswersTQ: TableQuery[BlanksAnswerFragmentsTable] = TableQuery[BlanksAnswerFragmentsTable]
-
   // Column types
 
   protected implicit val cardTypeColumnType: BaseColumnType[CardType] =
@@ -39,6 +36,9 @@ trait CoursesCollectionsFlashcardsTableDefs
 
   protected implicit val correctnessColumnType: BaseColumnType[Correctness] =
     MappedColumnType.base[Correctness, String](_.entryName, Correctness.withNameInsensitive)
+
+  protected implicit val jsArrayColumnType: BaseColumnType[JsValue] =
+    MappedColumnType.base[JsValue, String](Json.stringify, Json.parse)
 
   // Table Defs
 
@@ -103,13 +103,17 @@ trait CoursesCollectionsFlashcardsTableDefs
 
     def flashcardType: Rep[CardType] = column[CardType]("card_type")
 
-    def question: Rep[String] = column[String](frontName)
+    def front: Rep[String] = column[String](frontName)
 
-    def questionHint: Rep[Option[String]] = column[Option[String]]("front_hint")
+    def frontHint: Rep[Option[String]] = column[Option[String]]("front_hint")
 
-    def meaning: Rep[String] = column[String](backName)
+    def back: Rep[String] = column[String](backName)
 
-    def meaningHint: Rep[Option[String]] = column[Option[String]]("back_hint")
+    def backHint: Rep[Option[String]] = column[Option[String]]("back_hint")
+
+    def choiceAnswersJsValue: Rep[JsValue] = column[JsValue]("choice_answers_json")
+
+    def blanksAnswerFragmentsJsValue: Rep[JsValue] = column[JsValue]("blanks_answer_fragments_json")
 
 
     def pk: PrimaryKey = primaryKey("fc_pk", (id, collId, courseId))
@@ -117,44 +121,8 @@ trait CoursesCollectionsFlashcardsTableDefs
     def collFk: ForeignKeyQuery[CollectionsTable, CollectionBasics] = foreignKey("fc_coll_fk", (collId, courseId), collectionsTQ)(coll => (coll.id, coll.courseId))
 
 
-    override def * : ProvenShape[DBFlashcard] = (id, collId, courseId, flashcardType, question, questionHint, meaning, meaningHint) <> (DBFlashcard.tupled, DBFlashcard.unapply)
-
-  }
-
-  abstract class FlashcardComponentsTable[FC <: FlashcardComponent](tag: Tag, tableName: String) extends Table[FC](tag, tableName) {
-
-    def id: Rep[Int] = column[Int](idName, O.AutoInc)
-
-    def cardId: Rep[Int] = column[Int]("card_id")
-
-    def collId: Rep[Int] = column[Int]("coll_id")
-
-    def courseId: Rep[Int] = column[Int]("course_id")
-
-    def answer: Rep[String] = column[String](answerName)
-
-
-    def pk: PrimaryKey = primaryKey("ca_pk", (id, cardId, collId, courseId))
-
-    def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("ca_card_fk", (cardId, collId, courseId), flashcardsTQ)(fc => (fc.id, fc.collId, fc.courseId))
-
-  }
-
-  class ChoiceAnswersTable(tag: Tag) extends FlashcardComponentsTable[ChoiceAnswer](tag, "choice_answers") {
-
-    def correctness: Rep[Correctness] = column[Correctness](correctnessName)
-
-
-    override def * : ProvenShape[ChoiceAnswer] = (id, cardId, collId, courseId, answer, correctness) <> (ChoiceAnswer.tupled, ChoiceAnswer.unapply)
-
-  }
-
-  class BlanksAnswerFragmentsTable(tag: Tag) extends FlashcardComponentsTable[BlanksAnswerFragment](tag, "blanks_answer_fragments") {
-
-    def isAnswer: Rep[Boolean] = column[Boolean]("is_answer")
-
-
-    override def * : ProvenShape[BlanksAnswerFragment] = (id, cardId, collId, courseId, answer, isAnswer) <> (BlanksAnswerFragment.tupled, BlanksAnswerFragment.unapply)
+    override def * : ProvenShape[DBFlashcard] = (id, collId, courseId, flashcardType, front, frontHint, back, backHint,
+      choiceAnswersJsValue, blanksAnswerFragmentsJsValue) <> (DBFlashcard.tupled, DBFlashcard.unapply)
 
   }
 

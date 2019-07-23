@@ -2,90 +2,90 @@
 
 @(user: User, maxCardsCount: Int = 10, maybeCourseAndColl: Option[(Course, Collection)])(implicit requestHeader: RequestHeader, messagesProvider: MessagesProvider)
 
-@title = @{
-    if(maybeCourseAndColl.isDefined) "Vokabeln wiederholen" else "Neue Vokabeln lernen"
-}
+    @title = @{
+        if(maybeCourseAndColl.isDefined) "Vokabeln wiederholen" else "Neue Vokabeln lernen"
+    }
 
-@scripts = {
-    <script src="@routes.Assets.versioned("scripts/learnRepeatBasics.js")"></script>
-    <script src="@routes.Assets.versioned("scripts/questionMaker.js")"></script>
-    <script src="@routes.Assets.versioned("scripts/learnRepeat.js")"></script>
-}
+    @scripts = {
+        <script src="@routes.Assets.versioned("scripts/learnRepeatBasics.js")"></script>
+        <script src="@routes.Assets.versioned("scripts/questionMaker.js")"></script>
+        <script src="@routes.Assets.versioned("scripts/learnRepeat.js")"></script>
+    }
 
-@loadFcUrl = @{
-    maybeCourseAndColl match {
-        case None => {
-            routes.HomeController.nextFlashcardToRepeat
-        }
-        case Some((course, collection)) => {
-            routes.HomeController.nextFlashcardToLearn(course.id, collection.id)
+    @loadFcUrl = @{
+        maybeCourseAndColl match {
+            case None => {
+                routes.ApiController.nextFlashcardsToRepeat
+            }
+            case Some((course, collection)) => {
+                routes.ApiController.nextFlashcardsToLearn(course.id, collection.id)
+            }
         }
     }
-}
 
-@endUrl = @{
-    maybeCourseAndColl match {
-        case None => {
-            routes.HomeController.index()
-        }
-        case Some((course, collection)) => {
-            routes.HomeController.collection(course.id, collection.id)
+    @endUrl = @{
+        maybeCourseAndColl match {
+            case None => {
+                routes.HomeController.index()
+            }
+            case Some((course, collection)) => {
+                routes.HomeController.collection(course.id, collection.id)
+            }
         }
     }
-}
 
-@main(title, Some(user), scripts = scripts) {
-    @helper.CSRF.formField
+    @main(title, Some(user), scripts = scripts) {
+        @helper.CSRF.formField
 
-    <button id="loadFlashcardButton" data-href="@loadFcUrl">
-        Laden...
-    </button>
+        <button id="loadFlashcardButton" data-href="@loadFcUrl">
+            Laden...
+        </button>
 
-    <div class="row">
-        <div class="col s12 l8 offset-l2">
-            <div class="card-panel">
-                <h4 class="center-align" id="questionDiv"></h4>
+        <div class="row">
+            <div class="col s12 l8 offset-l2">
+                <div class="card-panel">
+                    <h4 class="center-align" id="questionDiv"></h4>
 
-                <hr>
+                    <hr>
 
-                <p class="center-align">
-                    <code>
-                        Stapel:
-                        <span id="bucketSpan">--</span>
-                    </code>
-                    <code title="Maximal 2 erlaubt">
-                        Fehlversuche:
-                        <span id="triesSpan">0</span>
-                    </code>
-                </p>
+                    <p class="center-align">
+                        <code>
+                            Stapel:
+                            <span id="bucketSpan">--</span>
+                        </code>
+                        <code title="Maximal 2 erlaubt">
+                            Fehlversuche:
+                            <span id="triesSpan">0</span>
+                        </code>
+                    </p>
 
-                <div id="answerDiv"></div>
+                    <div id="answerDiv"></div>
 
-                <p id="correctionTextPar">&nbsp;</p>
-            </div>
-            <div class="card-panel">
-                <div class="row">
-                    <h5 class="center-align">
-                        <span id="answeredFcCountSpan">0</span> / <span id="maxCardCountSpan">@maxCardsCount</span>
-                    </h5>
+                    <p id="correctionTextPar">&nbsp;</p>
                 </div>
-                <div class="progress">
-                    <div class="determinate" style="width: 0%" id="progressDiv"></div>
+                <div class="card-panel">
+                    <div class="row">
+                        <h5 class="center-align">
+                            <span id="answeredFcCountSpan">0</span> / <span id="maxCardCountSpan">@maxCardsCount</span>
+                        </h5>
+                    </div>
+                    <div class="progress">
+                        <div class="determinate" style="width: 0%" id="progressDiv"></div>
+                    </div>
                 </div>
+
+                <button class="btn btn-large waves-effect @primaryColor hide" title="Vorlesen" id="readQuestionButton">
+                    <i class="material-icons left">record_voice_over</i> Frage vorlesen
+                </button>
+
+                <button class="btn btn-large waves-effect @primaryColor" id="checkSolutionBtn" data-href="@routes.ApiController.checkSolution()">
+                    Lösung testen
+                </button>
+
+                <button id="nextFlashcardBtn" class="btn btn-large waves-effect @accentColor" disabled="disabled" data-endurl="@endUrl">
+                    Nächste Karteikarte
+                </button>
             </div>
-
-            <button class="btn btn-large waves-effect @primaryColor hide" title="Vorlesen" id="readQuestionButton">
-                <i class="material-icons left">record_voice_over</i> Frage vorlesen
-            </button>
-
-            <button class="btn btn-large waves-effect @primaryColor" id="checkSolutionBtn" data-href="@routes.HomeController.checkSolution()">
-                Lösung testen
-            </button>
-
-            <button id="nextFlashcardBtn" class="btn btn-large waves-effect @accentColor" disabled="disabled" data-endurl="@endUrl">
-                Nächste Karteikarte
-            </button>
         </div>
-    </div>
-}
+    }
 
