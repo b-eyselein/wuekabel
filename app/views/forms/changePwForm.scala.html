@@ -27,7 +27,7 @@
 
     <hr>
 
-    @helper.form(routes.LoginController.changePw, 'onsubmit -> "return checkPasswords();") {
+    @helper.form(routes.LoginController.changePw, Symbol("onsubmit") -> "return checkPasswords();") {
 
         @helper.CSRF.formField
 

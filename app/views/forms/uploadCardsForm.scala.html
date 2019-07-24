@@ -12,7 +12,7 @@
     <div class="row">
         <div class="col s12">
 
-        @helper.form(routes.AdminController.uploadCardsFile(courseId, collectionId), 'enctype -> "multipart/form-data") {
+        @helper.form(routes.AdminController.uploadCardsFile(courseId, collectionId), Symbol("enctype") -> "multipart/form-data") {
 
             @helper.CSRF.formField
 

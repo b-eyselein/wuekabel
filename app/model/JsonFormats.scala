@@ -2,13 +2,19 @@ package model
 
 import model.levenshtein._
 import play.api.libs.json._
-
+import play.api.libs.functional.syntax._
 
 object JsonFormats {
 
   // Incoming
 
-  val solutionFormat: Format[Solution] = Json.format[Solution]
+  private val stringSolutionFormat: Format[StringSolution] = Json.format[StringSolution]
+
+  val solutionFormat: Format[Solution] = {
+    implicit val ssf: Format[StringSolution] = stringSolutionFormat
+
+    Json.format[Solution]
+  }
 
   // Result
 
@@ -27,14 +33,32 @@ object JsonFormats {
     Json.format[EditOperation]
   }
 
-  private val answerSelectionResultFormat: Format[AnswerSelectionResult] = Json.format[AnswerSelectionResult]
+  private val levenshteinDistanceWrites: Writes[LevenshteinDistance] = {
+    def unapplyLevenshteinDistance: LevenshteinDistance => (String, String, Int) = ld => (ld.start, ld.target, ld.distance)
 
-  val completeCorrectionResultFormat: Format[CorrectionResult] = {
+    (
+      (__ \ "start").write[String] and
+        (__ \ "target").write[String] and
+        (__ \ "distance").write[Int]
+      ) (unapplyLevenshteinDistance)
+  }
+
+  private val matchingResultWrites: Writes[MatchingResult] = {
     implicit val eof: Format[EditOperation] = editOperationFormat
 
+    implicit val ldf: Writes[LevenshteinDistance] = levenshteinDistanceWrites
+
+    Json.writes[MatchingResult]
+  }
+
+  private val answerSelectionResultFormat: Format[AnswerSelectionResult] = Json.format[AnswerSelectionResult]
+
+  val completeCorrectionResultWrites: Writes[CorrectionResult] = {
     implicit val asrf: Format[AnswerSelectionResult] = answerSelectionResultFormat
 
-    Json.format[CorrectionResult]
+    implicit val mrf: Writes[MatchingResult] = matchingResultWrites
+
+    Json.writes[CorrectionResult]
   }
 
   // FlashcardToAnswer

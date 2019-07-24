@@ -6,7 +6,7 @@ function buildTextAnswerInput(answers: string[]): string {
     <div class="input-field col s12">
         <input type="text" class="translation_input"
             id="translation_input_${index}" data-index="${index}"
-            autofocus autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         <label for="translation_input_${index}">Übersetzung ${index + 1}</label>
     </div>
 </div>`.trim()

@@ -2,18 +2,20 @@ package model
 
 import model.levenshtein.EditOperation
 
+final case class StringSolution(id: Int, solution: String)
+
 final case class Solution(
   cardId: Int,
   collId: Int,
   courseId: Int,
-  solutions: Seq[String],
+  solutions: Seq[StringSolution],
   selectedAnswers: Seq[Int],
   frontToBack: Boolean
 )
 
 final case class CorrectionResult(
   correct: Boolean,
-  operations: Seq[EditOperation] = Seq.empty,
+  //  operations: Seq[EditOperation] = Seq.empty,
   matchingResult: Option[MatchingResult] = None,
   answersSelection: Option[AnswerSelectionResult] = None,
   newTriesCount: Int = 0,

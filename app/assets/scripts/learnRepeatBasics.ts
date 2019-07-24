@@ -56,12 +56,17 @@ interface FlashcardToAnswer {
     currentBucket: undefined | number;
 }
 
+interface StringSolution {
+    id: number;
+    solution: string;
+}
+
 interface Solution {
     cardId: number;
     collId: number;
     courseId: number;
 
-    solutions: string[];
+    solutions: StringSolution[];
     selectedAnswers: number[];
     frontToBack: boolean;
 }
@@ -78,9 +83,20 @@ interface AnswerSelectionResult {
     missing: number[]
 }
 
+interface Match {
+    start: string;
+    target: string;
+    distance: number;
+}
+
+interface MatchingResult {
+    matches: Match[];
+    nonMatchedSamples: string[];
+}
+
 interface CorrectionResult {
     correct: boolean
-    operations: EditOperation[]
+    matchingResult: MatchingResult;
     answersSelection: AnswerSelectionResult
     newTriesCount: number
     maybeSampleSolution: string | null

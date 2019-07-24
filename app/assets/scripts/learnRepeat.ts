@@ -18,7 +18,7 @@ let maxNumOfCards: number = 10;
 let answeredFlashcards: number = 0;
 
 function readSolution(cardType: CardType): undefined | Solution {
-    let solutions: string[] = [];
+    let solutions: StringSolution[] = [];
     let selectedAnswers: number[] = [];
 
     switch (cardType) {
@@ -27,8 +27,13 @@ function readSolution(cardType: CardType): undefined | Solution {
             const solutionInputs: HTMLInputElement[] = Array.from(document.querySelectorAll<HTMLInputElement>('.translation_input'));
 
             solutions = solutionInputs
-                .map((input) => input.value.trim())
-                .filter((str) => str.length !== 0);
+                .map((input: HTMLInputElement) => {
+                    return {
+                        id: -1,
+                        solution: input.value.trim()
+                    };
+                })
+                .filter((solution: StringSolution) => solution.solution.length !== 0);
 
             if (solutions.length === 0) {
                 alert('Sie können keine leere Lösung abgeben!');
@@ -98,7 +103,9 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
 
         // FIXME: disable solution inputs?
         if (currentFlashcard.flashcard.cardType === 'Text' || currentFlashcard.flashcard.cardType === 'Word') {
-            document.querySelector<HTMLInputElement>('#translation_input').disabled = true;
+            document.querySelectorAll<HTMLInputElement>('.translation_input').forEach(
+                (translationInput: HTMLInputElement) => translationInput.disabled = true
+            );
         }
 
         if (answeredFlashcards >= maxNumOfCards) {
@@ -115,9 +122,10 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
         case 'Word':
         case 'Text':
         case 'Blank':
-            const textInput = document.querySelector<HTMLInputElement>('#translation_input');
-            textInput.classList.remove(result.correct ? 'invalid' : 'valid');
-            textInput.classList.add(result.correct ? 'valid' : 'invalid');
+            document.querySelectorAll<HTMLInputElement>('.translation_input').forEach((textInput) => {
+                textInput.classList.remove(result.correct ? 'invalid' : 'valid');
+                textInput.classList.add(result.correct ? 'valid' : 'invalid');
+            });
             break;
         case 'Choice':
             console.error(JSON.stringify(result.answersSelection));

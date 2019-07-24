@@ -51,7 +51,7 @@ class ApiController @Inject()(cc: ControllerComponents, protected val tableDefs:
                   val (corrResult, newAnswer) = Corrector.completeCorrect(user, solution, flashcard, maybePreviousAnswer)
 
                   tableDefs.futureInsertOrUpdateUserAnswer(newAnswer).map { _ =>
-                    Ok(JsonFormats.completeCorrectionResultFormat.writes(corrResult))
+                    Ok(JsonFormats.completeCorrectionResultWrites.writes(corrResult))
                   }
 
               }

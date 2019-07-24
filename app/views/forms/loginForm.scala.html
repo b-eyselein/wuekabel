@@ -10,7 +10,7 @@
 
     <h2 class="center-align">@title</h2>
 
-    <form action="@routes.LoginController.login" method="post" class="col s12">
+    @helper.form(routes.LoginController.login, Symbol("class") -> "col s12") {
 
         @helper.CSRF.formField
 
@@ -22,5 +22,5 @@
             <button class="btn btn-large waves-effect waves-light @accentColor">Login</button>
         </div>
 
-    </form>
+    }
 }

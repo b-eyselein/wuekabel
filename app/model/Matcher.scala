@@ -20,45 +20,45 @@ object Matcher {
     distanceToBest: LevenshteinDistance
   )
 
-  def doMatch(learnerSolutions: List[String], sampleSolutions: List[String]): MatchingResult = {
+  def doMatch(learnerSolutions: List[StringSolution], sampleSolutions: List[String]): MatchingResult = {
 
-    def matchHead(learnerSolution: String, sampleSolutions: List[String]): MatchHeadResult = {
+    def matchHead(learnerSol: StringSolution, sampleSolutions: List[String]): MatchHeadResult = {
 
       @annotation.tailrec
       def go(
-        learnerSolution: String,
-        remainingSamples: List[String],
+        learnerSolution: StringSolution,
+        remainingSampleSols: List[String],
         priorSamples: List[String],
         maybeBestAndDistanceToBest: Option[BestAndDistanceToBest],
-        posterior: List[String]
-      ): MatchHeadResult = sampleSolutions match {
-        case Nil          => MatchHeadResult(priorSamples ++ posterior, maybeBestAndDistanceToBest)
+        posteriorSamples: List[String]
+      ): MatchHeadResult = remainingSampleSols match {
+        case Nil          => MatchHeadResult(priorSamples ++ posteriorSamples, maybeBestAndDistanceToBest)
         case head :: tail =>
 
-          val distanceToHead = LevenshteinDistance(learnerSolution, head)
+          val distanceToHead = LevenshteinDistance(learnerSolution.solution, head)
 
           maybeBestAndDistanceToBest match {
             case None                        =>
-              go(learnerSolution, tail, priorSamples ++ posterior, Some(BestAndDistanceToBest(head, distanceToHead)), List.empty[String])
+              go(learnerSolution, tail, priorSamples ++ posteriorSamples, Some(BestAndDistanceToBest(head, distanceToHead)), List.empty[String])
             case Some(bestAndDistanceToBest) =>
 
               if (distanceToHead.distance < bestAndDistanceToBest.distanceToBest.distance) {
-                go(learnerSolution, tail, priorSamples ++ (bestAndDistanceToBest.best :: posterior), Some(BestAndDistanceToBest(head, distanceToHead)), List.empty[String])
+                go(learnerSolution, tail, priorSamples ++ (bestAndDistanceToBest.best :: posteriorSamples), Some(BestAndDistanceToBest(head, distanceToHead)), List.empty[String])
               } else {
-                go(learnerSolution, tail, priorSamples, maybeBestAndDistanceToBest, posterior :+ head)
+                go(learnerSolution, tail, priorSamples, maybeBestAndDistanceToBest, posteriorSamples :+ head)
               }
           }
       }
 
-      go(learnerSolution, sampleSolutions, List.empty[String], None, List.empty[String])
+      go(learnerSol, sampleSolutions, List.empty[String], None, List.empty[String])
     }
 
     @annotation.tailrec
-    def go(learnerSolutions: List[String], sampleSolutions: List[String], matches: Seq[LevenshteinDistance]): MatchingResult = learnerSolutions match {
-      case Nil          => MatchingResult(matches, sampleSolutions)
+    def go(learnerSols: List[StringSolution], sampleSols: List[String], matches: Seq[LevenshteinDistance]): MatchingResult = learnerSols match {
+      case Nil          => MatchingResult(matches, sampleSols)
       case head :: tail =>
 
-        matchHead(head, sampleSolutions) match {
+        matchHead(head, sampleSols) match {
           case MatchHeadResult(remainingSamples, None)                        =>
             // FIXME: sampleSolutions was empty ?!?
             ???

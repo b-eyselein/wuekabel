@@ -1,5 +1,6 @@
 package model
 
+import model.Consts.frontBackSplitChar
 import java.time.LocalDate
 
 object Corrector {
@@ -82,11 +83,9 @@ object Corrector {
         val maybeSampleSolution = if (newWrongTriesCount < 2) {
           None
         } else if (solution.frontToBack) {
-          // FIXME: do not use head!
-          Some(flashcard.backs.head)
+          Some(flashcard.backs.mkString(frontBackSplitChar))
         } else {
-          // FIXME: do not use head!
-          Some(flashcard.fronts.head)
+          Some(flashcard.fronts.mkString(frontBackSplitChar))
         }
 
         (
