@@ -8,8 +8,8 @@ let progressDiv: HTMLDivElement;
 
 let correctionTextPar: HTMLParagraphElement;
 
-let currentFlashcard: null | Flashcard = null;
-let flashcards: Flashcard[] = [];
+let currentFlashcard: null | FlashcardToAnswer = null;
+let flashcards: FlashcardToAnswer[] = [];
 
 let checkSolutionUrl: string;
 let canSolve: boolean = true;
@@ -18,15 +18,20 @@ let maxNumOfCards: number = 10;
 let answeredFlashcards: number = 0;
 
 function readSolution(cardType: CardType): undefined | Solution {
-    let solution: string = '';
+    let solutions: string[] = [];
     let selectedAnswers: number[] = [];
 
     switch (cardType) {
         case 'Word':
         case 'Text':
-            solution = document.querySelector<HTMLInputElement>('#translation_input').value;
+            const solutionInputs: HTMLInputElement[] = Array.from(document.querySelectorAll<HTMLInputElement>('.translation_input'));
 
-            if (solution.length === 0) {
+            solutions = solutionInputs
+                .map((input) => input.value.trim())
+                .filter((str) => str.length !== 0);
+
+            if (solutions.length === 0) {
+                alert('Sie können keine leere Lösung abgeben!');
                 return null;
             }
             break;
@@ -56,16 +61,18 @@ function readSolution(cardType: CardType): undefined | Solution {
     }
 
     return {
-        cardId: currentFlashcard.cardId,
-        collId: currentFlashcard.collId,
-        courseId: currentFlashcard.courseId,
-        solution,
+        cardId: currentFlashcard.flashcard.cardId,
+        collId: currentFlashcard.flashcard.collId,
+        courseId: currentFlashcard.flashcard.courseId,
+        solutions,
         selectedAnswers,
         frontToBack: currentFlashcard.frontToBack
     };
 }
 
 function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void {
+
+    console.info(JSON.stringify(result, null, 2));
 
     let correctionText = `Ihre Lösung war ${result.correct ? '' : 'nicht '} korrekt.`;
 
@@ -90,7 +97,7 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
         document.querySelector('#answeredFcCountSpan').innerHTML = answeredFlashcards.toString();
 
         // FIXME: disable solution inputs?
-        if (currentFlashcard.cardType === 'Text' || currentFlashcard.cardType === 'Word') {
+        if (currentFlashcard.flashcard.cardType === 'Text' || currentFlashcard.flashcard.cardType === 'Word') {
             document.querySelector<HTMLInputElement>('#translation_input').disabled = true;
         }
 
@@ -125,7 +132,7 @@ function onCorrectionSuccess(result: CorrectionResult, cardType: CardType): void
 function initialLoadNextFlashcards(loadFlashcardUrl: string): void {
     fetch(loadFlashcardUrl).then(response => {
         if (response.status === 200) {
-            response.json().then((loadedFlashcard: Flashcard[]) => {
+            response.json().then((loadedFlashcard: FlashcardToAnswer[]) => {
 
                 flashcards = loadedFlashcard;
 
@@ -157,7 +164,7 @@ function loadNextFlashcard(): void {
 }
 
 function checkSolution(): void {
-    const solution: Solution = readSolution(currentFlashcard.cardType);
+    const solution: Solution = readSolution(currentFlashcard.flashcard.cardType);
 
     if (solution === null) {
         alert("Sie können keine leere Lösung abgeben!");
@@ -174,7 +181,7 @@ function checkSolution(): void {
         .then((response: Response) => {
                 if (response.status === 200) {
                     return response.json()
-                        .then(obj => onCorrectionSuccess(obj, currentFlashcard.cardType));
+                        .then(obj => onCorrectionSuccess(obj, currentFlashcard.flashcard.cardType));
                 } else {
                     response.text().then(text => console.error(text));
                     return Promise.reject("Error code was " + response.status);
@@ -195,10 +202,14 @@ function updateReadQuestionButton(readQuestionButton: HTMLButtonElement): void {
         readQuestionButton.disabled = false;
 
         readQuestionButton.onclick = () => {
-            const utterThis = new SpeechSynthesisUtterance(currentFlashcard.front);
-            utterThis.lang = 'fr';
 
-            window.speechSynthesis.speak(utterThis);
+            const toRead: string[] = currentFlashcard.frontToBack ? currentFlashcard.flashcard.fronts : currentFlashcard.flashcard.backs;
+
+            toRead.forEach((front) => {
+                const utterance = new SpeechSynthesisUtterance(front);
+                utterance.lang = 'fr';
+                window.speechSynthesis.speak(utterance);
+            });
         };
     } else {
         console.warn("Could not find any voices for Speech synthesis!");
@@ -249,7 +260,7 @@ domReady(() => {
             } else {
                 nextFlashcardBtn.click();
             }
-        } else if (currentFlashcard.cardType === 'Choice' && canSolve) {
+        } else if (currentFlashcard.flashcard.cardType === 'Choice' && canSolve) {
             const pressedKey: number = parseInt(event.key);
 
             const choiceParagraph: null | Element = document.querySelector<HTMLDivElement>('#answerDiv')

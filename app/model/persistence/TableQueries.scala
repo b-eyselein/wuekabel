@@ -3,7 +3,7 @@ package model.persistence
 import model.JsonFormats.{blanksAnswerFragmentFormat, choiceAnswerFormat}
 import model._
 import play.api.libs.json.{Format, JsError, JsSuccess, Json}
-
+import model.Consts.frontBackSplitChar
 import scala.concurrent.Future
 
 trait TableQueries {
@@ -43,14 +43,16 @@ trait TableQueries {
           maybeOldAnswer <- futureUserAnswerForFlashcard(user, cardId, collId, courseId, frontToBack)
         } yield {
           FlashcardToAnswer(
-            cardId, collId, courseId, cardType,
-            front,
-            frontHint,
-            back,
-            backHint,
-            frontToBack,
-            blanksAnswerFragments,
-            choiceAnswers,
+            Flashcard(
+              cardId, collId, courseId, cardType,
+              front.split(frontBackSplitChar),
+              frontHint,
+              back.split(frontBackSplitChar),
+              backHint,
+              blanksAnswerFragments,
+              choiceAnswers
+            ),
+            frontToBack: Boolean,
             currentTries = maybeOldAnswer.map { oa => if (oa.isActive) oa.wrongTries else 0 }.getOrElse(0),
             currentBucket = maybeOldAnswer.map(_.bucket)
           )

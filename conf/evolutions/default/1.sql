@@ -82,7 +82,7 @@ create table if not exists flashcards (
         on update cascade on delete cascade
 );
 
--- User <-> Flashcard
+-- User <-> FlashcardToAnswer
 
 create table if not exists users_answered_flashcards (
     username      varchar(50),
@@ -158,10 +158,6 @@ drop view if exists backs_to_learn;
 drop view if exists fronts_to_learn;
 
 drop table if exists users_answered_flashcards;
-
-drop table if exists blanks_answer_fragments;
-
-drop table if exists choice_answers;
 
 drop table if exists flashcards;
 

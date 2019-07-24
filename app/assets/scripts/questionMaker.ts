@@ -1,12 +1,17 @@
 /// <reference path="learnRepeatBasics.ts"/>
 
-const textAnswerInput: string = `
+function buildTextAnswerInput(answers: string[]): string {
+    return answers.map((_, index) => `
 <div class="row">
     <div class="input-field col s12">
-        <input type="text" id="translation_input" autofocus autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-        <label for="translation_input">Übersetzung</label>
+        <input type="text" class="translation_input"
+            id="translation_input_${index}" data-index="${index}"
+            autofocus autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <label for="translation_input_${index}">Übersetzung ${index + 1}</label>
     </div>
-</div>`.trim();
+</div>`.trim()
+    ).join('\n');
+}
 
 function buildAnswerFragments(answerFragments: BlanksAnswerFragment[]): string {
     return answerFragments.map(answerFragment => `
@@ -31,14 +36,14 @@ function buildChoiceAnswers(choiceAnswers: ChoiceAnswer[]): string {
 </p>`.trim()).join('\n');
 }
 
-function updateView(flashcard: Flashcard): void {
+function updateView(flashcard: FlashcardToAnswer): void {
 
     // Update question text
     let questionText: string;
     if (flashcard.frontToBack) {
-        questionText = flashcard.front + (flashcard.frontHint !== undefined ? ` <i>${flashcard.frontHint}</i>` : '');
+        questionText = flashcard.flashcard.fronts.join('/') + (flashcard.flashcard.frontHint !== undefined ? ` <i>${flashcard.flashcard.frontHint}</i>` : '');
     } else {
-        questionText = flashcard.back + (flashcard.backHint !== undefined ? ` <i>${flashcard.backHint}</i>` : '');
+        questionText = flashcard.flashcard.backs.join('/') + (flashcard.flashcard.backHint !== undefined ? ` <i>${flashcard.flashcard.backHint}</i>` : '');
     }
     document.querySelector<HTMLHeadingElement>('#questionDiv').innerHTML = questionText;
 
@@ -54,19 +59,19 @@ function updateView(flashcard: Flashcard): void {
 
     // Set answering inputs
     const answerDiv = document.querySelector<HTMLDivElement>('#answerDiv');
-    switch (flashcard.cardType) {
+    switch (flashcard.flashcard.cardType) {
         case 'Text':
         case 'Word' :
-            answerDiv.innerHTML = textAnswerInput;
-            document.querySelector<HTMLInputElement>('#translation_input').focus();
+            answerDiv.innerHTML = buildTextAnswerInput(flashcard.frontToBack ? flashcard.flashcard.backs : flashcard.flashcard.fronts);
+            document.querySelector<HTMLInputElement>('#translation_input_0').focus();
             break;
 
         case 'Blank':
-            answerDiv.innerHTML = buildAnswerFragments(flashcard.blanksAnswers);
+            answerDiv.innerHTML = buildAnswerFragments(flashcard.flashcard.blanksAnswers);
             break;
 
         case 'Choice':
-            answerDiv.innerHTML = buildChoiceAnswers(flashcard.choiceAnswers);
+            answerDiv.innerHTML = buildChoiceAnswers(flashcard.flashcard.choiceAnswers);
             break;
     }
 }

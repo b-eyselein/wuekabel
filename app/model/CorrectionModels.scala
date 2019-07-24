@@ -6,7 +6,7 @@ final case class Solution(
   cardId: Int,
   collId: Int,
   courseId: Int,
-  solution: String,
+  solutions: Seq[String],
   selectedAnswers: Seq[Int],
   frontToBack: Boolean
 )
@@ -14,6 +14,7 @@ final case class Solution(
 final case class CorrectionResult(
   correct: Boolean,
   operations: Seq[EditOperation] = Seq.empty,
+  matchingResult: Option[MatchingResult] = None,
   answersSelection: Option[AnswerSelectionResult] = None,
   newTriesCount: Int = 0,
   maybeSampleSolution: Option[String] = None

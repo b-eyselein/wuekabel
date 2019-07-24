@@ -2,19 +2,21 @@ package model
 
 import java.time.LocalDate
 
-import model.levenshtein.Levenshtein
-
 object Corrector {
 
   private val maxBucketId: Int = 6
+
+  // Blanks flashcards
+
+  private def correctBlanksFlashcard(blanksFlashcard: Flashcard, solution: Solution): Boolean = ???
+
+  // Choice flashcards
 
   def matchAnswerIds(selectedIds: Seq[Int], correctIds: Seq[Int]): AnswerSelectionResult = AnswerSelectionResult(
     wrong = selectedIds diff correctIds,
     correct = selectedIds intersect correctIds,
     missing = correctIds diff selectedIds
   )
-
-  private def correctBlanksFlashcard(blanksFlashcard: Flashcard, solution: Solution): Boolean = ???
 
   private def correctChoiceFlashcard(flashcard: Flashcard, solution: Solution): AnswerSelectionResult = {
 
@@ -24,11 +26,22 @@ object Corrector {
     matchAnswerIds(selectedAnswerIds, correctAnswerIds)
   }
 
+  // Textual flashcards
+
+  private def correctTextualFlashcard(flashcard: Flashcard, solution: Solution): MatchingResult = {
+
+    val sampleSolutions = if (solution.frontToBack) flashcard.backs else flashcard.fronts
+
+    Matcher.doMatch(solution.solutions.toList, sampleSolutions.toList)
+
+  }
+
+  // Complete correction
+
   private def correctFlashcard(flashcard: Flashcard, solution: Solution): CorrectionResult = flashcard.cardType match {
     case CardType.Word | CardType.Text =>
-      val sampleSolution = if (solution.frontToBack) flashcard.back else flashcard.front
-      val editOperations = Levenshtein.calculateBacktrace(solution.solution, sampleSolution)
-      CorrectionResult(editOperations.isEmpty, operations = editOperations)
+      val correctionResult = correctTextualFlashcard(flashcard, solution)
+      CorrectionResult(correctionResult.isCorrect, matchingResult = Some(correctionResult))
 
     case CardType.Blank =>
       val correct = correctBlanksFlashcard(flashcard, solution)
@@ -38,6 +51,7 @@ object Corrector {
       val answerSelectionResult = correctChoiceFlashcard(flashcard, solution)
       CorrectionResult(answerSelectionResult.isCorrect, answersSelection = Some(answerSelectionResult))
   }
+
 
   def completeCorrect(user: User, solution: Solution, flashcard: Flashcard, maybePreviousDbAnswer: Option[UserAnsweredFlashcard]): (CorrectionResult, UserAnsweredFlashcard) = {
 
@@ -68,9 +82,11 @@ object Corrector {
         val maybeSampleSolution = if (newWrongTriesCount < 2) {
           None
         } else if (solution.frontToBack) {
-          Some(flashcard.back)
+          // FIXME: do not use head!
+          Some(flashcard.backs.head)
         } else {
-          Some(flashcard.front)
+          // FIXME: do not use head!
+          Some(flashcard.fronts.head)
         }
 
         (

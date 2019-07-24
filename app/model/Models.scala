@@ -46,9 +46,9 @@ case object CardType extends PlayEnum[CardType] {
 final case class Flashcard(
   cardId: Int, collId: Int, courseId: Int,
   cardType: CardType,
-  front: String,
+  fronts: Seq[String],
   frontHint: Option[String] = None,
-  back: String = "",
+  backs: Seq[String] = Seq.empty,
   backHint: Option[String] = None,
   blanksAnswers: Seq[BlanksAnswerFragment] = Seq.empty,
   choiceAnswers: Seq[ChoiceAnswer] = Seq.empty

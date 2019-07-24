@@ -37,16 +37,22 @@ object JsonFormats {
     Json.format[CorrectionResult]
   }
 
-  // Flashcard
+  // FlashcardToAnswer
 
   val choiceAnswerFormat: Format[ChoiceAnswer] = Json.format[ChoiceAnswer]
 
   val blanksAnswerFragmentFormat: Format[BlanksAnswerFragment] = Json.format[BlanksAnswerFragment]
 
-  val flashcardToAnswerFormat: Format[FlashcardToAnswer] = {
+  val flashcardFormat: Format[Flashcard] = {
     implicit val caf: Format[ChoiceAnswer] = choiceAnswerFormat
 
     implicit val baff: Format[BlanksAnswerFragment] = blanksAnswerFragmentFormat
+
+    Json.format[Flashcard]
+  }
+
+  val flashcardToAnswerFormat: Format[FlashcardToAnswer] = {
+    implicit val fcf: Format[Flashcard] = flashcardFormat
 
     Json.format[FlashcardToAnswer]
   }

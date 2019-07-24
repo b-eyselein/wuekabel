@@ -3,6 +3,7 @@ package model.persistence
 import model.JsonFormats.{blanksAnswerFragmentFormat, choiceAnswerFormat}
 import model._
 import play.api.libs.json._
+import model.Consts.frontBackSplitChar
 
 object PersistenceModels {
 
@@ -21,7 +22,7 @@ object PersistenceModels {
         case JsError(errors)    => ???
       }
 
-      Flashcard(cardId, collId, courseId, cardType, front, frontHint, back, backHint, blanksAnswerFragments, choiceAnswers)
+      Flashcard(cardId, collId, courseId, cardType, front.split(frontBackSplitChar), frontHint, back.split(frontBackSplitChar), backHint, blanksAnswerFragments, choiceAnswers)
   }
 
 
@@ -30,12 +31,12 @@ object PersistenceModels {
   }
 
   def flashcardToDbFlashcard(fc: Flashcard): DBFlashcard = fc match {
-    case Flashcard(cardId, collId, courseId, cardType, front, frontHint, back, backHint, choiceAnswers, blanksAnswerFragments) =>
+    case Flashcard(cardId, collId, courseId, cardType, fronts, frontHint, backs, backHint, choiceAnswers, blanksAnswerFragments) =>
 
       implicit val caf: Format[ChoiceAnswer] = choiceAnswerFormat
       implicit val baff: Format[BlanksAnswerFragment] = blanksAnswerFragmentFormat
 
-      DBFlashcard(cardId, collId, courseId, cardType, front, frontHint, back, backHint,
+      DBFlashcard(cardId, collId, courseId, cardType, fronts.mkString(frontBackSplitChar), frontHint, backs.mkString(frontBackSplitChar), backHint,
         blanksAnswerFragmentsJsValue = Json.toJson(blanksAnswerFragments),
         choiceAnswersJsValue = Json.toJson(choiceAnswers))
   }

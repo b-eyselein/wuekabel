@@ -39,16 +39,19 @@ interface Flashcard {
 
     cardType: CardType;
 
-    front: string;
+    fronts: string[];
     frontHint: string | undefined;
-    back: string;
+    backs: string[];
     backHint: string | undefined;
 
-    frontToBack: boolean;
 
     blanksAnswers: BlanksAnswerFragment[];
     choiceAnswers: ChoiceAnswer[];
+}
 
+interface FlashcardToAnswer {
+    flashcard: Flashcard;
+    frontToBack: boolean;
     currentTries: number;
     currentBucket: undefined | number;
 }
@@ -58,7 +61,7 @@ interface Solution {
     collId: number;
     courseId: number;
 
-    solution: string;
+    solutions: string[];
     selectedAnswers: number[];
     frontToBack: boolean;
 }

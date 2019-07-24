@@ -16,6 +16,7 @@ object Consts {
 
   val excelFileName: String = "excelFile"
 
+  val frontBackSplitChar : String = "/"
   val frontLanguageIdName: String = "frontLanguageId"
   val frontName          : String = "front"
 

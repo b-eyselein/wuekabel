@@ -1,6 +1,7 @@
 package model
 
 import better.files._
+import model.Consts.frontBackSplitChar
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy
 import org.apache.poi.ss.usermodel.{CellType, Row => ExcelRow}
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -49,7 +50,7 @@ object Importer {
     partitionEitherSeq(readFlashcards)
   }
 
-  private def readChoiceRow(row: ExcelRow, courseId: Int, collId: Int, question: String): Either[String, Flashcard] = {
+  private def readChoiceRow(row: ExcelRow, courseId: Int, collId: Int, fronts: Seq[String]): Either[String, Flashcard] = {
 
     val cardId = row.getRowNum
 
@@ -70,17 +71,19 @@ object Importer {
       }
     })
 
-    Right(Flashcard(cardId, collId, courseId, CardType.Choice, question, choiceAnswers = answers))
+    Right(Flashcard(cardId, collId, courseId, CardType.Choice, fronts, choiceAnswers = answers))
 
   }
 
-  private def readTextualRow(row: ExcelRow, courseId: Int, collId: Int, cardType: CardType, question: String): Either[String, Flashcard] = for {
-    frontHint <- readOptionalStringCell(row, frontHintCellIndex)
-    back <- readStringCell(row, backCellIndex)
-    backHint <- readOptionalStringCell(row, backHintCellIndex)
-  } yield Flashcard(row.getRowNum, collId, courseId, cardType, question, frontHint, back, backHint)
 
-  private def readBlankRow(row: ExcelRow, courseId: Int, collId: Int, question: String): Either[String, Flashcard] = {
+  private def readTextualRow(row: ExcelRow, courseId: Int, collId: Int, cardType: CardType, fronts: Seq[String]): Either[String, Flashcard] = for {
+    frontHint <- readOptionalStringCell(row, frontHintCellIndex)
+    backs <- readStringCell(row, backCellIndex).map(_.split(frontBackSplitChar).map(_.trim))
+    backHint <- readOptionalStringCell(row, backHintCellIndex)
+  } yield Flashcard(row.getRowNum, collId, courseId, cardType, fronts, frontHint, backs, backHint)
+
+
+  private def readBlankRow(row: ExcelRow, courseId: Int, collId: Int, fronts: Seq[String]): Either[String, Flashcard] = {
     val cardId = row.getRowNum
 
     val (_, answers): (Seq[String], Seq[BlanksAnswerFragment]) = partitionEitherSeq(backCellIndex.to(row.getLastCellNum).map { cellIndex =>
@@ -91,17 +94,17 @@ object Importer {
       }
     })
 
-    Right(Flashcard(cardId, collId, courseId, CardType.Blank, question, blanksAnswers = answers))
+    Right(Flashcard(cardId, collId, courseId, CardType.Blank, fronts, blanksAnswers = answers))
   }
 
   private def readRow(row: ExcelRow, courseId: Int, collId: Int): Either[String, Flashcard] = for {
     cardTypeString <- readStringCell(row, cardTypeCellIndex)
     cardType <- cardTypeFromString(cardTypeString)
-    front <- readStringCell(row, frontCellIndex)
+    fronts <- readStringCell(row, frontCellIndex).map(_.split(frontBackSplitChar).map(_.trim))
     flashcard <- cardType match {
-      case CardType.Word | CardType.Text => readTextualRow(row, courseId, collId, cardType, front)
-      case CardType.Blank                => readBlankRow(row, courseId, collId, front)
-      case CardType.Choice               => readChoiceRow(row, courseId, collId, front)
+      case CardType.Word | CardType.Text => readTextualRow(row, courseId, collId, cardType, fronts)
+      case CardType.Blank                => readBlankRow(row, courseId, collId, fronts)
+      case CardType.Choice               => readChoiceRow(row, courseId, collId, fronts)
     }
   } yield flashcard
 

@@ -33,7 +33,7 @@
                         <p><b>ID</b>:
                             @completeCard.cardId</p>
 
-                        <p><b>Vorderseite</b>: @completeCard.front</p>
+                        <p><b>Vorderseite</b>: @completeCard.fronts</p>
                         <p><b>Hinwies Vorderseite:</b>
                             @completeCard.frontHint.map(fh => Html(s"<i>$fh</i>")).getOrElse("--")</p>
 
@@ -41,7 +41,7 @@
                         @completeCard.cardType match {
                             case CardType.Word | CardType.Text => {
                                 <p>
-                                    <b>Rückseite</b>: @completeCard.back
+                                    <b>Rückseite</b>: @completeCard.backs
                                 </p>
                                 <p>
                                     <b>Hinwies Rückseite:</b>
