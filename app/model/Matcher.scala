@@ -35,7 +35,7 @@ object Matcher {
         case Nil          => MatchHeadResult(priorSamples ++ posteriorSamples, maybeBestAndDistanceToBest)
         case head :: tail =>
 
-          val distanceToHead = LevenshteinDistance(learnerSolution.solution, head)
+          val distanceToHead = LevenshteinDistance(learnerSolution, head)
 
           maybeBestAndDistanceToBest match {
             case None                        =>

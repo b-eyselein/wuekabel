@@ -1,9 +1,10 @@
 package model.levenshtein
 
+import model.StringSolution
 import model.levenshtein.OperationType._
 
 
-final case class LevenshteinDistance(start: String, target: String) {
+final case class LevenshteinDistance(start: StringSolution, target: String) {
 
   @inline
   private def minimum(i: Int*): Int = i.min
@@ -21,7 +22,7 @@ final case class LevenshteinDistance(start: String, target: String) {
     dist
   }
 
-  private def calculateBacktrace(): Seq[EditOperation] = {
+  private def calculateBacktrace(dist: Array[Array[Int]]): Seq[EditOperation] = {
 
     @annotation.tailrec
     def go(dist: Array[Array[Int]], i: Int, j: Int, operations: List[EditOperation]): List[EditOperation] =
@@ -46,14 +47,14 @@ final case class LevenshteinDistance(start: String, target: String) {
 
       } else operations
 
-    go(dist, start.length, target.length, List[EditOperation]())
+    go(dist, start.solution.length, target.length, List[EditOperation]())
   }
 
-  private val dist = calculateTable(start, target)
+  private val dist = calculateTable(start.solution, target)
 
-  val distance: Int = dist(start.length)(target.length)
+  val distance: Int = dist(start.solution.length)(target.length)
 
-  lazy val backtrace: Seq[EditOperation] = calculateBacktrace()
+  lazy val backtrace: Seq[EditOperation] = calculateBacktrace(dist)
 
 
 }

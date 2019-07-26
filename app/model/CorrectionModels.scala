@@ -1,7 +1,5 @@
 package model
 
-import model.levenshtein.EditOperation
-
 final case class StringSolution(id: Int, solution: String)
 
 final case class Solution(

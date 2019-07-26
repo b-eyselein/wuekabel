@@ -72,21 +72,22 @@ interface Solution {
 }
 
 interface EditOperation {
-    operationType: "Replace" | "Insert" | "Delete"
-    index: number
-    char: string | null
+    operationType: "Replace" | "Insert" | "Delete";
+    index: number;
+    char: string | null;
 }
 
 interface AnswerSelectionResult {
-    wrong: number[]
-    correct: number[]
-    missing: number[]
+    wrong: number[];
+    correct: number[];
+    missing: number[];
 }
 
 interface Match {
-    start: string;
+    start: StringSolution;
     target: string;
     distance: number;
+    editOperations: EditOperation[];
 }
 
 interface MatchingResult {
@@ -95,9 +96,9 @@ interface MatchingResult {
 }
 
 interface CorrectionResult {
-    correct: boolean
+    correct: boolean;
     matchingResult: MatchingResult;
-    answersSelection: AnswerSelectionResult
-    newTriesCount: number
-    maybeSampleSolution: string | null
+    answersSelection: AnswerSelectionResult;
+    newTriesCount: number;
+    maybeSampleSolution: string | null;
 }

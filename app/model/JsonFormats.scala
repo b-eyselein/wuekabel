@@ -33,13 +33,20 @@ object JsonFormats {
     Json.format[EditOperation]
   }
 
+
   private val levenshteinDistanceWrites: Writes[LevenshteinDistance] = {
-    def unapplyLevenshteinDistance: LevenshteinDistance => (String, String, Int) = ld => (ld.start, ld.target, ld.distance)
+    def unapplyLevenshteinDistance: LevenshteinDistance => (StringSolution, String, Int, Seq[EditOperation]) =
+      ld => (ld.start, ld.target, ld.distance, ld.backtrace)
+
+    implicit val ssw: Writes[StringSolution] = stringSolutionFormat
+
+    implicit val eow: Writes[EditOperation] = editOperationFormat
 
     (
-      (__ \ "start").write[String] and
+      (__ \ "start").write[StringSolution] and
         (__ \ "target").write[String] and
-        (__ \ "distance").write[Int]
+        (__ \ "distance").write[Int] and
+        (__ \ "editOperations").write[Seq[EditOperation]]
       ) (unapplyLevenshteinDistance)
   }
 
