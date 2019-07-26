@@ -27,7 +27,7 @@ function readSolution(cardType: CardType): undefined | Solution {
             const solutionInputs: HTMLInputElement[] = Array.from(document.querySelectorAll<HTMLInputElement>('.translation_input'));
 
             solutions = solutionInputs
-                .map((input: HTMLInputElement, index: number) => {
+                .map<StringSolution>((input: HTMLInputElement, index: number) => {
                     return {
                         id: index,
                         solution: input.value.trim()
