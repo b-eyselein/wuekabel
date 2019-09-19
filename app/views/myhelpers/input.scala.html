@@ -1,9 +1,16 @@
 @(field: Field, labelContent: String, fieldType: String = "text", placeHolder: Option[String] = None,
-    isRequired: Boolean = false, isReadOnly: Boolean = false
+    isRequired: Boolean = false, isReadOnly: Boolean = false, otherAttrs: Seq[String] = Seq.empty
 )
 
     @attributes = {
-    @field.value.map(x => Html(s""" value="$x" """)).getOrElse(Html("")) @if(isRequired) { required } @if(isReadOnly) { readonly }
+        @field.value.map(x => Html(s""" value="$x" """)).getOrElse(Html(""))
+        @if(isRequired) {
+            required
+        }
+        @if(isReadOnly) {
+            readonly
+        }
+        @otherAttrs.mkString(" ")
     }
 
     <div class="row">

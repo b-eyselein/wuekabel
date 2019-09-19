@@ -14,7 +14,7 @@
 
         @helper.CSRF.formField
 
-        @myhelpers.input(loginForm(Consts.usernameName), "Nutzername", isRequired = true)
+        @myhelpers.input(loginForm(Consts.usernameName), "Nutzername", isRequired = true, otherAttrs = Seq("autofocus"))
 
         @myhelpers.input(loginForm(Consts.pwName), "Password", fieldType = "password", isRequired = true)
 
