@@ -9,7 +9,7 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 TwirlKeys.templateImports += "model.TemplateConsts._"
 
-scalaVersion := "2.13.0"
+scalaVersion := "2.13.1"
 
 updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true)
 
