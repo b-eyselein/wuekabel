@@ -16,16 +16,15 @@ updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true
 val webJarDependencies = Seq(
   // FIXME: remove jquery?!?
   "org.webjars.npm" % "jquery" % "3.4.1",
-  "org.webjars.npm" % "types__jquery" % "3.3.29",
+  "org.webjars.npm" % "types__jquery" % "3.3.31",
 
   "org.webjars.npm" % "materialize-css" % "1.0.0",
-
-  // javascript db
-  //  "org.webjars.npm" % "dexie" % "2.0.4"
+  "org.webjars.npm" % "types__materialize-css" % "1.0.6"
 )
 
 dependencyOverrides ++= Seq(
-  "org.webjars.npm" % "types__sizzle" % "2.3.2"
+  "org.webjars.npm" % "types__sizzle" % "2.3.2",
+  "org.webjars.npm" % "types__cash" % "0.0.3",
 )
 
 PlayKeys.playDefaultPort := 9090

@@ -10,9 +10,9 @@ class LevenshteinDistanceTest extends FlatSpec with Matchers {
 
   it should "calculate correct distances" in {
 
-    LevenshteinDistance.distance("test", "tert") shouldBe 1
+    LevenshteinDistance("test", "tert").distance shouldBe 1
 
-    LevenshteinDistance.distance("Jack", "John") shouldBe 3
+    LevenshteinDistance("Jack", "John").distance shouldBe 3
 
   }
 
