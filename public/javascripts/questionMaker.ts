@@ -41,9 +41,9 @@ function updateView(flashcard: FlashcardToAnswer): void {
     // Update question text
     let questionText: string;
     if (flashcard.frontToBack) {
-        questionText = flashcard.flashcard.fronts.join('/') + (flashcard.flashcard.frontHint !== undefined ? ` <i>${flashcard.flashcard.frontHint}</i>` : '');
+        questionText = flashcard.flashcard.frontsJson.join('/') + (flashcard.flashcard.frontHint !== undefined ? ` <i>${flashcard.flashcard.frontHint}</i>` : '');
     } else {
-        questionText = flashcard.flashcard.backs.join('/') + (flashcard.flashcard.backHint !== undefined ? ` <i>${flashcard.flashcard.backHint}</i>` : '');
+        questionText = flashcard.flashcard.backsJson.join('/') + (flashcard.flashcard.backHint !== undefined ? ` <i>${flashcard.flashcard.backHint}</i>` : '');
     }
     document.querySelector<HTMLHeadingElement>('#questionDiv').innerHTML = questionText;
 
@@ -62,16 +62,16 @@ function updateView(flashcard: FlashcardToAnswer): void {
     switch (flashcard.flashcard.cardType) {
         case 'Text':
         case 'Word' :
-            answerDiv.innerHTML = buildTextAnswerInput(flashcard.frontToBack ? flashcard.flashcard.backs : flashcard.flashcard.fronts);
+            answerDiv.innerHTML = buildTextAnswerInput(flashcard.frontToBack ? flashcard.flashcard.backsJson : flashcard.flashcard.frontsJson);
             document.querySelector<HTMLInputElement>('#translation_input_0').focus();
             break;
 
         case 'Blank':
-            answerDiv.innerHTML = buildAnswerFragments(flashcard.flashcard.blanksAnswers);
+            answerDiv.innerHTML = buildAnswerFragments(flashcard.flashcard.blanksAnswerFragmentsJson);
             break;
 
         case 'Choice':
-            answerDiv.innerHTML = buildChoiceAnswers(flashcard.flashcard.choiceAnswers);
+            answerDiv.innerHTML = buildChoiceAnswers(flashcard.flashcard.choiceAnswersJson);
             break;
     }
 }

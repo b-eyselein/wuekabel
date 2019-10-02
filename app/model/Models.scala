@@ -71,7 +71,7 @@ final case class Flashcard(
     case _               => JsError()
   })
 
-  def backs: Seq[String] = convertFromJson(frontsJson, {
+  def backs: Seq[String] = convertFromJson(backsJson, {
     case JsString(value) => JsSuccess(value)
     case _               => JsError()
   })

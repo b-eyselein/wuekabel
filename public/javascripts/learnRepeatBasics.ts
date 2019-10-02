@@ -39,14 +39,13 @@ interface Flashcard {
 
     cardType: CardType;
 
-    fronts: string[];
+    frontsJson: string[];
     frontHint: string | undefined;
-    backs: string[];
+    backsJson: string[];
     backHint: string | undefined;
 
-
-    blanksAnswers: BlanksAnswerFragment[];
-    choiceAnswers: ChoiceAnswer[];
+    blanksAnswerFragmentsJson: BlanksAnswerFragment[];
+    choiceAnswersJson: ChoiceAnswer[];
 }
 
 interface FlashcardToAnswer {

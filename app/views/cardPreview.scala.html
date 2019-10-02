@@ -1,88 +1,95 @@
-@import model.{User, Flashcard, CardType, Collection}
+@import model.{User, Flashcard, CardType, Collection, Consts}
 
 @(user: User, courseId: Int, collection: Collection, cards: Seq[Flashcard], readErrors: Seq[String])
 
-@title = @{
-    "Vorschau importierte Karteikarten"
-}
+    @title = @{
+        "Vorschau importierte Karteikarten"
+    }
 
-@cardsPerRow = @{
-    3
-}
+    @cardsPerRow = @{
+        3
+    }
 
-@colWidth = @{
-    12 / cardsPerRow
-}
+    @colWidth = @{
+        12 / cardsPerRow
+    }
 
-@main(title, Some(user)) {
-    @if(cards.nonEmpty) {
+    @main(title, Some(user)) {
+        @if(cards.nonEmpty) {
 
-        <div class="row">
-            <div class="col s12">
-                <a href="@routes.AdminController.collectionAdmin(courseId, collection.id)" class="btn btn-large waves-effect waves-block @accentColor">
-                    Zurück zur Sammlung
-                </a>
-            </div>
-        </div>
-
-        @for(completeCardGroup <- cards.grouped(cardsPerRow)) {
             <div class="row">
-            @for(completeCard <- completeCardGroup) {
-                <div class="col m@colWidth s12">
-                    <div class="card-panel">
-                        <p><b>ID</b>:
-                            @completeCard.cardId</p>
+                <div class="col s12">
+                    <a href="@routes.AdminController.collectionAdmin(courseId, collection.id)" class="btn btn-large waves-effect waves-block @accentColor">
+                        Zurück zur Sammlung
+                    </a>
+                </div>
+            </div>
 
-                        <p><b>Vorderseite</b>: @completeCard.fronts</p>
-                        <p><b>Hinwies Vorderseite:</b>
-                            @completeCard.frontHint.map(fh => Html(s"<i>$fh</i>")).getOrElse("--")</p>
+            @for(flashcardGroup <- cards.grouped(cardsPerRow)) {
+                <div class="row">
+                @for(flashcard <- flashcardGroup) {
+                    <div class="col m@colWidth s12">
+                        <div class="card-panel">
+                            <p>
+                                <b>ID</b>:
+                                @flashcard.cardId
+                            </p>
+
+                            <div>
+                                <b>Vorderseite</b>: @flashcard.fronts.mkString(Consts.multipleSolutionsSplitChar)
+                            </div>
+
+                            <p>
+                                <b>Hinwies Vorderseite:</b>
+                                @flashcard.frontHint.map(fh => Html(s"<i>$fh</i>")).getOrElse("--")
+                            </p>
 
 
-                        @completeCard.cardType match {
-                            case CardType.Word | CardType.Text => {
-                                <p>
-                                    <b>Rückseite</b>: @completeCard.backs
-                                </p>
-                                <p>
-                                    <b>Hinwies Rückseite:</b>
-                                    @completeCard.backHint.map(fh => Html(s"<i>$fh</i>")).getOrElse("--")
-                                </p>
-                            }
-                            case CardType.Blank => {
-                                <hr>
-
-                                @for(answer <- completeCard.blanksAnswerFragments) {
-                                    <p>@answer.answer</p>
-                                }
-                            }
-                            case CardType.Choice => {
-                                <hr>
-
-                                @for(answerGroup <- completeCard.choiceAnswers.grouped(2)) {
-                                    <div class="row">
-                                    @for(answer <- answerGroup) {
-                                        <div class="col m6 s12">
-                                            <b>@if(answer.correctness != model.Correctness.Wrong) {
-                                                +
-                                            } else {
-                                                -
-                                            }</b>
-                                            @answer.answer
-                                        </div>
-
-                                    }
+                            @flashcard.cardType match {
+                                case CardType.Word | CardType.Text => {
+                                    <div>
+                                        <b>Rückseite</b>: @flashcard.backs.mkString(Consts.multipleSolutionsSplitChar)
                                     </div>
+                                    <p>
+                                        <b>Hinwies Rückseite:</b>
+                                        @flashcard.backHint.map(fh => Html(s"<i>$fh</i>")).getOrElse("--")
+                                    </p>
+                                }
+                                case CardType.Blank => {
+                                    <hr>
+
+                                    @for(answer <- flashcard.blanksAnswerFragments) {
+                                        <p>@answer.answer</p>
+                                    }
+                                }
+                                case CardType.Choice => {
+                                    <hr>
+
+                                    @for(answerGroup <- flashcard.choiceAnswers.grouped(2)) {
+                                        <div class="row">
+                                        @for(answer <- answerGroup) {
+                                            <div class="col m6 s12">
+                                                <b>@if(answer.correctness != model.Correctness.Wrong) {
+                                                    +
+                                                } else {
+                                                    -
+                                                }</b>
+                                                @answer.answer
+                                            </div>
+
+                                        }
+                                        </div>
+                                    }
                                 }
                             }
-                        }
 
+                        </div>
                     </div>
+                }
                 </div>
             }
-            </div>
-        }
 
-    } else {
-        <p class="red-text">Konnte keine Karteikarten importieren!</p>
+        } else {
+            <p class="red-text">Konnte keine Karteikarten importieren!</p>
+        }
     }
-}

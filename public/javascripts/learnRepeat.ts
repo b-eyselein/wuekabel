@@ -211,16 +211,12 @@ function checkSolution(): void {
 }
 
 function updateReadQuestionButton(readQuestionButton: HTMLButtonElement): void {
-    const numOfFoundVoices: number = window.speechSynthesis.getVoices().length;
-
-    if (numOfFoundVoices > 0) {
-        console.info("Found " + numOfFoundVoices + " voices!");
+    if (window.speechSynthesis.getVoices().length > 0) {
         readQuestionButton.classList.remove('hide');
         readQuestionButton.disabled = false;
 
         readQuestionButton.onclick = () => {
-
-            const toRead: string[] = currentFlashcard.frontToBack ? currentFlashcard.flashcard.fronts : currentFlashcard.flashcard.backs;
+            const toRead: string[] = currentFlashcard.frontToBack ? currentFlashcard.flashcard.frontsJson : currentFlashcard.flashcard.backsJson;
 
             toRead.forEach((front) => {
                 const utterance = new SpeechSynthesisUtterance(front);
@@ -228,8 +224,6 @@ function updateReadQuestionButton(readQuestionButton: HTMLButtonElement): void {
                 window.speechSynthesis.speak(utterance);
             });
         };
-    } else {
-        console.warn("Could not find any voices for Speech synthesis!");
     }
 }
 

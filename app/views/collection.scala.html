@@ -2,46 +2,46 @@
 
 @(user: User, courseId: Int, collection: Collection, flashcardCount: Int, toLearnCount: Int)
 
-    @alreadyLearnedCount = @{
-        flashcardCount - toLearnCount
+@alreadyLearnedCount = @{
+    flashcardCount - toLearnCount
+}
+
+@progress = @{
+    s"${Math.round(alreadyLearnedCount * 100 / flashcardCount.toDouble)}%"
+}
+
+@title = @{
+    s"Sammlung '${collection.name}'"
+}
+
+@main(title, Some(user)) {
+    <h4 class="center-align">@title</h4>
+
+    <hr>
+
+    <p>Diese Sammlung enthält insgesamt @flashcardCount Karteikarten.</p>
+
+    <p>
+    @if(toLearnCount == 0) {
+        Sie haben alle Karteikarten gelernt.
+    } else {
+        Es existieren noch @toLearnCount neue Karteikarten.
     }
+    </p>
 
-    @progress = @{
-        Math.round(alreadyLearnedCount * 100 / flashcardCount.toDouble) + "%"
+    <br>
+
+    <h5 class="center-align">Fortschritt</h5>
+
+    <p class="center">@alreadyLearnedCount / @flashcardCount</p>
+
+    <div class="progress">
+        <div class="determinate" style="width: @progress"></div>
+    </div>
+
+    <br>
+
+    @if(toLearnCount > 0) {
+        <a href="@routes.HomeController.learn(courseId, collection.id)" class="btn btn-block @accentColor">Lernen</a>
     }
-
-    @title = @{
-        s"Sammlung '${collection.name}'"
-    }
-
-    @main(title, Some(user)) {
-        <h4 class="center-align">@title</h4>
-
-        <hr>
-
-        <p>Diese Sammlung enthält insgesamt @flashcardCount Karteikarten.</p>
-
-        <p>
-        @if(toLearnCount == 0) {
-            Sie haben alle Karteikarten gelernt.
-        } else {
-            Es existieren noch @toLearnCount neue Karteikarten.
-        }
-        </p>
-
-        <br>
-
-        <h5 class="center-align">Fortschritt</h5>
-
-        <p class="center">@alreadyLearnedCount / @flashcardCount</p>
-
-        <div class="progress">
-            <div class="determinate" style="width: @progress"></div>
-        </div>
-
-        <br>
-
-        @if(toLearnCount > 0) {
-            <a href="@routes.HomeController.learn(courseId, collection.id)" class="btn btn-block @accentColor">Lernen</a>
-        }
-    }
+}
