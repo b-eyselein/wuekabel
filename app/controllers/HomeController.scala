@@ -74,14 +74,17 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
     implicit request =>
       for {
         flashcardCount <- tableDefs.futureFlashcardCountForCollection(collection)
+        flashcardSidesCount <- tableDefs.futureFlashcardSidesCount(collection)
         toLearnCount <- tableDefs.futureFlashcardsToLearnCount(user, collection)
-      } yield Ok(views.html.collection(user, courseId, collection, flashcardCount, toLearnCount))
+      } yield Ok(views.html.collection(user, courseId, collection, flashcardCount,flashcardSidesCount, toLearnCount))
   }
 
   def learn(courseId: Int, collId: Int, frontToBack: Boolean = true): EssentialAction = futureWithUserAndCollection(courseId, collId) { (user, course, collection) =>
     implicit request =>
       tableDefs.futureFlashcardsToLearnCount(user, collection).map {
-        cardsToLearnCount => Ok(views.html.learn(user, Math.min(cardsToLearnCount, 10), Some(course, collection)))
+        sidesToLearnCount =>
+          val toLearnCount = Math.min(sidesToLearnCount._1 + sidesToLearnCount._2, 10)
+          Ok(views.html.learn(user, toLearnCount, Some(course, collection)))
       }
   }
 
@@ -91,7 +94,6 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
         cardsToRepeatCount => Ok(views.html.learn(user, Math.min(cardsToRepeatCount, 10), None))
       }
   }
-
 
 
 }

@@ -1,9 +1,13 @@
 @import model.{User, Collection}
 
-@(user: User, courseId: Int, collection: Collection, flashcardCount: Int, toLearnCount: Int)
+@(user: User, courseId: Int, collection: Collection, flashcardCount: Int, flashcardSidesCount: Int, toLearnCount: (Int, Int))
+
+@completeToLearnCount = @{
+    toLearnCount._1 + toLearnCount._2
+}
 
 @alreadyLearnedCount = @{
-    flashcardCount - toLearnCount
+    flashcardSidesCount - completeToLearnCount
 }
 
 @progress = @{
@@ -25,7 +29,11 @@
     @if(toLearnCount == 0) {
         Sie haben alle Karteikarten gelernt.
     } else {
-        Es existieren noch @toLearnCount neue Karteikarten.
+        Es existieren noch @{
+            toLearnCount._1
+        } neue Vorderseiten und @{
+            toLearnCount._2
+        } neue Rückseiten.
     }
     </p>
 
@@ -33,7 +41,7 @@
 
     <h5 class="center-align">Fortschritt</h5>
 
-    <p class="center">@alreadyLearnedCount / @flashcardCount</p>
+    <p class="center">@alreadyLearnedCount / @flashcardSidesCount</p>
 
     <div class="progress">
         <div class="determinate" style="width: @progress"></div>
@@ -41,7 +49,7 @@
 
     <br>
 
-    @if(toLearnCount > 0) {
+    @if(completeToLearnCount > 0) {
         <a href="@routes.HomeController.learn(courseId, collection.id)" class="btn btn-block @accentColor">Lernen</a>
     }
 }

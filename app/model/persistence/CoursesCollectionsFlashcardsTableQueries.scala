@@ -17,11 +17,16 @@ trait CoursesCollectionsFlashcardsTableQueries {
   }
 
   def futureNextCollectionIdInCourse(courseId: Int): Future[Int] = db.run(
-    collectionsTQ.filter { coll => coll.courseId === courseId }.map(_.id).max.result
-  ).map {
-    case None            => 0
-    case Some(currentId) => currentId + 1
-  }
+    collectionsTQ
+      .filter { coll => coll.courseId === courseId }
+      .map(_.id)
+      .max
+      .result
+  )
+    .map {
+      case None            => 0
+      case Some(currentId) => currentId + 1
+    }
 
   // Reading
 
@@ -30,7 +35,6 @@ trait CoursesCollectionsFlashcardsTableQueries {
   def futureCourseById(id: Int): Future[Option[Course]] = db.run(coursesTQ.filter(_.id === id).result.headOption)
 
   def futureInsertCourse(course: Course): Future[Boolean] = db.run(coursesTQ += course).transform(_ == 1, identity)
-
 
   def futureAllLanguages: Future[Seq[Language]] = db.run(languagesTQ.result)
 
@@ -62,29 +66,37 @@ trait CoursesCollectionsFlashcardsTableQueries {
       .result
   )
 
-  def futureFlashcardById(courseId: Int, collId: Int, cardId: Int): Future[Option[Flashcard]] = {
-    val dbFlashcardByIdQuery = flashcardsTQ
+  def futureFlashcardById(courseId: Int, collId: Int, cardId: Int): Future[Option[Flashcard]] = db.run(
+    flashcardsTQ
       .filter { fc => fc.id === cardId && fc.collId === collId && fc.courseId === courseId }
       .result
       .headOption
+  )
 
-    db.run(dbFlashcardByIdQuery)
-    //      .map {
-    //      case None              => None
-    //      case Some(dbFlashcard) => Some(PersistenceModels.dbFlashcardToFlashcard(dbFlashcard))
-    //    }
-  }
-
+  def futureFlashcardSidesCount(collection: Collection): Future[Int] = for {
+    frontsCount <- db.run(
+      flashcardsTQ
+        .filter { fc => fc.collId === collection.id && fc.courseId === collection.courseId }
+        .size
+        .result
+    )
+    backsCount <- db.run(
+      flashcardsTQ
+        .filter { fc =>
+          fc.collId === collection.id && fc.courseId === collection.courseId &&
+            (fc.flashcardType.inSet(Seq(CardType.Word, CardType.Text)))
+        }
+        .size
+        .result
+    )
+  } yield frontsCount + backsCount
 
   def futureFlashcardCountForCollection(collection: Collection): Future[Int] =
     db.run(flashcardsTQ.filter(fc => fc.collId === collection.id).size.result)
 
   // Saving
 
-  def futureInsertCompleteFlashcard(completeFlashcard: Flashcard): Future[Boolean] = {
-//    val flashcard = PersistenceModels.flashcardToDbFlashcard(completeFlashcard)
-
-    db.run(flashcardsTQ insertOrUpdate completeFlashcard).transform(_ == 1, identity)
-  }
+  def futureInsertCompleteFlashcard(flashcard: Flashcard): Future[Boolean] =
+    db.run(flashcardsTQ.insertOrUpdate(flashcard)).transform(_ == 1, identity)
 
 }

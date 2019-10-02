@@ -59,7 +59,7 @@ object Matcher {
       case head :: tail =>
 
         matchHead(head, sampleSols) match {
-          case MatchHeadResult(remainingSamples, None)                        =>
+          case MatchHeadResult(_, None)                                       =>
             // FIXME: sampleSolutions was empty ?!?
             ???
           case MatchHeadResult(remainingSamples, Some(bestAndDistanceToBest)) =>

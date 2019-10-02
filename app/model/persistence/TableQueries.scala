@@ -14,14 +14,8 @@ trait TableQueries {
   private def flashcardToDoFilter(fctd: FlashcardToDoView, collection: Collection, user: User): Rep[Boolean] =
     fctd.collId === collection.id && fctd.courseId === collection.courseId && fctd.username === user.username
 
-  def futureFlashcardToAnswerById(user: User, courseId: Int, collId: Int, cardId: Int, frontToBack: Boolean): Future[FlashcardToAnswer] = {
-
-    // FIXME: join tables, use method in PersistenceModels!
-    val dbFlashcardByIdQuery = flashcardsTQ.filter {
-      fc => fc.id === cardId && fc.collId === collId && fc.courseId === courseId
-    }.result.headOption
-
-    db.run(dbFlashcardByIdQuery).flatMap {
+  def futureFlashcardToAnswerById(user: User, courseId: Int, collId: Int, cardId: Int, frontToBack: Boolean): Future[FlashcardToAnswer] =
+    futureFlashcardById(courseId, collId, cardId).flatMap {
       case None            => ???
       case Some(flashcard) =>
 
@@ -29,19 +23,26 @@ trait TableQueries {
           maybeOldAnswer <- futureUserAnswerForFlashcard(user, cardId, collId, courseId, frontToBack)
         } yield {
           FlashcardToAnswer(
-            flashcard,
-            frontToBack: Boolean,
+            flashcard, frontToBack,
             currentTries = maybeOldAnswer.map { oa => if (oa.isActive) oa.wrongTries else 0 }.getOrElse(0),
             currentBucket = maybeOldAnswer.map(_.bucket)
           )
         }
     }
-  }
 
   // FlashcardToLearn View
 
-  def futureFlashcardsToLearnCount(user: User, collection: Collection): Future[Int] =
-    db.run(flashcardsToLearnTQ.filter(flashcardToDoFilter(_, collection, user)).size.result)
+  private def futureSidesToLearnCount(user: User, collection: Collection, front: Boolean): Future[Int] = db.run(
+    flashcardsToLearnTQ
+      .filter { ftl => ftl.courseId === collection.courseId && ftl.collId === collection.id && ftl.username === user.username && ftl.frontToBack === front }
+      .size
+      .result
+  )
+
+  def futureFlashcardsToLearnCount(user: User, collection: Collection): Future[(Int, Int)] = for {
+    frontsToLearnCount <- futureSidesToLearnCount(user, collection, front = true)
+    backsToLearnCount <- futureSidesToLearnCount(user, collection, front = false)
+  } yield (frontsToLearnCount, backsToLearnCount)
 
   def futureMaybeNextFlashcardToLearn(user: User, collection: Collection, count: Int = 10): Future[Seq[FlashcardToAnswer]] = {
     val query = flashcardsToLearnTQ
@@ -86,6 +87,7 @@ trait TableQueries {
         .filter {
           uaf => uaf.username === user.username && uaf.cardId === cardId && uaf.collId === collId && uaf.courseId === courseId && uaf.frontToBack === frontToBack
         }
-        .result.headOption)
+        .result.headOption
+    )
 
 }

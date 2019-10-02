@@ -66,6 +66,8 @@ final case class Flashcard(
       Seq.empty
   }
 
+  val onlyFrontToBack: Boolean = cardType == CardType.Choice || cardType == CardType.Blank
+
   def fronts: Seq[String] = convertFromJson(frontsJson, {
     case JsString(value) => JsSuccess(value)
     case _               => JsError()
