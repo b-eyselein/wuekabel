@@ -51,7 +51,7 @@
                             case CardType.Blank => {
                                 <hr>
 
-                                @for(answer <- completeCard.blanksAnswers) {
+                                @for(answer <- completeCard.blanksAnswerFragments) {
                                     <p>@answer.answer</p>
                                 }
                             }

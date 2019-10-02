@@ -48,7 +48,7 @@ trait CoursesCollectionsFlashcardsTableDefs
 
     def shortName: Rep[String] = column[String]("short_name")
 
-    def title: Rep[String] = column[String](titleName)
+    def title: Rep[String] = column[String]("title")
 
 
     override def * : ProvenShape[Course] = (id, shortName, title) <> (Course.tupled, Course.unapply)
@@ -93,7 +93,7 @@ trait CoursesCollectionsFlashcardsTableDefs
   }
 
 
-  class FlashcardsTable(tag: Tag) extends Table[DBFlashcard](tag, "flashcards") {
+  class FlashcardsTable(tag: Tag) extends Table[Flashcard](tag, "flashcards") {
 
     def id: Rep[Int] = column[Int](idName)
 
@@ -103,11 +103,11 @@ trait CoursesCollectionsFlashcardsTableDefs
 
     def flashcardType: Rep[CardType] = column[CardType]("card_type")
 
-    def front: Rep[String] = column[String](frontName)
+    def frontsJson: Rep[JsValue] = column[JsValue]("fronts_json")
 
     def frontHint: Rep[Option[String]] = column[Option[String]]("front_hint")
 
-    def back: Rep[String] = column[String](backName)
+    def backsJson: Rep[JsValue] = column[JsValue]("backs_json")
 
     def backHint: Rep[Option[String]] = column[Option[String]]("back_hint")
 
@@ -121,8 +121,8 @@ trait CoursesCollectionsFlashcardsTableDefs
     def collFk: ForeignKeyQuery[CollectionsTable, CollectionBasics] = foreignKey("fc_coll_fk", (collId, courseId), collectionsTQ)(coll => (coll.id, coll.courseId))
 
 
-    override def * : ProvenShape[DBFlashcard] = (id, collId, courseId, flashcardType, front, frontHint, back, backHint,
-      choiceAnswersJsValue, blanksAnswerFragmentsJsValue) <> (DBFlashcard.tupled, DBFlashcard.unapply)
+    override def * : ProvenShape[Flashcard] = (id, collId, courseId, flashcardType, frontsJson, frontHint, backsJson, backHint,
+      choiceAnswersJsValue, blanksAnswerFragmentsJsValue) <> (Flashcard.tupled, Flashcard.unapply)
 
   }
 

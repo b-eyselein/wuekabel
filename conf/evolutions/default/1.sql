@@ -69,13 +69,12 @@ create table if not exists flashcards (
     coll_id                      int,
     course_id                    int,
     card_type                    enum ('Word', 'Text', 'Blank', 'Choice') not null default 'Word',
-    front                        text                                     not null,
+    fronts_json                  json                                     not null,
     front_hint                   text,
-    back                         text                                     not null,
+    backs_json                   json                                     not null,
     back_hint                    text,
     choice_answers_json          json                                     not null default '[]',
     blanks_answer_fragments_json json                                     not null default '[]',
-
 
     primary key (id, coll_id, course_id),
     foreign key (coll_id, course_id) references collections (id, course_id)

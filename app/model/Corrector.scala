@@ -1,7 +1,8 @@
 package model
 
-import model.Consts.frontBackSplitChar
 import java.time.LocalDate
+
+import model.Consts.multipleSolutionsSplitChar
 
 object Corrector {
 
@@ -22,7 +23,7 @@ object Corrector {
   private def correctChoiceFlashcard(flashcard: Flashcard, solution: Solution): AnswerSelectionResult = {
 
     val selectedAnswerIds: Seq[Int] = solution.selectedAnswers
-    val correctAnswerIds: Seq[Int] = flashcard.choiceAnswers.filter(_.correctness != Correctness.Wrong).map(_.answerId)
+    val correctAnswerIds : Seq[Int] = flashcard.choiceAnswers.filter(_.correctness != Correctness.Wrong).map(_.answerId)
 
     matchAnswerIds(selectedAnswerIds, correctAnswerIds)
   }
@@ -76,16 +77,16 @@ object Corrector {
         val newBucket = Math.min(if (isCorrect) oldAnswer.bucket + 1 else oldAnswer.bucket, maxBucketId)
 
         val triesToAdd = if (isCorrect) 0 else 1
-        val oldTries = if (oldAnswer.isActive) oldAnswer.wrongTries else 0
+        val oldTries   = if (oldAnswer.isActive) oldAnswer.wrongTries else 0
 
         val newWrongTriesCount = oldTries + triesToAdd
 
         val maybeSampleSolution = if (newWrongTriesCount < 2) {
           None
         } else if (solution.frontToBack) {
-          Some(flashcard.backs.mkString(frontBackSplitChar))
+          Some(flashcard.backs.mkString(multipleSolutionsSplitChar))
         } else {
-          Some(flashcard.fronts.mkString(frontBackSplitChar))
+          Some(flashcard.fronts.mkString(multipleSolutionsSplitChar))
         }
 
         (

@@ -4,6 +4,9 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 import enumeratum.{EnumEntry, PlayEnum}
+import model.JsonFormats.{blanksAnswerFragmentFormat, choiceAnswerFormat}
+import play.api.Logger
+import play.api.libs.json._
 
 import scala.collection.immutable
 
@@ -46,25 +49,46 @@ case object CardType extends PlayEnum[CardType] {
 final case class Flashcard(
   cardId: Int, collId: Int, courseId: Int,
   cardType: CardType,
-  fronts: Seq[String],
+  frontsJson: JsValue,
   frontHint: Option[String] = None,
-  backs: Seq[String] = Seq.empty,
+  backsJson: JsValue = JsArray(),
   backHint: Option[String] = None,
-  blanksAnswers: Seq[BlanksAnswerFragment] = Seq.empty,
-  choiceAnswers: Seq[ChoiceAnswer] = Seq.empty
-)
+  blanksAnswerFragmentsJson: JsValue = JsArray(),
+  choiceAnswersJson: JsValue = JsArray()
+) {
 
-sealed trait FlashcardComponent {
-  val answerId: Int
+  private def logger = Logger(classOf[Flashcard])
+
+  private def convertFromJson[T](jsValue: JsValue, reads: Reads[T]): Seq[T] = Json.fromJson(jsValue)(Reads.seq(reads)) match {
+    case JsSuccess(value, _) => value
+    case JsError(errors)     =>
+      logger.error("Error while converting json in Flashcard: " + errors.map("\t" + _.toString()).mkString("\n"))
+      Seq.empty
+  }
+
+  def fronts: Seq[String] = convertFromJson(frontsJson, {
+    case JsString(value) => JsSuccess(value)
+    case _               => JsError()
+  })
+
+  def backs: Seq[String] = convertFromJson(frontsJson, {
+    case JsString(value) => JsSuccess(value)
+    case _               => JsError()
+  })
+
+  def blanksAnswerFragments: Seq[BlanksAnswerFragment] = convertFromJson(blanksAnswerFragmentsJson, blanksAnswerFragmentFormat)
+
+  def choiceAnswers: Seq[ChoiceAnswer] = convertFromJson(choiceAnswersJson, choiceAnswerFormat)
+
 }
 
 // Blanks
 
-final case class BlanksAnswerFragment(answerId: Int, answer: String, isAnswer: Boolean) extends FlashcardComponent
+final case class BlanksAnswerFragment(answerId: Int, answer: String, isAnswer: Boolean)
 
 // Single and Multiple choice
 
-final case class ChoiceAnswer(answerId: Int, answer: String, correctness: Correctness) extends FlashcardComponent
+final case class ChoiceAnswer(answerId: Int, answer: String, correctness: Correctness)
 
 sealed trait Correctness extends EnumEntry
 

@@ -60,7 +60,7 @@ trait CoursesCollectionsFlashcardsTableQueries {
     flashcardsTQ
       .filter { fc => fc.collId === collection.id && fc.courseId === collection.courseId }
       .result
-  ).map(_.map(PersistenceModels.dbFlashcardToFlashcard))
+  )
 
   def futureFlashcardById(courseId: Int, collId: Int, cardId: Int): Future[Option[Flashcard]] = {
     val dbFlashcardByIdQuery = flashcardsTQ
@@ -68,10 +68,11 @@ trait CoursesCollectionsFlashcardsTableQueries {
       .result
       .headOption
 
-    db.run(dbFlashcardByIdQuery).map {
-      case None              => None
-      case Some(dbFlashcard) => Some(PersistenceModels.dbFlashcardToFlashcard(dbFlashcard))
-    }
+    db.run(dbFlashcardByIdQuery)
+    //      .map {
+    //      case None              => None
+    //      case Some(dbFlashcard) => Some(PersistenceModels.dbFlashcardToFlashcard(dbFlashcard))
+    //    }
   }
 
 
@@ -81,9 +82,9 @@ trait CoursesCollectionsFlashcardsTableQueries {
   // Saving
 
   def futureInsertCompleteFlashcard(completeFlashcard: Flashcard): Future[Boolean] = {
-    val flashcard = PersistenceModels.flashcardToDbFlashcard(completeFlashcard)
+//    val flashcard = PersistenceModels.flashcardToDbFlashcard(completeFlashcard)
 
-    db.run(flashcardsTQ insertOrUpdate flashcard).transform(_ == 1, identity)
+    db.run(flashcardsTQ insertOrUpdate completeFlashcard).transform(_ == 1, identity)
   }
 
 }

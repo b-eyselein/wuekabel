@@ -2,39 +2,46 @@
 
 @(user: User, courseId: Int, collection: Collection, flashcardCount: Int, toLearnCount: Int)
 
-@title = @{
-    s"Sammlung '${collection.name}'"
-}
+    @alreadyLearnedCount = @{
+        flashcardCount - toLearnCount
+    }
 
-@main(title, Some(user)) {
-    <h3 class="center-align">@title</h3>
+    @progress = @{
+        Math.round(alreadyLearnedCount * 100 / flashcardCount.toDouble) + "%"
+    }
 
-    <hr>
+    @title = @{
+        s"Sammlung '${collection.name}'"
+    }
 
-    <div class="row">
-        <div class="col s12">
-            <div class="card @primaryColor">
-                <div class="card-content white-text">
-                    <span class="card-title">
-                        Diese Sammlung enthält insgesamt @flashcardCount Karteikarten.
+    @main(title, Some(user)) {
+        <h4 class="center-align">@title</h4>
 
-                        <br>
+        <hr>
 
-                        @if(toLearnCount == 0) {
-                            Sie haben alle Karteikarten gelernt.
-                        } else {
-                            Es existieren noch @toLearnCount neue Karteikarten.
-                        }
-                    </span>
-                </div>
-                <div class="card-action">
-                @if(toLearnCount == 0) {
-                    <a class="grey-text">Lernen</a>
-                } else {
-                    <a href="@routes.HomeController.learn(courseId, collection.id)">Lernen</a>
-                }
-                </div>
-            </div>
+        <p>Diese Sammlung enthält insgesamt @flashcardCount Karteikarten.</p>
+
+        <p>
+        @if(toLearnCount == 0) {
+            Sie haben alle Karteikarten gelernt.
+        } else {
+            Es existieren noch @toLearnCount neue Karteikarten.
+        }
+        </p>
+
+        <br>
+
+        <h5 class="center-align">Fortschritt</h5>
+
+        <p class="center">@alreadyLearnedCount / @flashcardCount</p>
+
+        <div class="progress">
+            <div class="determinate" style="width: @progress"></div>
         </div>
-    </div>
-}
+
+        <br>
+
+        @if(toLearnCount > 0) {
+            <a href="@routes.HomeController.learn(courseId, collection.id)" class="btn btn-block @accentColor">Lernen</a>
+        }
+    }

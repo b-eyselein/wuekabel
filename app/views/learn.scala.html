@@ -37,55 +37,50 @@
     @main(title, Some(user), scripts = scripts) {
         @helper.CSRF.formField
 
-        <button id="loadFlashcardButton" data-href="@loadFcUrl">
+        <button id="loadFlashcardButton" hidden data-href="@loadFcUrl">
             Laden...
         </button>
 
+        <h4 class="center-align" id="questionDiv"></h4>
+
+        <hr>
+
+        <p class="center-align">
+            <code>
+                Stapel:
+                <span id="bucketSpan">--</span>
+            </code>
+            <code title="Maximal 2 erlaubt">
+                Fehlversuche:
+                <span id="triesSpan">0</span>
+            </code>
+        </p>
+
+        <div id="answerDiv"></div>
+
+        <p id="correctionTextPar">&nbsp;</p>
+
         <div class="row">
-            <div class="col s12 l8 offset-l2">
-                <div class="card-panel">
-                    <h4 class="center-align" id="questionDiv"></h4>
+            <h5 class="center-align">
+                <span id="answeredFcCountSpan">0</span> / <span id="maxCardCountSpan">@maxCardsCount</span>
+            </h5>
+        </div>
+        <div class="progress">
+            <div class="determinate" style="width: 0%" id="progressDiv"></div>
+        </div>
 
-                    <hr>
+        <div class="center-align">
+            <button class="btn btn-large waves-effect @primaryColor hide" title="Vorlesen" id="readQuestionButton">
+                <i class="material-icons left">record_voice_over</i> Frage vorlesen
+            </button>
 
-                    <p class="center-align">
-                        <code>
-                            Stapel:
-                            <span id="bucketSpan">--</span>
-                        </code>
-                        <code title="Maximal 2 erlaubt">
-                            Fehlversuche:
-                            <span id="triesSpan">0</span>
-                        </code>
-                    </p>
+            <button class="btn waves-effect @primaryColor" id="checkSolutionBtn" data-href="@routes.ApiController.checkSolution()">
+                Lösung testen
+            </button>
 
-                    <div id="answerDiv"></div>
-
-                    <p id="correctionTextPar">&nbsp;</p>
-                </div>
-                <div class="card-panel">
-                    <div class="row">
-                        <h5 class="center-align">
-                            <span id="answeredFcCountSpan">0</span> / <span id="maxCardCountSpan">@maxCardsCount</span>
-                        </h5>
-                    </div>
-                    <div class="progress">
-                        <div class="determinate" style="width: 0%" id="progressDiv"></div>
-                    </div>
-                </div>
-
-                <button class="btn btn-large waves-effect @primaryColor hide" title="Vorlesen" id="readQuestionButton">
-                    <i class="material-icons left">record_voice_over</i> Frage vorlesen
-                </button>
-
-                <button class="btn btn-large waves-effect @primaryColor" id="checkSolutionBtn" data-href="@routes.ApiController.checkSolution()">
-                    Lösung testen
-                </button>
-
-                <button id="nextFlashcardBtn" class="btn btn-large waves-effect @accentColor" disabled="disabled" data-endurl="@endUrl">
-                    Nächste Karteikarte
-                </button>
-            </div>
+            <button id="nextFlashcardBtn" class="btn waves-effect @accentColor" disabled="disabled" data-endurl="@endUrl">
+                Weiter
+            </button>
         </div>
     }
 

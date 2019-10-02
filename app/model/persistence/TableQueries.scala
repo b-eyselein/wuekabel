@@ -1,9 +1,7 @@
 package model.persistence
 
-import model.JsonFormats.{blanksAnswerFragmentFormat, choiceAnswerFormat}
 import model._
-import play.api.libs.json.{Format, JsError, JsSuccess, Json}
-import model.Consts.frontBackSplitChar
+
 import scala.concurrent.Future
 
 trait TableQueries {
@@ -24,34 +22,14 @@ trait TableQueries {
     }.result.headOption
 
     db.run(dbFlashcardByIdQuery).flatMap {
-      case None                                                                                                                       => ???
-      case Some(DBFlashcard(_, _, _, cardType, front, frontHint, back, backHint, blanksAnswerFragmentsJsValue, choiceAnswersJsValue)) =>
-
-        implicit val caf: Format[ChoiceAnswer] = choiceAnswerFormat
-        val choiceAnswers: Seq[ChoiceAnswer] = Json.fromJson[Seq[ChoiceAnswer]](choiceAnswersJsValue) match {
-          case JsSuccess(cas, _) => cas
-          case JsError(errors)   => ???
-        }
-
-        implicit val baff: Format[BlanksAnswerFragment] = blanksAnswerFragmentFormat
-        val blanksAnswerFragments: Seq[BlanksAnswerFragment] = Json.fromJson[Seq[BlanksAnswerFragment]](blanksAnswerFragmentsJsValue) match {
-          case JsSuccess(bafs, _) => bafs
-          case JsError(errors)    => ???
-        }
+      case None            => ???
+      case Some(flashcard) =>
 
         for {
           maybeOldAnswer <- futureUserAnswerForFlashcard(user, cardId, collId, courseId, frontToBack)
         } yield {
           FlashcardToAnswer(
-            Flashcard(
-              cardId, collId, courseId, cardType,
-              front.split(frontBackSplitChar),
-              frontHint,
-              back.split(frontBackSplitChar),
-              backHint,
-              blanksAnswerFragments,
-              choiceAnswers
-            ),
+            flashcard,
             frontToBack: Boolean,
             currentTries = maybeOldAnswer.map { oa => if (oa.isActive) oa.wrongTries else 0 }.getOrElse(0),
             currentBucket = maybeOldAnswer.map(_.bucket)

@@ -48,7 +48,7 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
     def dateAnswered: Rep[LocalDate] = column[LocalDate]("date_answered")
 
-    def correct: Rep[Boolean] = column[Boolean](correctName)
+    def correct: Rep[Boolean] = column[Boolean]("correct")
 
     def wrongTries: Rep[Int] = column[Int]("wrong_tries")
 
@@ -57,7 +57,7 @@ class TableDefs @Inject()(override protected val dbConfigProvider: DatabaseConfi
 
     def userFk: ForeignKeyQuery[UsersTable, User] = foreignKey("uaf_user_fk", username, usersTQ)(_.username)
 
-    def cardFk: ForeignKeyQuery[FlashcardsTable, DBFlashcard] = foreignKey("uaf_card_fk", (cardId, collId), flashcardsTQ)(fc => (fc.id, fc.collId))
+    def cardFk: ForeignKeyQuery[FlashcardsTable, Flashcard] = foreignKey("uaf_card_fk", (cardId, collId), flashcardsTQ)(fc => (fc.id, fc.collId))
 
 
     override def * : ProvenShape[UserAnsweredFlashcard] = (username, cardId, collId, courseId, cardType,
