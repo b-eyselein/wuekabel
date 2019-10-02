@@ -8,8 +8,8 @@ object TemplateConsts {
 
   //  val accentColor = ""
 
-  val colorGreen = "green accent-3"
+  val colorGreen = "green lighten-1"
 
-  val colorRed = "red accent-3"
+  val colorRed = "red lighten-1"
 
 }

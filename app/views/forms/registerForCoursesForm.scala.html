@@ -25,12 +25,19 @@
         @for(xGroup <- allCoursesAndRegisterStates.grouped(btnsPerRow)) {
             <div class="row">
 
-            @for((course, registered) <- xGroup;
-            btnColor = if(registered) colorRed else colorGreen;
-            linkText = if(registered) s"Aus Kurs ${course.name} austragen" else s"In Kurs ${course.name} einschreiben";
-            linkHref = if(registered) routes.HomeController.unregisterForCourse(course.id) else routes.HomeController.registerForCourse(course.id)) {
+            @for((course, registered) <- xGroup; linkHref = if(registered) routes.HomeController.unregisterForCourse(course.id) else routes.HomeController.registerForCourse(course.id)) {
                 <div class="col m@colWidth s12">
-                    <a href="@linkHref" class="btn btn-large waves-effect waves-block @btnColor">@linkText</a>
+                    <div class="card">
+                        <div class="card-content">
+                            <span class="card-title">@course.name</span>
+                            <p class="@if(registered) {green} else {red}-text">Sie sind @if(!registered) {nicht} in diesen Kurs eingeschrieben.</p>
+                        </div>
+                        <div class="card-action">
+                            <a href="@linkHref">@{
+                                if(registered) "Austragen" else "Einschreiben"
+                            }</a>
+                        </div>
+                    </div>
                 </div>
             }
 

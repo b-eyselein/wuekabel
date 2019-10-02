@@ -6,7 +6,6 @@
     "Startseite"
 }
 
-
 @coursesPerRow = @{
     2
 }
@@ -16,63 +15,12 @@
 }
 
 @main(title, Some(user)) {
-
     <h3 class="center-align">@title</h3>
 
     <hr>
 
     @if(!user.hasAcceptedDataPrivacyStatement) {
-        <div class="row">
-            <div class="col s12">
-                <div class="card @primaryColor">
-                    <div class="card-content white-text">
-                        <span class="card-title">Datenschutzerklärung und Einwilligung zur Datenerhebung</span>
-
-                        <p>(Stand Dezember 2018)</p>
-
-                        <br>
-
-                        <p>Der Datenschutz ist der Universität Würzburg besonders wichtig, deshalb kommen wir unserer
-                            Verpflichtung gemäß Art. 13 Abs. 1 der Datenschutzgrundverordnung gerne nach und geben Ihnen
-                            folgende Informationen zur Erhebung Ihrer Daten.</p>
-
-                        <p>Verantwortlicher für die Datenerhebung ist die Universität Würzburg, Sanderring 2,
-                            97070 Würzburg, E-Mail: <a href="info@@uni-wuerzburg.de">info@@uni-wuerzburg.de</a>.
-                            Für Fragen des Datenschutzes können Sie sich an den behördlichen Datenschutzbeauftragten der
-                            Universität, Sanderring 2, 97070 Würzburg, E-Mail: <a href="datenschutz@@uni-wuerzburg.de">
-                            datenschutz@@uni-wuerzburg.de</a>    wenden.</p>
-
-                        <br>
-
-                        <p>
-                            <span class="red-text">
-                                Die erhobenen Daten werden ausschließlich zu Forschungszwecken innerhalb von WueKabel
-                                genutzt</span>, hierzu sind wir nach Art. 6 Abs. 1 Buchst. a DSGVO berechtigt.</p>
-
-                        <p class="red-text">
-                            Die Daten werden zu Forschungszwecken für mind. 10 Jahre gespeichert und dann gelöscht.
-                            Falls es in einzelnen Fällen nötig ist die Daten länger zu speichern, erfolgt dies in enger
-                            Abstimmung mit dem behördlichen Datenschutzbeauftragten.</p>
-
-                        <br>
-
-                        <p><b>Weitere Informationen über Ihre Rechte bezüglich der DSGVO finden Sie hier:</b></p>
-
-                        <br>
-
-                        <p class="center-align"><a href="https://www.uni-wuerzburg.de/universitaet/datenschutzbeauftragter">
-                            https://www.uni-wuerzburg.de/universitaet/datenschutzbeauftragter</a></p>
-
-                        <br>
-
-                        <p>Mit dem Bestätigen der Einverständniserklärung erklären Sie, dass Sie die Datenschutzerklärung zur Kenntnis genommen haben und damit Einverstanden sind.</p>
-                    </div>
-                    <div class="card-action">
-                        <a href="@routes.HomeController.acceptDPS()">Akzeptieren</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @dataPrivacyStatement.render()
 
         <hr>
     }
@@ -81,13 +29,14 @@
         <div class="col s12">
             <div class="card @primaryColor">
                 <div class="card-content white-text">
-                    <span class="card-title">
+                    <span class="card-title">Wiederholen</span>
+                    <p>
                     @if(repeatCount > 0) {
                         Es sind noch @repeatCount Karteikarten bereit zum Wiederholen.
                     } else {
                         Sie haben alle Karteikarten wiederholt.
                     }
-                    </span>
+                    </p>
                 </div>
                 <div class="card-action">
                 @if(repeatCount == 0) {
