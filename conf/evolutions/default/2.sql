@@ -15,7 +15,9 @@ values ('first_user', '$2a$10$6loikDKMzBkdP1HG33BeheyhF7e1.gNBx3mM1CiePRg2AaicJm
 
 insert into languages (id, name)
 values (1, 'Französisch'),
-       (2, 'Deutsch');
+       (2, 'Deutsch'),
+       (3, 'Italienisch'),
+       (4, 'Spanisch');
 
 # insert into users_in_courses(username, course_id)
 # values ('first_user', 1);
