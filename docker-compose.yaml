@@ -1,0 +1,21 @@
+version: '3.3'
+
+volumes:
+  db_volume: { }
+
+services:
+  mariadb:
+    image: mariadb
+    restart: always
+    ports:
+      - "3906:3306"
+    volumes:
+      - type: volume
+        source: db_volume
+        target: /var/lib/mysql
+      - type: bind
+        source: ./other_resources/create_all.sql
+        target: /docker-entrypoint-initdb.d/00_create_all.sql
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+

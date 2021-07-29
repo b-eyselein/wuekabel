@@ -3,7 +3,7 @@
 @(title: String, maybeUser: Option[User], scripts: Html = Html(""))(content: Html)
 
 @leftNavigation = {
-    <li><a href="@routes.HomeController.index()">Startseite</a></li>
+    <li><a href="@routes.HomeController.index">Startseite</a></li>
 }
 
 @rightNavigation = {
@@ -12,14 +12,14 @@
 @maybeUser match {
     case Some(user) => {
         @if(user.isAdmin) {
-            <li><a href="@routes.AdminController.index()">Administration</a></li>
+            <li><a href="@routes.AdminController.index">Administration</a></li>
         }
-        <li><a href="@routes.HomeController.userPage()">Nutzer: @user.username </a></li>
-        <li><a href="@routes.LoginController.logout()">Logout</a></li>
+        <li><a href="@routes.HomeController.userPage">Nutzer: @user.username </a></li>
+        <li><a href="@routes.LoginController.logout">Logout</a></li>
     }
     case None => {
-        <li><a href="@routes.LoginController.loginForm()">Login</a></li>
-        <li><a href="@routes.LoginController.registerForm()">Registrieren</a></li>
+        <li><a href="@routes.LoginController.loginForm">Login</a></li>
+        <li><a href="@routes.LoginController.registerForm">Registrieren</a></li>
     }
 }
 }

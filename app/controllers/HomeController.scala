@@ -31,7 +31,7 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
   def acceptDPS: EssentialAction = futureWithUser { user =>
     implicit request =>
       tableDefs.futureUserAcceptedDps(user).map {
-        _ => Redirect(routes.HomeController.index())
+        _ => Redirect(routes.HomeController.index)
       }
   }
 
@@ -45,14 +45,14 @@ class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs
   def registerForCourse(courseId: Int): EssentialAction = futureWithUser { user =>
     implicit request =>
       tableDefs.futureRegisterUserForCourse(user.username, courseId).map {
-        _ => Redirect(controllers.routes.HomeController.registerForCoursesForm())
+        _ => Redirect(controllers.routes.HomeController.registerForCoursesForm)
       }
   }
 
   def unregisterForCourse(courseId: Int): EssentialAction = futureWithUser { user =>
     implicit request =>
       tableDefs.futureUnregisterUserFromCourse(user.username, courseId).map {
-        _ => Redirect(controllers.routes.HomeController.registerForCoursesForm())
+        _ => Redirect(controllers.routes.HomeController.registerForCoursesForm)
       }
   }
 

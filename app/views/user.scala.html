@@ -2,26 +2,26 @@
 
 @(user: User, courses: Seq[Course])
 
-    @title = @{
-        s"Nutzer '${user.username}'"
-    }
+@title = @{
+    s"Nutzer '${user.username}'"
+}
 
-    @main(title, Some(user)) {
-        <h4 class="center-align">@title</h4>
+@main(title, Some(user)) {
+    <h4 class="center-align">@title</h4>
 
-        <hr>
+    <hr>
 
-        <section>
-            <h5>Meine Kurse</h5>
-            @if(courses.nonEmpty) {
-                <ul class="collection">
-                @for(course <- courses) {
-                    <li class="collection-item">@course.name</li>
-                }
-                </ul>
-            } else {
-                <p class="red-text">Sie sind noch nicht in einem Kurs registriert.</p>
+    <section>
+        <h5>Meine Kurse</h5>
+        @if(courses.nonEmpty) {
+            <ul class="collection">
+            @for(course <- courses) {
+                <li class="collection-item">@course.name</li>
             }
-        </section>
+            </ul>
+        } else {
+            <p class="red-text">Sie sind noch nicht in einem Kurs registriert.</p>
+        }
+    </section>
 
-    }
+}

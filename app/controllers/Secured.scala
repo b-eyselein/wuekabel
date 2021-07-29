@@ -18,7 +18,7 @@ trait Secured {
 
   private def username(request: RequestHeader): Option[String] = request.session.get(idName)
 
-  private def onUnauthorized(request: RequestHeader): Result = Redirect(controllers.routes.LoginController.loginForm()).withNewSession
+  private def onUnauthorized(request: RequestHeader): Result = Redirect(controllers.routes.LoginController.loginForm).withNewSession
 
   private def futureOnUnauthorized(request: RequestHeader): Future[Result] =
     Future(onUnauthorized(request))

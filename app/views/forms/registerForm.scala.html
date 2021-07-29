@@ -10,7 +10,7 @@
 
     <h2 class="center-align">@title</h2>
 
-    @helper.form(routes.LoginController.register(), Symbol("class") -> "col s12") {
+    @helper.form(routes.LoginController.register, Symbol("class") -> "col s12") {
 
         @helper.CSRF.formField
 

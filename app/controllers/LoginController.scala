@@ -36,7 +36,7 @@ class LoginController @Inject()(cc: ControllerComponents, val dbConfigProvider: 
       tableDefs.futureInsertUser(newUser) flatMap {
         case false => Future(BadRequest("Could not save user!"))
         case true  => tableDefs.futureSavePwHash(pwHash) map {
-          _ => Redirect(routes.LoginController.loginForm())
+          _ => Redirect(routes.LoginController.loginForm)
         }
       }
     }
@@ -53,12 +53,12 @@ class LoginController @Inject()(cc: ControllerComponents, val dbConfigProvider: 
     val onRead: LoginFormValues => Future[Result] = { credentials =>
 
       tableDefs.futureUserByUserName(credentials.username) flatMap {
-        case None       => Future(Redirect(controllers.routes.LoginController.registerForm()))
+        case None       => Future(Redirect(controllers.routes.LoginController.registerForm))
         case Some(user) => tableDefs.futurePwHashForUser(user) map {
           case None               => BadRequest("Cannot change password!")
           case Some(userPassword) =>
             if (credentials.password isBcrypted userPassword.pwHash) {
-              Redirect(controllers.routes.HomeController.index()).withSession(idName -> user.username)
+              Redirect(controllers.routes.HomeController.index).withSession(idName -> user.username)
             } else {
               Ok(views.html.forms.loginForm(FormMappings.loginValuesForm.fill(credentials)))
             }
@@ -74,7 +74,7 @@ class LoginController @Inject()(cc: ControllerComponents, val dbConfigProvider: 
   }
 
   def logout: Action[AnyContent] = Action {
-    implicit request => Redirect(routes.LoginController.loginForm()).withNewSession
+    implicit request => Redirect(routes.LoginController.loginForm).withNewSession
   }
 
   def changePwForm: EssentialAction = futureWithUser { user =>
@@ -109,7 +109,7 @@ class LoginController @Inject()(cc: ControllerComponents, val dbConfigProvider: 
 
             tableDefs.futureUpdatePwHashForUser(user, changePwFormValues.firstNewPw.bcrypt) map {
               case false => ???
-              case true  => Redirect(routes.HomeController.index())
+              case true  => Redirect(routes.HomeController.index)
             }
           } else {
             Future.successful(BadRequest(views.html.forms.changePwForm(user, FormMappings.changePwForm.fill(changePwFormValues), hasPw)))

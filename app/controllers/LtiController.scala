@@ -39,7 +39,7 @@ class LtiController @Inject()(cc: ControllerComponents, protected val tableDefs:
         user <- selectOrInsertUser(ltiFormValues.username)
         maybePw <- tableDefs.futurePwHashForUser(user)
       } yield {
-        val baseRedirect = Redirect(routes.HomeController.index()).withSession(idName -> user.username)
+        val baseRedirect = Redirect(routes.HomeController.index).withSession(idName -> user.username)
 
         if (maybePw.isEmpty) baseRedirect.flashing("no_pw_set" -> maybePw.isDefined.toString)
         else baseRedirect

@@ -46,11 +46,11 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
 
       def onRead: Course => Future[Result] = { newCourse =>
         tableDefs.futureInsertCourse(newCourse) map {
-          _ => Redirect(routes.AdminController.index())
+          _ => Redirect(routes.AdminController.index)
         }
       }
 
-      FormMappings.newCourseForm.bindFromRequest.fold(onError, onRead)
+      FormMappings.newCourseForm.bindFromRequest().fold(onError, onRead)
   }
 
   // Collections
@@ -91,7 +91,7 @@ class AdminController @Inject()(cc: ControllerComponents, protected val tableDef
         }
       }
 
-      FormMappings.newCollectionForm.bindFromRequest.fold(onError, onRead)
+      FormMappings.newCollectionForm.bindFromRequest().fold(onError, onRead)
   }
 
   // Flashcards
