@@ -15,7 +15,7 @@
     @loadFcUrl = @{
         maybeCourseAndColl match {
             case None => {
-                routes.ApiController.nextFlashcardsToRepeat
+                routes.ApiController.nextFlashcardsToRepeat()
             }
             case Some((course, collection)) => {
                 routes.ApiController.nextFlashcardsToLearn(course.id, collection.id)

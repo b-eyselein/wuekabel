@@ -63,6 +63,6 @@ class LtiController @Inject() (cc: ControllerComponents, protected val tableDefs
       ???
     }
 
-    FormMappings.ltiToolProxyRegistrationRequestForm.bindFromRequest.fold(onError, onRead)
+    FormMappings.ltiToolProxyRegistrationRequestForm.bindFromRequest().fold(onError, onRead)
   }
 }

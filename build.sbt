@@ -12,8 +12,6 @@ TwirlKeys.templateImports += "model.TemplateConsts._"
 
 scalaVersion := "2.13.6"
 
-// updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true)
-
 val webJarDependencies = Seq(
   // FIXME: remove jquery?!?
   "org.webjars.npm" % "jquery"                 % "3.6.0",

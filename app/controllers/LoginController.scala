@@ -44,7 +44,7 @@ class LoginController @Inject() (cc: ControllerComponents, val dbConfigProvider:
       }
     }
 
-    FormMappings.registerValuesForm.bindFromRequest.fold(onError, onRead)
+    FormMappings.registerValuesForm.bindFromRequest().fold(onError, onRead)
   }
 
   def login: Action[AnyContent] = Action.async { implicit request =>
@@ -59,7 +59,7 @@ class LoginController @Inject() (cc: ControllerComponents, val dbConfigProvider:
           tableDefs.futurePwHashForUser(user) map {
             case None => BadRequest("Cannot change password!")
             case Some(userPassword) =>
-              if (credentials.password isBcrypted userPassword.pwHash) {
+              if (credentials.password.isBcryptedBounded(userPassword.pwHash)) {
                 Redirect(controllers.routes.HomeController.index).withSession(idName -> user.username)
               } else {
                 Ok(views.html.forms.loginForm(FormMappings.loginValuesForm.fill(credentials)))
@@ -68,7 +68,7 @@ class LoginController @Inject() (cc: ControllerComponents, val dbConfigProvider:
       }
     }
 
-    FormMappings.loginValuesForm.bindFromRequest.fold(onError, onRead)
+    FormMappings.loginValuesForm.bindFromRequest().fold(onError, onRead)
   }
 
   def loginForm: Action[AnyContent] = Action { implicit request =>
@@ -98,7 +98,7 @@ class LoginController @Inject() (cc: ControllerComponents, val dbConfigProvider:
 
         val oldPwCorrect = maybePwHashForUser.map(_.pwHash) match {
           case None            => true
-          case Some(oldPwHash) => changePwFormValues.oldPw.exists(oldPw => oldPw.isBcrypted(oldPwHash))
+          case Some(oldPwHash) => changePwFormValues.oldPw.exists(oldPw => oldPw.isBcryptedBounded(oldPwHash))
         }
 
         if (oldPwCorrect && newPwsEqual) {
@@ -111,7 +111,7 @@ class LoginController @Inject() (cc: ControllerComponents, val dbConfigProvider:
         }
       }
 
-      FormMappings.changePwForm.bindFromRequest.fold(onError, onRead)
+      FormMappings.changePwForm.bindFromRequest().fold(onError, onRead)
     }
   }
 
