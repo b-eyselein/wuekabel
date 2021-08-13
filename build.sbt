@@ -36,13 +36,16 @@ libraryDependencies ++= Seq(
   "org.scalatestplus.play" %% "scalatestplus-play"   % "5.1.0" % Test,
   "mysql"                   % "mysql-connector-java" % "8.0.26",
   // Better enums for scala
-  "com.beachape"      %% "enumeratum-play"       % "1.7.0",
-  "com.beachape"      %% "enumeratum-play-json"  % "1.7.0",
+  "com.beachape" %% "enumeratum-play"      % "1.7.0",
+  "com.beachape" %% "enumeratum-play-json" % "1.7.0",
+  // Slick
   "com.typesafe.play" %% "play-slick"            % "5.0.0",
   "com.typesafe.play" %% "play-slick-evolutions" % "5.0.0",
-  "com.github.t3hnar" %% "scala-bcrypt"          % "4.3.0",
+  // BCrypt
+  "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0",
   // Betterfiles
   "com.github.pathikrit" %% "better-files" % "3.9.1",
-  "org.apache.poi"        % "poi"          % "5.0.0",
-  "org.apache.poi"        % "poi-ooxml"    % "5.0.0"
+  // POI
+  "org.apache.poi" % "poi"       % "5.0.0",
+  "org.apache.poi" % "poi-ooxml" % "5.0.0"
 )
