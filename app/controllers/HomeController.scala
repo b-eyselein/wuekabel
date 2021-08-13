@@ -1,12 +1,10 @@
 package controllers
 
-import javax.inject.{Inject, Singleton}
-import model._
 import model.persistence.TableDefs
-import play.api.libs.json.JsString
 import play.api.mvc._
 
-import scala.concurrent.{ExecutionContext, Future}
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents, protected val tableDefs: TableDefs)(implicit protected val ec: ExecutionContext)

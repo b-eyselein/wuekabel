@@ -1,17 +1,19 @@
 package controllers
 
-import javax.inject.{Inject, Singleton}
 import model.Consts.idName
 import model.persistence.TableDefs
 import model.{FormMappings, LtiFormValues, LtiToolProxyRegistrationRequestFormValues, User}
 import play.api.data.Form
 import play.api.mvc._
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class LtiController @Inject()(cc: ControllerComponents, protected val tableDefs: TableDefs)(implicit protected val ec: ExecutionContext)
-  extends AbstractController(cc) with NewControllerHelpers with play.api.i18n.I18nSupport {
+class LtiController @Inject() (cc: ControllerComponents, protected val tableDefs: TableDefs)(implicit protected val ec: ExecutionContext)
+    extends AbstractController(cc)
+    with NewControllerHelpers
+    with play.api.i18n.I18nSupport {
 
   override protected val adminRightsRequired: Boolean = false
 
@@ -19,7 +21,7 @@ class LtiController @Inject()(cc: ControllerComponents, protected val tableDefs:
 
   private def selectOrInsertUser(username: String): Future[User] = tableDefs.futureUserByUserName(username) flatMap {
     case Some(user) => Future.successful(user)
-    case None       =>
+    case None =>
       val newUser = User(username)
       tableDefs.futureInsertUser(newUser) map {
         case true  => newUser
@@ -34,9 +36,8 @@ class LtiController @Inject()(cc: ControllerComponents, protected val tableDefs:
     }
 
     def onRead: LtiFormValues => Future[Result] = { ltiFormValues =>
-
       for {
-        user <- selectOrInsertUser(ltiFormValues.username)
+        user    <- selectOrInsertUser(ltiFormValues.username)
         maybePw <- tableDefs.futurePwHashForUser(user)
       } yield {
         val baseRedirect = Redirect(routes.HomeController.index).withSession(idName -> user.username)
@@ -51,7 +52,6 @@ class LtiController @Inject()(cc: ControllerComponents, protected val tableDefs:
   }
 
   def registerAsLtiProvider: Action[AnyContent] = Action { implicit request =>
-
     def onError: Form[LtiToolProxyRegistrationRequestFormValues] => Result = { formWithErrors =>
       formWithErrors.errors.foreach(println)
       BadRequest("TODO!")
