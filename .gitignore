@@ -3,5 +3,7 @@ target
 
 .idea/
 
+.bsp
+
 public/javascripts/*.js
 public/javascripts/*.js.map
